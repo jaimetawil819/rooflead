@@ -24,7 +24,7 @@ export default function LeadDetailPage({ params }: { params: Promise<{ id: strin
         .single();
       setLead(leadData);
 
-      const { data: msgs } = await supabase
+      const { data: msgs, error } = await supabase
         .from("messages")
         .select("*")
         .eq("lead_id", id)
