@@ -43,18 +43,22 @@ export async function POST(
     return NextResponse.json({ error: "Failed to create lead" }, { status: 500 });
   }
 
-  // Send greeting SMS to the lead
-  if (phone) {
-    console.log("Attempting SMS to:", phone);
-    try {
-      await sendSMS(
-        phone,
-        `Hi ${name ?? "there"}! Thanks for reaching out to ${businessName}. I have a few quick questions to make sure we can help you. What type of roofing issue are you dealing with? (repair, replacement, storm damage, or inspection)`
-      );
-    } catch (err) {
-      console.error("SMS failed:", err);
-    }
-  }
+    // Send greeting SMS to the lead
+    if (phone) {
+        const greeting = `Hi ${name ?? "there"}! Thanks for reaching out to ${businessName}. I have a few quick questions to make sure we can help you. What type of roofing issue are you dealing with? (repair, replacement, storm damage, or inspection)`;
+        try {
+          await sendSMS(phone, greeting);
+        } catch (err) {
+          console.error("SMS failed:", err);
+        }
+    
+        // Save greeting to messages table
+        await supabase.from("messages").insert({
+          lead_id: lead.id,
+          role: "assistant",
+          body: greeting,
+        });
+      }
 
   return NextResponse.json({ success: true, leadId: lead.id });
 }
