@@ -45,6 +45,7 @@ export async function POST(
 
   // Send greeting SMS to the lead
   if (phone) {
+    console.log("Attempting SMS to:", phone);
     try {
       await sendSMS(
         phone,
