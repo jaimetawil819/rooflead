@@ -2,6 +2,12 @@ import { NextRequest, NextResponse } from "next/server";
 import twilio from "twilio";
 import { getAdminClient } from "@/lib/supabase/admin";
 import { generateConversationReply, generateLeadSummary } from "@/lib/ai";
+import { getPhoneLookupCandidates } from "@/lib/phone";
+import {
+  isSmsOptedOut,
+  isSmsOptOutKeyword,
+  recordSmsOptOut,
+} from "@/lib/sms-opt-outs";
 import { sendSMS } from "@/lib/twilio";
 
 function getTwilioValidationUrl(req: NextRequest) {
@@ -49,12 +55,49 @@ export async function POST(req: NextRequest) {
     return new NextResponse("Bad request", { status: 400 });
   }
 
-  // Handle STOP immediately
-  if (text.toUpperCase() === "STOP") {
+  const phoneCandidates = getPhoneLookupCandidates(from);
+
+  // Handle carrier-recognized opt-out keywords before any AI response.
+  if (isSmsOptOutKeyword(text)) {
+    await recordSmsOptOut(supabase, from, text);
+
+    const { data: optedOutLeads } = await supabase
+      .from("leads")
+      .select("id")
+      .in("phone", phoneCandidates)
+      .not("status", "in", '("qualified","unresponsive","won","lost","junk")');
+
+    const optedOutLeadIds = optedOutLeads?.map((lead) => lead.id) ?? [];
+
+    if (optedOutLeadIds.length > 0) {
+      await supabase.from("messages").insert(
+        optedOutLeadIds.map((leadId) => ({
+          lead_id: leadId,
+          role: "user",
+          body: text,
+        }))
+      );
+
+      await supabase
+        .from("leads")
+        .update({
+          status: "unresponsive",
+          follow_up_sent: true,
+          sms_opted_out_at: new Date().toISOString(),
+        })
+        .in("id", optedOutLeadIds);
+    }
+
     return new NextResponse(
       "<Response><Message>You have been unsubscribed and will receive no further messages.</Message></Response>",
       { headers: { "Content-Type": "text/xml" } }
     );
+  }
+
+  if (await isSmsOptedOut(supabase, from)) {
+    return new NextResponse("<Response></Response>", {
+      headers: { "Content-Type": "text/xml" },
+    });
   }
 
   // Find the most recent active lead for this phone number.
@@ -63,7 +106,7 @@ export async function POST(req: NextRequest) {
   const { data: lead } = await supabase
     .from("leads")
     .select("id, business_id, status, name")
-    .eq("phone", from)
+    .in("phone", phoneCandidates)
     .not("status", "in", '("qualified","unresponsive","won","lost","junk")')
     .order("created_at", { ascending: false })
     .limit(1)
@@ -143,7 +186,10 @@ export async function POST(req: NextRequest) {
         .eq("id", lead.id);
 
       // Notify the business owner
-      if (business?.notification_phone) {
+      if (
+        business?.notification_phone &&
+        !(await isSmsOptedOut(supabase, business.notification_phone))
+      ) {
         const scoreEmoji = score === "hot" ? "🔥" : score === "warm" ? "✅" : score === "cold" ? "❄️" : "⚠️";
         const leadName = lead.name ?? "New lead";
         const notifMsg = `${scoreEmoji} ${score.toUpperCase()} lead — ${leadName}\n${summary}\nCall: ${from}\nView: ${process.env.NEXT_PUBLIC_APP_URL}/dashboard/leads/${lead.id}`;

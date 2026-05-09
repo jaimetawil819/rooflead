@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getAdminClient } from "@/lib/supabase/admin";
+import { isSmsOptedOut } from "@/lib/sms-opt-outs";
 import { sendSMS } from "@/lib/twilio";
 
 // Called by Vercel Cron every 10 minutes.
@@ -42,8 +43,21 @@ export async function GET(req: NextRequest) {
   }
 
   let sent = 0;
+  let skippedOptOuts = 0;
 
   for (const lead of toFollowUp) {
+    if (await isSmsOptedOut(supabase, lead.phone)) {
+      await supabase
+        .from("leads")
+        .update({
+          follow_up_sent: true,
+          sms_opted_out_at: new Date().toISOString(),
+        })
+        .eq("id", lead.id);
+      skippedOptOuts++;
+      continue;
+    }
+
     // Check if the lead has replied at all (has any user messages)
     const { count } = await supabase
       .from("messages")
@@ -77,5 +91,9 @@ export async function GET(req: NextRequest) {
     }
   }
 
-  return NextResponse.json({ sent, markedUnresponsive: toMarkUnresponsive?.length ?? 0 });
+  return NextResponse.json({
+    sent,
+    skippedOptOuts,
+    markedUnresponsive: toMarkUnresponsive?.length ?? 0,
+  });
 }

@@ -48,14 +48,14 @@ This document is the executable checklist. Work top-down. Do not skip Phase 0 to
 | ✅ Reject with 403 on signature mismatch | code | same | Spoofed POST returns 403 locally |
 | ✅ Optional dev bypass via `TWILIO_VALIDATE_REQUESTS=false` env var | code | `.env.example`, same route | Documented; leave unset in production |
 
-### 0D — STOP opt-out persistence 🔴
+### 0D — STOP opt-out persistence 🔴 ✅
 
 | Step | Type | Files / Action | Verify |
 |------|------|---------------|--------|
-| Migration: create `sms_opt_outs` table | sql | new `supabase/migrations/0002_sms_opt_outs.sql` | Run via Supabase SQL editor; table exists |
-| Update Twilio webhook to insert opt-out + update lead on STOP/UNSUBSCRIBE/CANCEL/END/QUIT | code | `app/api/webhooks/twilio/route.ts` | SMS "STOP" creates row in `sms_opt_outs`; matching lead status updated |
-| Update follow-up cron to skip opted-out phones | code | `app/api/cron/follow-up/route.ts` | Add a STOP'd lead to test → cron does not text |
-| Update form-greeting send to skip opted-out phones | code | `app/api/forms/[widgetKey]/route.ts` | Submitting form with opted-out phone does not send greeting |
+| ✅ Migration: create `sms_opt_outs` table | sql | new `supabase/migrations/0002_sms_opt_outs.sql` | Manual Supabase apply still required |
+| ✅ Update Twilio webhook to insert opt-out + update lead on STOP/UNSUBSCRIBE/CANCEL/END/QUIT | code | `app/api/webhooks/twilio/route.ts` | Typecheck/build pass; real SMS test pending after migration |
+| ✅ Update follow-up cron to skip opted-out phones | code | `app/api/cron/follow-up/route.ts` | Typecheck/build pass |
+| ✅ Update form-greeting send to skip opted-out phones | code | `app/api/forms/[widgetKey]/route.ts` | Typecheck/build pass |
 
 ### 0E — Schema / migrations 🟡
 

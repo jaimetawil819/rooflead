@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getAdminClient } from "@/lib/supabase/admin";
+import { isSmsOptedOut } from "@/lib/sms-opt-outs";
 import { sendSMS } from "@/lib/twilio";
 
 export async function POST(
@@ -40,22 +41,31 @@ export async function POST(
     return NextResponse.json({ error: "Failed to create lead" }, { status: 500 });
   }
 
-    // Send greeting SMS to the lead
-    if (phone) {
-        const greeting = `Hi ${name ?? "there"}! Thanks for reaching out to ${businessName}. I have a few quick questions to make sure we can help you. ${intakeQuestion}`;
-        try {
-          await sendSMS(phone, greeting);
-        } catch (err) {
-          console.error("SMS failed:", err);
-        }
-    
-        // Save greeting to messages table
-        await supabase.from("messages").insert({
-          lead_id: lead.id,
-          role: "assistant",
-          body: greeting,
-        });
+  // Send greeting SMS to the lead unless this phone has opted out.
+  if (phone) {
+    const optedOut = await isSmsOptedOut(supabase, phone);
+
+    if (optedOut) {
+      await supabase
+        .from("leads")
+        .update({ sms_opted_out_at: new Date().toISOString() })
+        .eq("id", lead.id);
+    } else {
+      const greeting = `Hi ${name ?? "there"}! Thanks for reaching out to ${businessName}. I have a few quick questions to make sure we can help you. ${intakeQuestion}`;
+      try {
+        await sendSMS(phone, greeting);
+      } catch (err) {
+        console.error("SMS failed:", err);
       }
+
+      // Save greeting to messages table
+      await supabase.from("messages").insert({
+        lead_id: lead.id,
+        role: "assistant",
+        body: greeting,
+      });
+    }
+  }
 
   return NextResponse.json({ success: true, leadId: lead.id });
 }

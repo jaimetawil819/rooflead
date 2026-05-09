@@ -35,6 +35,36 @@ Why this change was made.
 
 ---
 
+## 2026-05-09 — Phase 0D — Durable SMS opt-out persistence
+
+**Task:** Phase 0D from `IMPLEMENTATION_PLAN.md`
+**Status:** completed in code; Supabase migration still needs manual apply
+
+**Files changed:**
+- `supabase/migrations/0002_sms_opt_outs.sql` (added — creates `sms_opt_outs` table and `leads.sms_opted_out_at`)
+- `lib/phone.ts` (added — lightweight phone normalization and lookup candidates)
+- `lib/sms-opt-outs.ts` (added — opt-out keyword, lookup, and record helpers)
+- `app/api/webhooks/twilio/route.ts` (modified — persists STOP/UNSUBSCRIBE/CANCEL/END/QUIT and blocks opted-out replies)
+- `app/api/forms/[widgetKey]/route.ts` (modified — skips initial greeting if phone has opted out)
+- `app/api/cron/follow-up/route.ts` (modified — skips follow-up SMS for opted-out phones)
+
+**Reason:**
+SMS opt-out handling was only an immediate TwiML response to the exact word `STOP`; it did not persist consent state. That was not good enough for compliance or real users. Added durable global opt-outs keyed by normalized phone number so future automated SMS sends are suppressed.
+
+**Verification performed:**
+- **typecheck (`npx.cmd tsc --noEmit`):** clean — no output. ✅
+- **build (`npm.cmd run build`):** ✓ Compiled successfully in 4.5s. All 19 routes detected. ✅
+- **lint (`npm.cmd run lint`):** failed with 17 errors + 3 warnings — same known lint debt; no new files reported.
+
+**Follow-up needed:**
+- Manual: apply `supabase/migrations/0002_sms_opt_outs.sql` in Supabase SQL Editor before deploying/testing this behavior against production.
+- After migration + deploy: send `STOP` from a real phone, confirm row appears in `sms_opt_outs`, matching active lead gets `sms_opted_out_at`, and follow-up cron skips that phone.
+
+**Notes / surprises:**
+- Opt-out is intentionally global by phone number, not per lead. That is stricter and safer for TCPA-style compliance.
+- Phone normalization is deliberately lightweight for now: US 10-digit numbers normalize to `+1...`, existing E.164-style numbers are preserved. Full validation remains Phase 0F.
+
+---
 ## 2026-05-09 — Phase 0C — Twilio webhook signature validation
 
 **Task:** Phase 0C from `IMPLEMENTATION_PLAN.md`
