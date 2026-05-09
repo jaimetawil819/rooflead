@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
+import { sendSMS } from "@/lib/twilio";
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -15,13 +16,15 @@ export async function POST(
 
   const { data: widget } = await supabase
     .from("form_widgets")
-    .select("business_id")
+    .select("business_id, businesses(name)")
     .eq("widget_key", widgetKey)
     .single();
 
   if (!widget) {
     return NextResponse.json({ error: "Invalid widget key" }, { status: 404 });
   }
+
+  const businessName = (widget.businesses as any)?.name ?? "the team";
 
   const { data: lead, error } = await supabase
     .from("leads")
@@ -38,6 +41,18 @@ export async function POST(
 
   if (error) {
     return NextResponse.json({ error: "Failed to create lead" }, { status: 500 });
+  }
+
+  // Send greeting SMS to the lead
+  if (phone) {
+    try {
+      await sendSMS(
+        phone,
+        `Hi ${name ?? "there"}! Thanks for reaching out to ${businessName}. I have a few quick questions to make sure we can help you. What type of roofing issue are you dealing with? (repair, replacement, storm damage, or inspection)`
+      );
+    } catch (err) {
+      console.error("SMS failed:", err);
+    }
   }
 
   return NextResponse.json({ success: true, leadId: lead.id });
