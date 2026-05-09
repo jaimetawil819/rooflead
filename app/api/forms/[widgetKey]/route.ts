@@ -1,16 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createClient } from "@supabase/supabase-js";
+import { getAdminClient } from "@/lib/supabase/admin";
 import { sendSMS } from "@/lib/twilio";
-
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
 
 export async function POST(
   req: NextRequest,
   { params }: { params: Promise<{ widgetKey: string }> }
 ) {
+  const supabase = getAdminClient();
   const { widgetKey } = await params;
   const { name, phone, address, serviceType } = await req.json();
 

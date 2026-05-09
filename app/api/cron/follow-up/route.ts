@@ -1,11 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createClient } from "@supabase/supabase-js";
+import { getAdminClient } from "@/lib/supabase/admin";
 import { sendSMS } from "@/lib/twilio";
-
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
 
 // Called by Vercel Cron every 10 minutes.
 // Finds leads with no reply after 30 min → sends one follow-up → marks unresponsive if still no reply after 60 min.
@@ -14,6 +9,8 @@ export async function GET(req: NextRequest) {
   if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
+
+  const supabase = getAdminClient();
 
   const now = new Date();
   const thirtyMinAgo = new Date(now.getTime() - 30 * 60 * 1000).toISOString();

@@ -1,14 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createClient } from "@supabase/supabase-js";
+import { getAdminClient } from "@/lib/supabase/admin";
 import { generateConversationReply, generateLeadSummary } from "@/lib/ai";
 import { sendSMS } from "@/lib/twilio";
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
-
 export async function POST(req: NextRequest) {
+  const supabase = getAdminClient();
   const body = await req.text();
   const params = Object.fromEntries(new URLSearchParams(body));
 
