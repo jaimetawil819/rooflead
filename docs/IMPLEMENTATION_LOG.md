@@ -35,6 +35,38 @@ Why this change was made.
 
 ---
 
+## 2026-05-09 — Phase 0E — Migration folder discipline
+
+**Task:** Phase 0E from `IMPLEMENTATION_PLAN.md`
+**Status:** partial — repo structure done; live schema baseline requires manual Supabase dump
+
+**Files changed:**
+- `supabase/migrations/README.md` (added — migration apply order and baseline capture instructions)
+- `supabase/migrations/0001_INITIAL_BASELINE_PENDING.md` (added — placeholder explaining why the baseline is not guessed)
+- `docs/IMPLEMENTATION_PLAN.md` (modified — marks 0E repo work complete and baseline dump pending)
+- `docs/IMPLEMENTATION_LOG.md` (modified — this entry)
+
+**Reason:**
+The project now has forward migrations, but the current live Supabase schema is still not captured in the repo. Creating a fake `0001_initial_baseline.sql` from code would be dangerous because it could miss columns, policies, defaults, indexes, or RLS behavior. Added migration discipline docs and exact commands for generating the real baseline from Supabase.
+
+**Verification performed:**
+- Migration folder exists. ✅
+- `0002_sms_opt_outs.sql` exists. ✅
+- README includes numeric apply order, Supabase SQL Editor workflow, and `pg_dump` / Supabase CLI baseline options. ✅
+- No app code changed in this phase.
+- **typecheck (`npx.cmd tsc --noEmit`):** clean — no output. ✅
+- **build (`npm.cmd run build`):** ✓ Compiled successfully in 4.3s. All 19 routes detected. ✅
+- **lint (`npm.cmd run lint`):** failed with 17 errors + 3 warnings — same known lint debt.
+
+**Follow-up needed:**
+- User must generate and commit `supabase/migrations/0001_initial_baseline.sql` from the live Supabase database.
+- After baseline is committed, delete `supabase/migrations/0001_INITIAL_BASELINE_PENDING.md`.
+- User must still apply `0002_sms_opt_outs.sql` in Supabase before deploying/testing Phase 0D behavior.
+
+**Notes / surprises:**
+- This phase cannot honestly be marked fully complete without live database access or a schema dump from Supabase.
+
+---
 ## 2026-05-09 — Phase 0D — Durable SMS opt-out persistence
 
 **Task:** Phase 0D from `IMPLEMENTATION_PLAN.md`
