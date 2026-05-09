@@ -27,11 +27,14 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  // Find the lead by phone number
+  // Find the most recent active lead for this phone number.
+  // Excludes completed/closed leads so a returning homeowner doesn't
+  // corrupt a finished conversation from another business.
   const { data: lead } = await supabase
     .from("leads")
-    .select("id, business_id, status")
+    .select("id, business_id, status, name")
     .eq("phone", from)
+    .not("status", "in", '("qualified","unresponsive","won","lost","junk")')
     .order("created_at", { ascending: false })
     .limit(1)
     .single();
@@ -61,17 +64,26 @@ export async function POST(req: NextRequest) {
     content: m.body,
   }));
 
-  // Get business name
-  const { data: business } = await supabase
-    .from("businesses")
-    .select("name, notification_phone")
-    .eq("id", lead.business_id)
-    .single();
+  // Get business name and widget config
+  const [{ data: business }, { data: widget }] = await Promise.all([
+    supabase
+      .from("businesses")
+      .select("name, notification_phone")
+      .eq("id", lead.business_id)
+      .single(),
+    supabase
+      .from("form_widgets")
+      .select("services, intake_question")
+      .eq("business_id", lead.business_id)
+      .single(),
+  ]);
 
   const businessName = business?.name ?? "the team";
+  const services = widget?.services ?? [];
+  const intakeQuestion = widget?.intake_question ?? "What type of roofing issue are you dealing with?";
 
   // Generate AI reply
-  const reply = await generateConversationReply(businessName, history);
+  const reply = await generateConversationReply(businessName, history, services, intakeQuestion);
 
   // Save AI reply
   await supabase.from("messages").insert({
@@ -102,10 +114,10 @@ export async function POST(req: NextRequest) {
 
       // Notify the business owner
       if (business?.notification_phone) {
-        await sendSMS(
-          business.notification_phone,
-          `New qualified lead: ${from}. Score: ${score.toUpperCase()}. Summary: ${summary} View: ${process.env.NEXT_PUBLIC_APP_URL}/dashboard/leads/${lead.id}`
-        );
+        const scoreEmoji = score === "hot" ? "🔥" : score === "warm" ? "✅" : score === "cold" ? "❄️" : "⚠️";
+        const leadName = lead.name ?? "New lead";
+        const notifMsg = `${scoreEmoji} ${score.toUpperCase()} lead — ${leadName}\n${summary}\nCall: ${from}\nView: ${process.env.NEXT_PUBLIC_APP_URL}/dashboard/leads/${lead.id}`;
+        await sendSMS(business.notification_phone, notifMsg);
       }
     } catch (err) {
       console.error("Summary generation failed:", err);

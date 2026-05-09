@@ -1,76 +1,119 @@
 import { createClient } from "@/lib/supabase/server";
+import { auth } from "@clerk/nextjs/server";
+import { redirect } from "next/navigation";
 import Link from "next/link";
+import { ArrowRight } from "lucide-react";
+import { Suspense } from "react";
+import LeadsFilter from "@/components/dashboard/LeadsFilter";
 
-export default async function LeadsPage() {
+const scoreColors: Record<string, string> = {
+  hot: "bg-red-100 text-red-700",
+  warm: "bg-orange-100 text-orange-700",
+  cold: "bg-blue-100 text-blue-700",
+  unqualified: "bg-gray-100 text-gray-600",
+};
+
+const statusColors: Record<string, string> = {
+  new: "bg-blue-100 text-blue-700",
+  contacted: "bg-purple-100 text-purple-700",
+  qualified: "bg-green-100 text-green-700",
+  appointment_set: "bg-yellow-100 text-yellow-700",
+  won: "bg-emerald-100 text-emerald-700",
+  lost: "bg-red-100 text-red-700",
+  junk: "bg-gray-100 text-gray-500",
+  unresponsive: "bg-gray-100 text-gray-500",
+};
+
+export default async function LeadsPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ status?: string; score?: string }>;
+}) {
+  const { userId } = await auth();
+  if (!userId) redirect("/sign-in");
+
+  const { status, score } = await searchParams;
+
   const supabase = await createClient();
 
-  const { data: leads } = await supabase
+  const { data: business } = await supabase
+    .from("businesses")
+    .select("id")
+    .eq("owner_id", userId)
+    .single();
+
+  let query = supabase
     .from("leads")
     .select("*")
+    .eq("business_id", business?.id)
     .order("created_at", { ascending: false });
 
-  const scoreColor = (score: string | null) => {
-    if (score === "hot") return "background:#fef2f2;color:#991b1b";
-    if (score === "warm") return "background:#fff7ed;color:#9a3412";
-    if (score === "cold") return "background:#eff6ff;color:#1e40af";
-    return "background:#f9fafb;color:#374151";
-  };
+  if (status && status !== "all") query = query.eq("status", status);
+  if (score && score !== "all") query = query.eq("lead_score", score);
 
-  const statusColor = (status: string) => {
-    if (status === "new") return "background:#dbeafe;color:#1e40af";
-    if (status === "qualified") return "background:#dcfce7;color:#166534";
-    if (status === "won") return "background:#d1fae5;color:#065f46";
-    if (status === "lost") return "background:#fee2e2;color:#991b1b";
-    return "background:#f3f4f6;color:#374151";
-  };
+  const { data: leads } = await query;
 
   return (
-    <div className="p-8">
-      <h1 className="text-2xl font-bold mb-6">Leads</h1>
-      {!leads || leads.length === 0 ? (
-        <p className="text-gray-500">No leads yet. Submit your test form to see them here.</p>
-      ) : (
-        <table style={{ width: "100%", borderCollapse: "collapse" }}>
-          <thead>
-            <tr style={{ borderBottom: "2px solid #e5e7eb" }}>
-              <th style={{ textAlign: "left", padding: "8px", fontWeight: 600 }}>Name</th>
-              <th style={{ textAlign: "left", padding: "8px", fontWeight: 600 }}>Phone</th>
-              <th style={{ textAlign: "left", padding: "8px", fontWeight: 600 }}>Service</th>
-              <th style={{ textAlign: "left", padding: "8px", fontWeight: 600 }}>Score</th>
-              <th style={{ textAlign: "left", padding: "8px", fontWeight: 600 }}>Status</th>
-              <th style={{ textAlign: "left", padding: "8px", fontWeight: 600 }}>Date</th>
-            </tr>
-          </thead>
-          <tbody>
-            {leads.map((lead) => (
-              <tr key={lead.id} style={{ borderBottom: "1px solid #e5e7eb" }}>
-                <td style={{ padding: "10px 8px" }}>
-                  <Link href={`/dashboard/leads/${lead.id}`} style={{ color: "#2563eb", textDecoration: "underline" }}>
-                    {lead.name ?? "Unknown"}
-                  </Link>
-                </td>
-                <td style={{ padding: "10px 8px" }}>{lead.phone ?? "—"}</td>
-                <td style={{ padding: "10px 8px" }}>{lead.service_type ?? "—"}</td>
-                <td style={{ padding: "10px 8px" }}>
-                  {lead.lead_score ? (
-                    <span style={{ padding: "2px 8px", borderRadius: "9999px", fontSize: "12px", ...Object.fromEntries(scoreColor(lead.lead_score).split(";").map(s => s.split(":"))) }}>
-                      {lead.lead_score.toUpperCase()}
-                    </span>
-                  ) : "—"}
-                </td>
-                <td style={{ padding: "10px 8px" }}>
-                  <span style={{ padding: "2px 8px", borderRadius: "9999px", fontSize: "12px", ...Object.fromEntries(statusColor(lead.status).split(";").map(s => s.split(":"))) }}>
-                    {lead.status.toUpperCase()}
+    <div className="p-8 max-w-5xl">
+      <div className="mb-6">
+        <h1 className="text-2xl font-bold text-slate-900">Leads</h1>
+        <p className="text-gray-500 mt-1">Every lead that has come through your form.</p>
+      </div>
+
+      <div className="mb-4">
+        <Suspense>
+          <LeadsFilter />
+        </Suspense>
+      </div>
+
+      <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+        {!leads || leads.length === 0 ? (
+          <div className="px-6 py-16 text-center">
+            <p className="text-gray-400 font-medium">No leads found</p>
+            <p className="text-gray-400 text-sm mt-1">
+              {status || score ? "Try adjusting your filters." : "Submit a test lead using your embed form to see it appear here."}
+            </p>
+          </div>
+        ) : (
+          <>
+            <div className="grid grid-cols-[1fr_auto_auto_auto_auto] gap-4 px-6 py-3 border-b border-gray-100 bg-gray-50">
+              {["Name", "Service", "Score", "Status", "Date"].map((h) => (
+                <span key={h} className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
+                  {h}
+                </span>
+              ))}
+            </div>
+
+            <div className="divide-y divide-gray-50">
+              {leads.map((lead) => (
+                <Link
+                  key={lead.id}
+                  href={`/dashboard/leads/${lead.id}`}
+                  className="grid grid-cols-[1fr_auto_auto_auto_auto] gap-4 items-center px-6 py-4 hover:bg-gray-50 transition-colors group"
+                >
+                  <div>
+                    <p className="font-medium text-slate-900 text-sm group-hover:text-blue-600 transition-colors flex items-center gap-1">
+                      {lead.name ?? "Unknown"}
+                      <ArrowRight className="h-3.5 w-3.5 opacity-0 group-hover:opacity-100 transition-opacity" />
+                    </p>
+                    <p className="text-xs text-gray-400 mt-0.5">{lead.phone ?? "—"}</p>
+                  </div>
+                  <span className="text-sm text-gray-600">{lead.service_type ?? "—"}</span>
+                  <span className={`text-xs font-semibold px-2.5 py-1 rounded-full whitespace-nowrap ${scoreColors[lead.lead_score] ?? "bg-gray-100 text-gray-500"}`}>
+                    {lead.lead_score ? lead.lead_score.toUpperCase() : "—"}
                   </span>
-                </td>
-                <td style={{ padding: "10px 8px", color: "#6b7280", fontSize: "14px" }}>
-                  {new Date(lead.created_at).toLocaleDateString()}
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      )}
+                  <span className={`text-xs font-medium px-2.5 py-1 rounded-full whitespace-nowrap ${statusColors[lead.status] ?? "bg-gray-100 text-gray-600"}`}>
+                    {lead.status.replace("_", " ")}
+                  </span>
+                  <span className="text-xs text-gray-400 whitespace-nowrap">
+                    {new Date(lead.created_at).toLocaleDateString()}
+                  </span>
+                </Link>
+              ))}
+            </div>
+          </>
+        )}
+      </div>
     </div>
   );
 }

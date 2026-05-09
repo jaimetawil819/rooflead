@@ -4,15 +4,21 @@ const client = new Anthropic();
 
 export async function generateConversationReply(
   businessName: string,
-  messageHistory: { role: "user" | "assistant"; content: string }[]
+  messageHistory: { role: "user" | "assistant"; content: string }[],
+  services: { label: string; value: string }[] = [],
+  intakeQuestion: string = "What type of roofing issue are you dealing with?"
 ): Promise<string> {
+  const serviceList = services.length > 0
+    ? services.map((s) => s.label).join(", ")
+    : "repair, replacement, storm damage, inspection";
+
   const response = await client.messages.create({
     model: "claude-haiku-4-5-20251001",
     max_tokens: 200,
-    system: `You are a friendly intake assistant for ${businessName}, a roofing company.
+    system: `You are a friendly intake assistant for ${businessName}.
 Your job is to collect these 4 things from the homeowner, one question at a time:
-1. Type of issue (repair, replacement, storm damage, or inspection)
-2. Urgency (emergency/active leak, needs attention soon, or just getting estimates)
+1. Type of service needed (${serviceList})
+2. Urgency (emergency/active issue, needs attention soon, or just getting estimates)
 3. Timeline (ASAP, within a month, or planning ahead)
 4. Whether they own the home
 
@@ -61,5 +67,9 @@ Return only the JSON object.`,
   });
 
   const text = (response.content[0] as { text: string }).text;
-  return JSON.parse(text);
+  try {
+    return JSON.parse(text);
+  } catch {
+    return { summary: text, score: "warm" as const };
+  }
 }

@@ -3,26 +3,56 @@
 import { useState, useEffect } from "react";
 import { useUser } from "@clerk/nextjs";
 import { createClient } from "@/lib/supabase/client";
+import { Button } from "@/components/ui/button";
+import { Building2, Phone, Code, Plus, X } from "lucide-react";
+
+interface Service {
+  label: string;
+  value: string;
+}
+
+function labelToValue(label: string): string {
+  return label.toLowerCase().replace(/[^a-z0-9]+/g, "_").replace(/^_|_$/g, "");
+}
 
 export default function SettingsPage() {
   const { user } = useUser();
   const [name, setName] = useState("");
   const [notificationPhone, setNotificationPhone] = useState("");
+  const [widgetKey, setWidgetKey] = useState("");
+  const [widgetId, setWidgetId] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
+  const [copied, setCopied] = useState(false);
+
+  const [services, setServices] = useState<Service[]>([]);
+  const [intakeQuestion, setIntakeQuestion] = useState("");
+  const [savingForm, setSavingForm] = useState(false);
+  const [savedForm, setSavedForm] = useState(false);
 
   useEffect(() => {
     if (!user) return;
     const load = async () => {
       const supabase = createClient();
-      const { data } = await supabase
+      const { data: business } = await supabase
         .from("businesses")
-        .select("*")
+        .select("id, name, notification_phone")
         .eq("owner_id", user.id)
         .single();
-      if (data) {
-        setName(data.name);
-        setNotificationPhone(data.notification_phone ?? "");
+      if (business) {
+        setName(business.name ?? "");
+        setNotificationPhone(business.notification_phone ?? "");
+        const { data: widget } = await supabase
+          .from("form_widgets")
+          .select("id, widget_key, services, intake_question")
+          .eq("business_id", business.id)
+          .single();
+        if (widget) {
+          setWidgetKey(widget.widget_key);
+          setWidgetId(widget.id);
+          setServices(widget.services ?? []);
+          setIntakeQuestion(widget.intake_question ?? "");
+        }
       }
     };
     load();
@@ -32,49 +62,188 @@ export default function SettingsPage() {
     if (!user) return;
     setSaving(true);
     const supabase = createClient();
-    await supabase.from("businesses").upsert({
-      owner_id: user.id,
-      name,
-      notification_phone: notificationPhone,
-    });
+    await supabase
+      .from("businesses")
+      .update({ name, notification_phone: notificationPhone })
+      .eq("owner_id", user.id);
     setSaving(false);
     setSaved(true);
     setTimeout(() => setSaved(false), 3000);
   };
 
+  const saveFormConfig = async () => {
+    if (!widgetId) return;
+    setSavingForm(true);
+    const supabase = createClient();
+    await supabase
+      .from("form_widgets")
+      .update({ services, intake_question: intakeQuestion })
+      .eq("id", widgetId);
+    setSavingForm(false);
+    setSavedForm(true);
+    setTimeout(() => setSavedForm(false), 3000);
+  };
+
+  const addService = () => {
+    setServices([...services, { label: "", value: "" }]);
+  };
+
+  const updateService = (index: number, label: string) => {
+    const updated = [...services];
+    updated[index] = { label, value: labelToValue(label) };
+    setServices(updated);
+  };
+
+  const removeService = (index: number) => {
+    setServices(services.filter((_, i) => i !== index));
+  };
+
+  const embedCode = widgetKey
+    ? `<script src="${window.location.origin}/embed.js" data-key="${widgetKey}"></script>`
+    : "";
+
+  const copyEmbed = () => {
+    navigator.clipboard.writeText(embedCode);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
   return (
-    <div className="p-8 max-w-lg">
-      <h1 className="text-2xl font-bold mb-6">Business Settings</h1>
-      <div className="space-y-4">
-        <div>
-          <label className="block text-sm font-medium mb-1">Business Name</label>
-          <input
-            className="w-full border rounded px-3 py-2"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            placeholder="ABC Roofing Co."
-          />
-        </div>
-        <div>
-          <label className="block text-sm font-medium mb-1">
-            Notification Phone (your number for lead alerts)
-          </label>
-          <input
-            className="w-full border rounded px-3 py-2"
-            value={notificationPhone}
-            onChange={(e) => setNotificationPhone(e.target.value)}
-            placeholder="+1 555 000 0000"
-          />
-        </div>
-        <button
-          onClick={save}
-          disabled={saving}
-          className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 disabled:opacity-50"
-        >
-          {saving ? "Saving..." : "Save Settings"}
-        </button>
-        {saved && <p className="text-green-600 text-sm">Settings saved!</p>}
+    <div className="p-8 max-w-2xl">
+      <div className="mb-8">
+        <h1 className="text-2xl font-bold text-slate-900">Settings</h1>
+        <p className="text-gray-500 mt-1">Manage your business info and lead form.</p>
       </div>
+
+      {/* Business info */}
+      <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 mb-4">
+        <h2 className="font-semibold text-slate-900 mb-5">Business Information</h2>
+        <div className="space-y-4">
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-1.5" htmlFor="biz-name">
+              Business Name
+            </label>
+            <div className="relative">
+              <Building2 className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" aria-hidden="true" />
+              <input
+                id="biz-name"
+                className="w-full border border-gray-200 rounded-lg pl-9 pr-3 py-2.5 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                placeholder="ABC Roofing Co."
+              />
+            </div>
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-1.5" htmlFor="notif-phone">
+              Notification Phone
+            </label>
+            <div className="relative">
+              <Phone className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" aria-hidden="true" />
+              <input
+                id="notif-phone"
+                type="tel"
+                className="w-full border border-gray-200 rounded-lg pl-9 pr-3 py-2.5 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                value={notificationPhone}
+                onChange={(e) => setNotificationPhone(e.target.value)}
+                placeholder="+1 555 000 0000"
+              />
+            </div>
+            <p className="text-xs text-gray-400 mt-1.5">
+              You&apos;ll receive an SMS here whenever a lead is qualified.
+            </p>
+          </div>
+        </div>
+        <div className="flex items-center gap-3 mt-6">
+          <Button onClick={save} disabled={saving} size="sm">
+            {saving ? "Saving…" : "Save Changes"}
+          </Button>
+          {saved && <span className="text-sm text-green-600 font-medium">Saved!</span>}
+        </div>
+      </div>
+
+      {/* Lead form config */}
+      {widgetId && (
+        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 mb-4">
+          <h2 className="font-semibold text-slate-900 mb-1">Lead Form</h2>
+          <p className="text-sm text-gray-500 mb-5">
+            Customize what services appear in your form dropdown and the opening question the AI asks.
+          </p>
+
+          <div className="mb-5">
+            <label className="block text-sm font-medium text-slate-700 mb-1.5">
+              AI Opening Question
+            </label>
+            <input
+              className="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              value={intakeQuestion}
+              onChange={(e) => setIntakeQuestion(e.target.value)}
+              placeholder="What type of roofing issue are you dealing with?"
+            />
+            <p className="text-xs text-gray-400 mt-1.5">
+              This is the first question the AI texts to the lead after form submission.
+            </p>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-2">
+              Services
+            </label>
+            <div className="space-y-2 mb-3">
+              {services.map((service, i) => (
+                <div key={i} className="flex items-center gap-2">
+                  <input
+                    className="flex-1 border border-gray-200 rounded-lg px-3 py-2 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    value={service.label}
+                    onChange={(e) => updateService(i, e.target.value)}
+                    placeholder="e.g. Roof Repair"
+                  />
+                  <button
+                    onClick={() => removeService(i)}
+                    className="text-gray-400 hover:text-red-500 transition-colors p-1"
+                    aria-label="Remove service"
+                  >
+                    <X className="h-4 w-4" />
+                  </button>
+                </div>
+              ))}
+            </div>
+            <button
+              onClick={addService}
+              className="flex items-center gap-1.5 text-sm text-blue-600 hover:text-blue-700 font-medium"
+            >
+              <Plus className="h-4 w-4" />
+              Add service
+            </button>
+          </div>
+
+          <div className="flex items-center gap-3 mt-6">
+            <Button onClick={saveFormConfig} disabled={savingForm} size="sm">
+              {savingForm ? "Saving…" : "Save Form Settings"}
+            </Button>
+            {savedForm && <span className="text-sm text-green-600 font-medium">Saved!</span>}
+          </div>
+        </div>
+      )}
+
+      {/* Embed code */}
+      {widgetKey && (
+        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
+          <div className="flex items-center gap-2 mb-2">
+            <Code className="h-4 w-4 text-gray-400" aria-hidden="true" />
+            <h2 className="font-semibold text-slate-900">Your Embed Code</h2>
+          </div>
+          <p className="text-sm text-gray-500 mb-4">
+            Paste this snippet anywhere on your website to show the lead form.
+          </p>
+          <div className="bg-slate-900 rounded-xl p-4 text-green-400 text-xs font-mono break-all mb-3">
+            {embedCode}
+          </div>
+          <Button variant="outline" size="sm" onClick={copyEmbed}>
+            {copied ? "Copied!" : "Copy Code"}
+          </Button>
+        </div>
+      )}
     </div>
   );
 }

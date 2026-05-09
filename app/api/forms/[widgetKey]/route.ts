@@ -16,7 +16,7 @@ export async function POST(
 
   const { data: widget } = await supabase
     .from("form_widgets")
-    .select("business_id, businesses(name)")
+    .select("business_id, intake_question, businesses(name)")
     .eq("widget_key", widgetKey)
     .single();
 
@@ -25,6 +25,7 @@ export async function POST(
   }
 
   const businessName = (widget.businesses as any)?.name ?? "the team";
+  const intakeQuestion = widget.intake_question ?? "What type of roofing issue are you dealing with?";
 
   const { data: lead, error } = await supabase
     .from("leads")
@@ -45,7 +46,7 @@ export async function POST(
 
     // Send greeting SMS to the lead
     if (phone) {
-        const greeting = `Hi ${name ?? "there"}! Thanks for reaching out to ${businessName}. I have a few quick questions to make sure we can help you. What type of roofing issue are you dealing with? (repair, replacement, storm damage, or inspection)`;
+        const greeting = `Hi ${name ?? "there"}! Thanks for reaching out to ${businessName}. I have a few quick questions to make sure we can help you. ${intakeQuestion}`;
         try {
           await sendSMS(phone, greeting);
         } catch (err) {
