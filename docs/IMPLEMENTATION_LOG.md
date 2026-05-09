@@ -35,6 +35,37 @@ Why this change was made.
 
 ---
 
+## 2026-05-09 — Phase 0C — Twilio webhook signature validation
+
+**Task:** Phase 0C from `IMPLEMENTATION_PLAN.md`
+**Status:** completed
+
+**Files changed:**
+- `app/api/webhooks/twilio/route.ts` (modified — validates Twilio webhook signatures before trusting request params)
+- `.env.example` (modified — documents optional local-only `TWILIO_VALIDATE_REQUESTS=false` bypass)
+- `.gitignore` (modified — explicitly allows `.env.example` to be committed while real `.env*` files stay ignored)
+
+**Reason:**
+The Twilio webhook endpoint was public, which is correct for Twilio delivery, but it trusted any POST body that looked like a Twilio request. That meant a spoofed request could inject lead messages, trigger AI calls, or cause outbound SMS. Added official Twilio request validation using `twilio.validateRequest()` before any lead lookup, message insert, AI call, or SMS send.
+
+Validation is enabled by default. Local manual testing can set `TWILIO_VALIDATE_REQUESTS=false`, but production should leave it unset.
+
+**Verification performed:**
+- **typecheck (`npx tsc --noEmit`):** clean — no output. ✅
+- **build (`npm run build`):** ✓ Compiled successfully in 6.0s. All 19 routes detected. ✅
+- **lint (`npm run lint`):** failed with 17 errors + 3 warnings — existing lint debt, no new Twilio-route lint errors. Known categories: `any` types in form/lead pages, unescaped legal-page copy, unused `intakeQuestion` plumbing.
+- **manual smoke test:** started temporary Next dev server on port 3010 with validation forced on; unsigned fake POST to `/api/webhooks/twilio` returned `403`. ✅
+
+**Follow-up needed:**
+- After deploy, send a real inbound SMS through Twilio to confirm Twilio-signed requests still pass.
+- Confirm Vercel production does **not** set `TWILIO_VALIDATE_REQUESTS=false`.
+
+**Notes / surprises:**
+- Twilio validation depends on the exact public URL and POST params. The handler reconstructs the public URL from forwarded headers (`x-forwarded-proto`, `x-forwarded-host`) with safe fallbacks for local dev.
+- The first local smoke-test attempt used `npm run dev -- -p 3010`; PowerShell/npm did not preserve the port argument as expected. Retried by invoking Next directly with Node, then killed the temporary process tree.
+- Caught that `.env.example` was still ignored by `.env*`; added `!.env.example` so the safe template is tracked without exposing real env files.
+
+---
 ## 2026-05-09 — Phase 0B — Clerk middleware (proxy.ts)
 
 **Task:** Phase 0B from `IMPLEMENTATION_PLAN.md`

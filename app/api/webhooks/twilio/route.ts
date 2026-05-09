@@ -1,12 +1,46 @@
 import { NextRequest, NextResponse } from "next/server";
+import twilio from "twilio";
 import { getAdminClient } from "@/lib/supabase/admin";
 import { generateConversationReply, generateLeadSummary } from "@/lib/ai";
 import { sendSMS } from "@/lib/twilio";
+
+function getTwilioValidationUrl(req: NextRequest) {
+  const requestUrl = new URL(req.url);
+  const protocol =
+    req.headers.get("x-forwarded-proto") ??
+    requestUrl.protocol.replace(":", "");
+  const host =
+    req.headers.get("x-forwarded-host") ??
+    req.headers.get("host") ??
+    requestUrl.host;
+
+  return `${protocol}://${host}${requestUrl.pathname}${requestUrl.search}`;
+}
+
+function shouldValidateTwilioRequest() {
+  return process.env.TWILIO_VALIDATE_REQUESTS !== "false";
+}
 
 export async function POST(req: NextRequest) {
   const supabase = getAdminClient();
   const body = await req.text();
   const params = Object.fromEntries(new URLSearchParams(body));
+
+  // Twilio signs the exact public URL and POST params. Validate after reading
+  // the raw form body, before trusting From/Body or touching lead data.
+  if (shouldValidateTwilioRequest()) {
+    const signature = req.headers.get("x-twilio-signature");
+    const authToken = process.env.TWILIO_AUTH_TOKEN;
+    const validationUrl = getTwilioValidationUrl(req);
+
+    if (
+      !signature ||
+      !authToken ||
+      !twilio.validateRequest(authToken, signature, validationUrl, params)
+    ) {
+      return new NextResponse("Forbidden", { status: 403 });
+    }
+  }
 
   const from = params.From;
   const text = params.Body?.trim();

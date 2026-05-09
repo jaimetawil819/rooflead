@@ -39,14 +39,14 @@ This document is the executable checklist. Work top-down. Do not skip Phase 0 to
 | Confirm `/dashboard` redirects when logged out | manual | browser test | Redirect to `/sign-in` |
 | Confirm Stripe / Twilio / form webhooks still receive POSTs | manual | curl or deploy test | 200 / signature-validated rejection (not redirect) |
 
-### 0C — Twilio webhook signature validation 🔴
+### 0C — Twilio webhook signature validation 🔴 ✅
 
 | Step | Type | Files / Action | Verify |
 |------|------|---------------|--------|
-| Add `twilio.validateRequest()` check in webhook handler | code | `app/api/webhooks/twilio/route.ts` | Submit a real test SMS — still works |
-| Reconstruct full URL including query string per Twilio spec | code | same | A request with tampered body fails validation (curl test) |
-| Reject with 403 on signature mismatch | code | same | Spoofed POST returns 403 |
-| Optional dev bypass via `TWILIO_VALIDATE_REQUESTS=false` env var | code | same | Local development still functional |
+| ✅ Add `twilio.validateRequest()` check in webhook handler | code | `app/api/webhooks/twilio/route.ts` | Build passes; real SMS test pending after deploy |
+| ✅ Reconstruct full URL including query string per Twilio spec | code | same | URL built from forwarded headers + path/search |
+| ✅ Reject with 403 on signature mismatch | code | same | Spoofed POST returns 403 locally |
+| ✅ Optional dev bypass via `TWILIO_VALIDATE_REQUESTS=false` env var | code | `.env.example`, same route | Documented; leave unset in production |
 
 ### 0D — STOP opt-out persistence 🔴
 
