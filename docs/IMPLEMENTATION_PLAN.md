@@ -1,223 +1,233 @@
-# Implementation Plan — RoofLead
+# Implementation Plan - RoofLead
 
-**Plan created:** 2026-05-09
-**Source audit:** `docs/PROJECT_AUDIT.md`
+**Created:** 2026-05-09
+**Last updated:** 2026-05-10
 **Tracker:** `docs/IMPLEMENTATION_LOG.md`
 
-This document is the executable checklist. Work top-down. Do not skip Phase 0 to reach Phase 2 features.
-
-**Risk legend:**
-- 🟢 **Low** — additive change, no migration, easy rollback
-- 🟡 **Medium** — touches a hot path, schema change, or external dashboard
-- 🔴 **High** — affects production data, auth surface, or money flow
-
-**Change-type legend:**
-- `code` — TypeScript / TSX files
-- `sql` — Supabase migration
-- `dashboard` — Manual configuration in Supabase / Stripe / Twilio / Vercel UI
-- `manual` — Action user must perform (rotate secret, run command, etc.)
+This is the execution checklist. Work one slice at a time, verify, commit, then move on.
 
 ---
 
-## Phase 0 — Safety & Security (must complete before pilot customer)
+## Status summary
 
-### 0A — Repo safety & structure 🟢
+Phase 0 is complete. Phase 1 is in progress and has already closed several reliability gaps:
 
-| Step | Type | Files / Action | Verify |
-|------|------|---------------|--------|
-| Verify `.gitignore` ignores `.env*` | code | `.gitignore` | `git check-ignore .env.local` returns the path |
-| Add `.env.example` from variable names used in code | code | new `.env.example` | `npm run build` still succeeds; file shows every name without secret values |
-| Create `lib/supabase/admin.ts` shared service-role client | code | new `lib/supabase/admin.ts` | Import from one route, build passes |
-| Replace duplicated admin client instantiation in API routes | code | `app/api/forms/[widgetKey]/route.ts`, `app/api/forms/[widgetKey]/config/route.ts`, `app/api/webhooks/twilio/route.ts`, `app/api/webhooks/stripe/route.ts`, `app/api/billing/checkout/route.ts`, `app/api/cron/follow-up/route.ts` | Build passes; webhook + form endpoints behave identically |
-
-### 0B — Clerk middleware 🟡 ✅
-
-| Step | Type | Files / Action | Verify |
-|------|------|---------------|--------|
-| ✅ Add `clerkMiddleware` with deny-by-default public-route list | code | `proxy.ts` (Next.js 16 uses proxy.ts, not middleware.ts) | Build ✓; `ƒ Proxy (Middleware)` in route table |
-| ✅ Define public routes (`/`, `/sign-in`, `/sign-up`, `/privacy`, `/terms`, `/api/forms/*`, `/api/webhooks/*`, `/api/cron/*`, `/test-form/*`) | code | `proxy.ts` matcher | All routes compile |
-| Confirm `/dashboard` redirects when logged out | manual | browser test | Redirect to `/sign-in` |
-| Confirm Stripe / Twilio / form webhooks still receive POSTs | manual | curl or deploy test | 200 / signature-validated rejection (not redirect) |
-
-### 0C — Twilio webhook signature validation 🔴 ✅
-
-| Step | Type | Files / Action | Verify |
-|------|------|---------------|--------|
-| ✅ Add `twilio.validateRequest()` check in webhook handler | code | `app/api/webhooks/twilio/route.ts` | Build passes; real SMS test pending after deploy |
-| ✅ Reconstruct full URL including query string per Twilio spec | code | same | URL built from forwarded headers + path/search |
-| ✅ Reject with 403 on signature mismatch | code | same | Spoofed POST returns 403 locally |
-| ✅ Optional dev bypass via `TWILIO_VALIDATE_REQUESTS=false` env var | code | `.env.example`, same route | Documented; leave unset in production |
-
-### 0D — STOP opt-out persistence 🔴 ✅
-
-| Step | Type | Files / Action | Verify |
-|------|------|---------------|--------|
-| ✅ Migration: create `sms_opt_outs` table | sql | new `supabase/migrations/0002_sms_opt_outs.sql` | Applied in Supabase SQL Editor |
-| ✅ Update Twilio webhook to insert opt-out + update lead on STOP/UNSUBSCRIBE/CANCEL/END/QUIT | code | `app/api/webhooks/twilio/route.ts` | Typecheck/build pass; real SMS STOP test pending after deploy |
-| ✅ Update follow-up cron to skip opted-out phones | code | `app/api/cron/follow-up/route.ts` | Typecheck/build pass |
-| ✅ Update form-greeting send to skip opted-out phones | code | `app/api/forms/[widgetKey]/route.ts` | Typecheck/build pass |
-
-### 0E — Schema / migrations 🟡 ✅
-
-| Step | Type | Files / Action | Verify |
-|------|------|---------------|--------|
-| ✅ Create `supabase/migrations/` directory | code | existing dir | Folder exists |
-| ✅ Capture current schema as `0001_initial_baseline.sql` | manual + sql | User ran Supabase CLI dump from remote project | File committed; schema reproducible |
-| ✅ Add `0002_sms_opt_outs.sql` (Phase 0D) | sql | `supabase/migrations/0002_sms_opt_outs.sql` | Migration applied in Supabase SQL Editor |
-| ✅ Add a brief `supabase/migrations/README.md` describing apply order | code | new file | Explains apply order, baseline capture, and SQL Editor workflow |
-
-### 0F — Form endpoint hardening 🟡 ✅
-
-| Step | Type | Files / Action | Verify |
-|------|------|---------------|--------|
-| ✅ Validate required fields (name, phone) | code | `app/api/forms/[widgetKey]/route.ts`, `lib/form-validation.ts` | Empty payload returns 400 |
-| ✅ Length caps (name ≤ 100, phone ≤ 20, address ≤ 250, serviceType ≤ 50) | code | `lib/form-validation.ts` | Oversized field values are trimmed/capped; body >5KB rejected |
-| ✅ Strip control chars from text inputs | code | `lib/form-validation.ts` | Control chars normalized to spaces before insert |
-| ✅ Normalize phone to E.164 | code | `lib/phone.ts`, form route | `(619) 555-1234` stores/sends as `+16195551234` |
-| ✅ Scaffold rate limiter behind `RATE_LIMIT_ENABLED` env flag | code | `lib/rate-limit.ts`, form route, `.env.example` | When enabled, repeat request returns 429; when disabled, no-op |
-| ✅ Document limiter setup/limits in `IMPLEMENTATION_LOG.md` | code | log entry | Notes that current limiter is in-memory MVP guard, not production abuse prevention |
-
-### 0G — Conversation completion via tool use 🟡 ✅
-
-| Step | Type | Files / Action | Verify |
-|------|------|---------------|--------|
-| ✅ Replace `reply.includes(...)` with Anthropic tool-use (define `complete_intake` tool) | code | `lib/ai.ts`, `app/api/webhooks/twilio/route.ts` | Typecheck/build pass; real SMS completion test pending |
-| ✅ Fall back gracefully when no tool call returned | code | same | Text response is sent normally with `isComplete: false` |
-
-### 0H — Manual: secret rotation 🔴 checklist ready
-
-Checklist (user runs this off-Claude):
-- Use `docs/SECRET_ROTATION_CHECKLIST.md`
-- Rotate Supabase service role key + anon key
-- Rotate Twilio Auth Token
-- Rotate Anthropic API key
-- Rotate Stripe secret key + webhook signing secret
-- Rotate Clerk secret key
-- Rotate `CRON_SECRET`
-- Update all values in `.env.local`, Vercel, and cron-job.org
-- Redeploy: `npx.cmd vercel --prod`
-- Verify auth, checkout, form submit, SMS, inbound webhook, STOP opt-out, and cron
+- Stripe lifecycle + billing portal
+- Stripe webhook idempotency
+- Twilio inbound message idempotency
+- Form duplicate guard
+- Structured lead extraction
+- AI fallback/length guardrails
+- Local inbound SMS simulator
+- Summary parser hardening
+- Renter/unqualified status handling
 
 ---
 
-## Phase 1 — Reliability & Backend Correctness (within 2 weeks of first customer)
+## Phase 0 - Safety and security
 
-### 1A — Structured lead extraction 🟡
-- `lib/ai.ts` `generateLeadSummary` returns `{ summary, score, urgency, timeline, service_type, is_homeowner }`
-- Migration adds `urgency`, `timeline`, `is_homeowner` columns to `leads`
-- Webhook persists structured fields
-- Verify: completed conversation populates all columns
+**Status:** Complete, with provider-side manual checks still required before real customer usage.
 
-### 1B — Phone normalization (deferred to here if not done in 0F) 🟡
+Completed:
+- `.env*` ignored and `.env.example` created.
+- Shared Supabase admin client added.
+- API routes use server-side service-role client where needed.
+- Next.js 16 `proxy.ts` is deny-by-default.
+- Public routes limited to marketing/auth/legal/forms/webhooks/cron/test form.
+- Twilio webhook signature validation added.
+- STOP/UNSUBSCRIBE/CANCEL/END/QUIT opt-outs persist.
+- Form endpoint validates name/phone, caps input sizes, normalizes phone, rejects >5KB body.
+- In-memory form rate-limit scaffold added behind env flags.
+- Supabase migrations added.
+- RLS hardened by `0003_secure_rls.sql`.
+- Dashboard private data moved behind protected API routes.
+- AI completion moved to Anthropic tool use.
+- Secret rotation checklist created.
 
-### 1C — Asynchronous webhook processing 🔴
-- Twilio webhook returns TwiML immediately; defers AI call to background
-- Options: Inngest, Upstash QStash, or self-call `/api/process-message` with fire-and-forget fetch
-- Verify: webhook responds in <500ms even when Anthropic is slow
-
-### 1D — Stripe lifecycle events 🟡
-- Add `customer.subscription.updated` handler — sync `subscription_status`
-- Add `invoice.payment_failed` handler — flag `past_due`
-- Add `event.id` idempotency check via `stripe_events` log table
-- Verify: trigger via Stripe CLI; DB reflects state changes
-
-### 1E — Stripe customer portal 🟢
-- New route `app/api/billing/portal/route.ts` calling `stripe.billingPortal.sessions.create()`
-- Add "Manage Billing" link in dashboard sidebar
-- Verify: customer can update card, cancel subscription, view invoices
-
-### 1F — Pro tier checkout 🟡
-- Add `STRIPE_PRICE_ID_PRO` env var
-- `app/subscribe/page.tsx` shows tier selector
-- `app/api/billing/checkout/route.ts` accepts `priceId` param
-
-### 1G — Idempotency 🟡
-- Add `twilio_sid` unique column to messages
-- Form endpoint checks for existing lead with same `phone + business_id` in last 5 minutes
-- Verify: replaying webhook does not duplicate messages
-
-### 1H — Prompt injection mitigation 🟢
-- Move user-provided strings (business name, intake question) out of system prompt
-- Pass via assistant context message instead, with delimiter
-- Verify: a malicious intake question containing "ignore prior instructions" does not jailbreak
-
-### 1I — Conversation length cap 🟢
-- If `messageHistory.length > 20`, skip AI generation; force completion + summary
-- Verify: 21-message conversation auto-completes
-
-### 1J — Mid-conversation timeout 🟢
-- Add `last_message_at` column to leads
-- Cron job force-completes leads idle for 24h
-- Verify: stale lead auto-summarizes after 24h
-
-### 1K — Structured logging 🟢
-- Add request ID per webhook invocation
-- Strip PII from error logs
-- Optional: integrate Sentry or Vercel log drain
-
-### 1L — `intakeQuestion` parameter is accepted but never used 🟢 partial
-- Discovered during Phase 0A lint pass.
-- ✅ `lib/ai.ts` now uses `intakeQuestion` in the conversation prompt.
-- Remaining issue in `public/embed.js:15` — variable extracted from config but never rendered.
-- Files: `lib/ai.ts`, `public/embed.js`
-- Verify: change intake question in Settings → submit a test lead → first AI reply uses the configured question
+Manual checks:
+- Ensure `TWILIO_VALIDATE_REQUESTS` is not `false` in Vercel production.
+- Keep rotated provider secrets in Vercel and `.env.local`.
+- Run production smoke tests after each deploy.
 
 ---
 
-## Phase 2 — Product Improvements
+## Phase 1 - Reliability and backend correctness
 
-### 2A — Twilio number per business 🔴
-- Twilio API: provision local number on subscription start
-- Store `twilio_phone` per business
-- Webhook routes by `params.To` instead of phone-only lookup
-- Update billing to charge $1/mo extra per number
+### 1A - Stripe lifecycle and portal - Complete
 
-### 2B — Human handoff 🟡
-- Dashboard button "Take Over" pauses AI for that lead
-- Manual reply box on lead detail sends SMS via Twilio
-- Status shows "Owner replying"
+Files:
+- `app/api/webhooks/stripe/route.ts`
+- `app/api/billing/portal/route.ts`
+- `app/dashboard/settings/page.tsx`
+- `supabase/migrations/0004_stripe_billing_hardening.sql`
 
-### 2C — ROI metric 🟢
-- Dashboard counter: "X leads responded to in <60s this month"
-- Reinforces subscription value
+Implemented:
+- `checkout.session.completed`
+- `customer.subscription.created`
+- `customer.subscription.updated`
+- `customer.subscription.deleted`
+- `invoice.payment_failed`
+- `stripe_events` idempotency
+- Stripe customer billing portal
 
-### 2D — Email fallback 🟡
-- Resend integration; if SMS fails twice, send email if available
+Verify:
+- Checkout unlocks dashboard.
+- Manage Billing opens Stripe portal.
+- Duplicate webhook event does not reprocess.
+- Subscription update/cancel/payment-failed events update `businesses.subscription_status`.
 
-### 2E — Code cleanup 🟢
-- Extract `lib/lead-colors.ts`
-- Generate Supabase types: `npx supabase gen types typescript --project-id ...`
-- Replace `any` in lead detail page
+### 1B - Twilio and form idempotency - Complete
 
-### 2F — Onboarding upsert refactor 🟢
-- Server action with proper conflict resolution
-- Remove the upsert-then-fetch pattern
+Files:
+- `app/api/webhooks/twilio/route.ts`
+- `app/api/forms/[widgetKey]/route.ts`
+- `supabase/migrations/0005_twilio_message_idempotency.sql`
 
-### 2G — Lead list pagination 🟢
-- 50 leads per page; URL param `?page=`
+Implemented:
+- `messages.twilio_message_sid`
+- Unique partial index for non-null Twilio SIDs
+- Duplicate Twilio SID skip before AI/SMS work
+- Same business + same phone within 5 minutes returns existing lead
+
+Verify:
+- Reuse the same simulator `--sid` twice; only one user message/AI reply appears.
+- Submit the same form twice quickly; only one lead is created.
+
+### 1C - Structured lead extraction - Complete
+
+Files:
+- `lib/ai.ts`
+- `app/api/webhooks/twilio/route.ts`
+- `app/dashboard/leads/[id]/page.tsx`
+- `supabase/migrations/0006_structured_lead_extraction.sql`
+
+Implemented fields:
+- `urgency`
+- `timeline`
+- `is_homeowner`
+- `qualification_reason`
+
+Implemented behavior:
+- Completed conversations persist structured fields.
+- Lead detail displays structured fields and score reason.
+- Renter/unqualified completed leads become `junk`, not `qualified`.
+- Parser tolerates JSON wrapped in markdown/code-fence/prefix text.
+
+Verify:
+- Use `npm run simulate:inbound` to complete a test conversation.
+- Confirm summary is readable and fields are populated.
+- Confirm renter lead becomes `junk`.
+
+### 1D - AI reliability guardrails - Complete
+
+Files:
+- `lib/ai.ts`
+
+Implemented:
+- Blank AI reply fallback
+- Anthropic conversation error fallback
+- Anthropic summary error fallback
+- 20-message conversation cap with handoff reply
+- Safer logs without full transcript output
+
+Verify:
+- Typecheck/lint/build pass.
+- After A2P approval, run live SMS test to confirm normal completion still works.
+
+### 1E - Manual inbound SMS simulator - Complete
+
+Files:
+- `scripts/simulate-inbound.mjs`
+- `docs/MANUAL_TESTING.md`
+- `package.json`
+
+Command:
+
+```powershell
+npm run simulate:inbound -- --from +16195551234 --body "I need roof repair ASAP"
+```
+
+Purpose:
+- Test the real signed Twilio webhook locally before A2P approval.
+- Exercise AI replies, DB writes, structured extraction, and duplicate `MessageSid` behavior.
+
+### 1F - Async Twilio webhook processing - Next recommended
+
+Problem:
+- Current webhook still waits for Anthropic and outbound SMS before returning.
+- Slow provider calls can trigger Twilio retries.
+
+Likely files:
+- `app/api/webhooks/twilio/route.ts`
+- New protected internal route or job processor
+- Possibly a `message_jobs` / `inbound_events` table if using DB-backed queue
+
+Goal:
+- Validate Twilio signature and persist inbound event quickly.
+- Return TwiML fast.
+- Process AI reply in background or via internal async route.
+
+### 1G - Prompt injection mitigation - Pending
+
+Problem:
+- Business name, service list, and intake question are interpolated into the system prompt.
+
+Goal:
+- Treat configurable business strings as untrusted context, not instructions.
+- Add delimiters and prompt rules.
+
+### 1H - Mid-conversation timeout - Pending
+
+Problem:
+- Leads that stop replying can remain `new`.
+
+Goal:
+- Track `last_message_at`.
+- Cron marks stale conversations as `unresponsive` or summarizes partial info after a timeout.
+
+### 1I - Structured logging - Pending
+
+Problem:
+- Debugging production failures will be difficult.
+
+Goal:
+- Add request IDs and safe logs.
+- Avoid logging full PII transcripts.
+- Optional later: Sentry.
 
 ---
 
-## Phase 3 — Scale & Polish
+## Phase 2 - Product improvements
 
-- Multiple notification phones per business
-- Configurable AI persona name
-- Photo upload via MMS
-- Conversation search
-- Zapier / CRM webhook
-- Supabase realtime dashboard updates
-- Dark mode
-- Consolidate planning docs (`PRODUCT_BRIEF.md` etc.) into rooflead repo `docs/`
-- Custom domain + DNS
-- Switch Stripe to live mode
-- Production Clerk instance (currently using dev keys `pk_test_`)
+Do not start until at least one pilot workflow is stable.
+
+- Human handoff / owner takeover
+- Manual owner SMS reply from dashboard
+- Scheduling/inspection booking
+- ROI metrics
+- Email fallback
+- Twilio number per business
+- Lead list pagination
+- Search/filter improvements
+- CRM/Zapier/webhook export
 
 ---
 
-## How to use this plan
+## Phase 3 - Scale and polish
 
-1. Open `docs/IMPLEMENTATION_LOG.md` and add an entry as you start each task.
-2. Complete one task at a time. Run typecheck/build after each.
-3. Mark the task ✅ in this file when verified.
-4. If a task uncovers a new issue, add it to the appropriate phase here.
-5. Never skip Phase 0 to reach Phase 1+.
+- Custom domain
+- Production Clerk instance
+- Stripe live mode
+- Better onboarding
+- Multiple notification phones
+- Photo/MMS intake
+- Realtime dashboard updates
+- Consolidate old off-repo planning docs
+
+---
+
+## Current next action
+
+Recommended next engineering slice: **1F - Async Twilio webhook processing**.
+
+Reason: it is the biggest remaining backend reliability risk. The simulator now gives us a way to test most of the webhook logic without waiting for A2P approval.

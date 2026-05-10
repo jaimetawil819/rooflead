@@ -35,6 +35,32 @@ Why this change was made.
 
 ---
 
+## 2026-05-10 - Phase 1 - Status documentation refresh
+
+**Task:** Analyze current Phase 1 progress and update project docs.
+**Status:** completed
+
+**Files changed:**
+- `docs/PROJECT_AUDIT.md` (rewritten to current state)
+- `docs/IMPLEMENTATION_PLAN.md` (rewritten to current Phase 1 checklist)
+- `README.md` (rewritten from default Next.js README)
+- `docs/IMPLEMENTATION_LOG.md` (updated recent verification statuses)
+
+**Reason:**
+Phase 1 moved quickly: Stripe correctness, idempotency, structured extraction, AI guardrails, manual simulation, and summary parsing fixes were implemented, but the docs still described old Phase 0 blockers and pending Phase 1 tasks. This refresh makes the repo documentation match the current code and migrations.
+
+**Verification performed:**
+- Current code/migrations compared against `docs/IMPLEMENTATION_PLAN.md`.
+- Git history checked through `phase 1 manual simulator and ai qualification fixes`.
+
+**Follow-up needed:**
+- Continue with async Twilio webhook processing as the next recommended Phase 1 slice.
+
+**Notes / surprises:**
+- `README.md` was still the default create-next-app README, so it has been replaced with RoofLead-specific setup and testing instructions.
+
+---
+
 ## 2026-05-10 - Phase 1 - Manual inbound SMS simulator
 
 **Task:** Add local test utility for AI conversation flow while A2P approval is pending.
@@ -50,10 +76,14 @@ Why this change was made.
 A2P approval blocks full live SMS testing, but we still need a way to test the actual Twilio webhook path, AI replies, structured extraction, and duplicate `MessageSid` handling. This utility signs a local webhook request with the Twilio auth token from `.env.local` and posts it to `/api/webhooks/twilio`, exercising the real route without creating a new public dev endpoint.
 
 **Verification performed:**
-- Pending final typecheck/lint/build in this session.
+- `npm run simulate:inbound -- --help`: clean.
+- `npx.cmd tsc --noEmit`: clean.
+- `npm.cmd run lint`: clean.
+- `npm.cmd run build`: clean.
+- Manual simulator was used to complete test conversations while A2P approval was pending.
 
 **Follow-up needed:**
-- Use `docs/MANUAL_TESTING.md` to simulate a complete conversation against a test lead.
+- After A2P approval, compare simulator behavior against a real SMS conversation.
 
 **Notes / surprises:**
 - The simulator contains no hardcoded credentials or phone numbers.
@@ -73,10 +103,13 @@ A2P approval blocks full live SMS testing, but we still need a way to test the a
 Manual inbound simulation showed the AI summary card displaying a raw JSON blob instead of the parsed summary. The summary model returned JSON with extra formatting/prefix text, so strict `JSON.parse(text)` failed and the fallback stored the whole blob as the summary. The parser now strips common markdown/code-fence wrappers, removes a leading `json` label, extracts the first balanced JSON object, and then parses it.
 
 **Verification performed:**
-- Pending final typecheck/lint/build in this session.
+- `npx.cmd tsc --noEmit`: clean.
+- `npm.cmd run lint`: clean.
+- `npm.cmd run build`: clean.
+- Manual simulator re-test confirmed the AI Summary card shows readable summary text instead of raw JSON.
 
 **Follow-up needed:**
-- Re-run the simulator on a new test lead and confirm the lead detail page shows a normal summary plus structured fields.
+- Continue watching summary output during real SMS tests after A2P approval.
 
 **Notes / surprises:**
 - The summary prompt now explicitly asks for raw JSON only, but the parser is tolerant because model output can still drift.
@@ -96,7 +129,9 @@ Manual inbound simulation showed the AI summary card displaying a raw JSON blob 
 Live SMS testing is blocked while A2P approval is pending, but we can still make the AI layer safer. Before this change, an empty Anthropic response could produce an empty outbound SMS, and Anthropic API failures could bubble up through the webhook path. Long conversations could also keep looping indefinitely. This change adds a blank-response fallback, catches Anthropic failures with a safe SMS response or manual-review summary, and caps conversations at 20 messages with a handoff reply.
 
 **Verification performed:**
-- Pending final typecheck/lint/build in this session.
+- `npx.cmd tsc --noEmit`: clean.
+- `npm.cmd run lint`: clean.
+- `npm.cmd run build`: clean.
 
 **Follow-up needed:**
 - After A2P approval, complete a live SMS conversation and confirm fallback behavior does not interfere with normal completion.
@@ -109,7 +144,7 @@ Live SMS testing is blocked while A2P approval is pending, but we can still make
 ## 2026-05-10 - Phase 1 - Structured lead extraction
 
 **Task:** Phase 1 structured lead extraction.
-**Status:** code prepared; Supabase SQL migration still requires manual application
+**Status:** completed locally; live SMS verification still pending A2P approval
 
 **Files changed:**
 - `supabase/migrations/0006_structured_lead_extraction.sql` (added)
@@ -123,11 +158,14 @@ Live SMS testing is blocked while A2P approval is pending, but we can still make
 Completed AI conversations previously stored only a free-text summary and lead score. That is useful for a demo, but not strong enough for follow-up workflows, filtering, scheduling, or CRM-style reporting. This change makes the summary step return structured fields: score, urgency, timeline, homeowner status, and qualification reason. The Twilio webhook persists those fields when a lead is qualified, and the lead detail page displays them.
 
 **Verification performed:**
-- Pending final typecheck/lint/build in this session.
+- `npx.cmd tsc --noEmit`: clean.
+- `npm.cmd run lint`: clean.
+- `npm.cmd run build`: clean.
+- Manual simulator completed conversations and populated readable summaries/score reasons.
+- Renter/unqualified scenario exposed a status bug; follow-up patch now maps renter/unqualified completed leads to `junk`.
 
 **Follow-up needed:**
-- Apply `supabase/migrations/0006_structured_lead_extraction.sql` in Supabase SQL Editor before deploying this webhook change.
-- Complete a test SMS conversation and verify `urgency`, `timeline`, `is_homeowner`, and `qualification_reason` populate on the lead record.
+- After A2P approval, complete a real SMS conversation and confirm fields populate through live Twilio traffic.
 
 **Notes / surprises:**
 - Existing leads will show blank structured fields until they complete a new AI conversation or are backfilled later.
@@ -137,7 +175,7 @@ Completed AI conversations previously stored only a free-text summary and lead s
 ## 2026-05-10 - Phase 1 - Twilio and form idempotency
 
 **Task:** Phase 1 message and lead duplicate protection.
-**Status:** code prepared; Supabase SQL migration still requires manual application
+**Status:** completed locally; production duplicate replay verification still recommended
 
 **Files changed:**
 - `supabase/migrations/0005_twilio_message_idempotency.sql` (added)
@@ -150,12 +188,14 @@ Completed AI conversations previously stored only a free-text summary and lead s
 Twilio may retry webhook delivery, and browsers/users may submit the public form more than once. Before this change, duplicate Twilio delivery could insert duplicate inbound messages and trigger a second AI/SMS reply. Duplicate form submissions could create duplicate leads and send duplicate greetings. This change stores Twilio `MessageSid` values on inbound messages and skips already-processed SIDs before AI work. It also treats a same-business, same-phone form submission within five minutes as a duplicate and returns the existing lead.
 
 **Verification performed:**
-- Pending final typecheck/lint/build in this session.
+- `npx.cmd tsc --noEmit`: clean.
+- `npm.cmd run lint`: clean.
+- `npm.cmd run build`: clean.
+- Manual simulator supports duplicate `--sid` testing.
 
 **Follow-up needed:**
-- Apply `supabase/migrations/0005_twilio_message_idempotency.sql` in Supabase SQL Editor before deploying this webhook change.
-- Replay the same Twilio webhook payload with the same `MessageSid` and confirm it does not create another message or AI reply.
-- Submit the same test form twice within five minutes and confirm only one lead is created.
+- Re-test duplicate `MessageSid` behavior after production deploy.
+- Re-test duplicate form submission after production deploy.
 
 **Notes / surprises:**
 - STOP opt-outs may update multiple matching active leads, but only one stored message receives the Twilio SID so duplicate webhook delivery is still detected.
@@ -165,7 +205,7 @@ Twilio may retry webhook delivery, and browsers/users may submit the public form
 ## 2026-05-10 - Phase 1 - Stripe billing correctness
 
 **Task:** Phase 1 Stripe lifecycle and customer billing management.
-**Status:** code prepared; Supabase SQL migration and Stripe dashboard tests still required
+**Status:** completed locally; provider dashboard event tests still recommended
 
 **Files changed:**
 - `supabase/migrations/0004_stripe_billing_hardening.sql` (added)
@@ -180,12 +220,12 @@ The original Stripe webhook only marked a business active after checkout and can
 **Verification performed:**
 - `npx.cmd tsc --noEmit`: clean.
 - `npm.cmd run lint`: clean.
+- `npm.cmd run build`: clean.
+- User confirmed billing flow appeared to work locally.
 
 **Follow-up needed:**
-- Apply `supabase/migrations/0004_stripe_billing_hardening.sql` in Supabase SQL Editor before deploying this webhook change.
 - In Stripe Dashboard, configure the customer portal if Stripe asks for portal settings.
-- Trigger/test `checkout.session.completed`, `customer.subscription.updated`, `customer.subscription.deleted`, and `invoice.payment_failed`.
-- Verify duplicate Stripe webhook delivery returns successfully without reprocessing.
+- Trigger/test `customer.subscription.updated`, `customer.subscription.deleted`, `invoice.payment_failed`, and duplicate event delivery in production/test mode.
 
 **Notes / surprises:**
 - Billing portal is protected by Clerk and returns a Stripe-hosted session for the signed-in business owner only.
@@ -195,7 +235,7 @@ The original Stripe webhook only marked a business active after checkout and can
 ## 2026-05-10 - Phase 0 - RLS hardening preparation
 
 **Task:** Close the remaining Phase 0 database exposure before Phase 1.
-**Status:** code prepared; Supabase SQL migration still requires manual application
+**Status:** completed; migration applied and local dashboard/form tests passed
 
 **Files changed:**
 - `app/api/dashboard/settings/route.ts` (added)

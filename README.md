@@ -1,36 +1,101 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# RoofLead
 
-## Getting Started
+RoofLead is an AI-powered lead intake and qualification SaaS for roofing companies.
 
-First, run the development server:
+Homeowner submits a form -> RoofLead starts an SMS intake flow -> AI qualifies the lead -> dashboard shows the conversation, urgency, score, summary, and next action.
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+## Current Stack
+
+- Next.js 16 App Router
+- TypeScript
+- Supabase Postgres
+- Clerk authentication
+- Twilio SMS
+- Anthropic Claude
+- Stripe Checkout, webhooks, and billing portal
+- Vercel hosting
+- Tailwind/shadcn UI
+
+## Local Development
+
+Install dependencies:
+
+```powershell
+npm install
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Create `.env.local` from `.env.example`, then run:
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+```powershell
+npm run dev
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Open:
 
-## Learn More
+```text
+http://localhost:3000
+```
 
-To learn more about Next.js, take a look at the following resources:
+## Common Commands
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+```powershell
+npm run dev
+npm run lint
+npm run build
+npx.cmd tsc --noEmit
+```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Manual Inbound SMS Simulation
 
-## Deploy on Vercel
+Use this while Twilio A2P approval is pending.
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+1. Start the app:
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+```powershell
+npm run dev
+```
+
+2. Submit a test lead with a phone number.
+
+3. Simulate a signed inbound Twilio webhook:
+
+```powershell
+npm run simulate:inbound -- --from +16195551234 --body "I need roof repair ASAP"
+```
+
+Use the same phone number as the test lead.
+
+More detail: `docs/MANUAL_TESTING.md`.
+
+## Important Docs
+
+- `docs/PROJECT_AUDIT.md` - current architecture/product audit
+- `docs/IMPLEMENTATION_PLAN.md` - active execution checklist
+- `docs/IMPLEMENTATION_LOG.md` - running change log
+- `docs/SECRET_ROTATION_CHECKLIST.md` - pre-pilot secret rotation checklist
+- `supabase/migrations/README.md` - database migration order
+
+## Security Notes
+
+- Do not commit `.env.local` or any real secrets.
+- Service-role Supabase access belongs only in server code.
+- Twilio webhook validation is enabled by default. Do not set `TWILIO_VALIDATE_REQUESTS=false` in production.
+- Dashboard/private data access goes through protected API routes and server-side ownership checks.
+
+## Current Phase
+
+Phase 1: reliability and backend correctness.
+
+Completed in Phase 1:
+
+- Stripe lifecycle handling and billing portal
+- Stripe webhook idempotency
+- Twilio message idempotency
+- Form duplicate guard
+- Structured lead extraction
+- AI reliability guardrails
+- Manual inbound SMS simulator
+
+Recommended next slice:
+
+- Async Twilio webhook processing
