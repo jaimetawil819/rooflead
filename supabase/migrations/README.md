@@ -6,6 +6,7 @@ This folder tracks database changes for RoofLead.
 
 - `0001_initial_baseline.sql` is the schema snapshot generated from the live Supabase project.
 - `0002_sms_opt_outs.sql` is the first tracked forward migration. It adds durable SMS opt-out storage.
+- `0003_secure_rls.sql` removes permissive direct table access after dashboard data access has moved behind protected API routes.
 
 ## Apply order
 
@@ -13,6 +14,7 @@ Apply migrations in numeric order:
 
 1. `0001_initial_baseline.sql` - schema snapshot of the current live database. This should normally be treated as already applied to the existing Supabase project.
 2. `0002_sms_opt_outs.sql` - run in Supabase SQL Editor before deploying code that references `sms_opt_outs` or `leads.sms_opted_out_at`.
+3. `0003_secure_rls.sql` - run only after deploying the protected dashboard API routes. It removes permissive anon/authenticated table access and expects private data access to go through server-owned API routes using Clerk ownership checks.
 
 ## Capturing the baseline
 

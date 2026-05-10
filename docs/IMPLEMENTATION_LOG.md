@@ -35,6 +35,43 @@ Why this change was made.
 
 ---
 
+## 2026-05-10 - Phase 0 - RLS hardening preparation
+
+**Task:** Close the remaining Phase 0 database exposure before Phase 1.
+**Status:** code prepared; Supabase SQL migration still requires manual application
+
+**Files changed:**
+- `app/api/dashboard/settings/route.ts` (added)
+- `app/api/dashboard/form-widget/route.ts` (added)
+- `app/api/dashboard/onboarding/route.ts` (added)
+- `app/api/dashboard/leads/[id]/route.ts` (added)
+- `app/dashboard/settings/page.tsx` (modified - uses protected API routes instead of browser Supabase access)
+- `app/dashboard/onboarding/page.tsx` (modified - uses protected API routes instead of browser Supabase access)
+- `app/dashboard/leads/[id]/page.tsx` (modified - uses protected API routes instead of browser Supabase access)
+- `app/dashboard/layout.tsx` (modified - uses server admin client after Clerk auth check)
+- `app/dashboard/page.tsx` (modified - uses server admin client after Clerk auth check)
+- `app/dashboard/leads/page.tsx` (modified - uses server admin client after Clerk auth check)
+- `supabase/migrations/0003_secure_rls.sql` (added)
+- `supabase/migrations/README.md` (updated)
+
+**Reason:**
+The baseline Supabase schema still had permissive policies (`USING (true)`) and direct grants to `anon` / `authenticated` on private tables. Before those grants can be safely removed, dashboard reads and writes must stop using the browser anon client. This change moves private dashboard data access behind authenticated Next.js API routes that use Clerk `auth()` plus explicit `owner_id` checks.
+
+**Verification performed:**
+- `npx.cmd tsc --noEmit`: clean after switching dashboard data access.
+- `npm.cmd run build`: clean; all 23 app routes compiled and `Proxy (Middleware)` present.
+- `npm.cmd run lint`: still fails on existing lint debt in `app/api/forms/[widgetKey]/config/route.ts`, `app/privacy/page.tsx`, and `app/terms/page.tsx`; no remaining lint errors in the new dashboard API routes or refactored dashboard pages.
+
+**Follow-up needed:**
+- Apply `supabase/migrations/0003_secure_rls.sql` manually in Supabase SQL Editor.
+- After applying, verify settings, onboarding, leads list, lead detail, form submit, Twilio webhook, Stripe webhook, and cron still work.
+- Clean remaining lint debt before final Phase 0 signoff.
+
+**Notes / surprises:**
+- The migration intentionally revokes direct table privileges from both `anon` and `authenticated`. Public form, webhook, cron, and dashboard API routes still work through server-side service-role access.
+
+---
+
 ## 2026-05-09 — Phase 0H — Secret rotation checklist
 
 **Task:** Phase 0H from `IMPLEMENTATION_PLAN.md`

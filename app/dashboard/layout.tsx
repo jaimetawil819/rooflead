@@ -1,6 +1,6 @@
 import { auth } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
-import { createClient } from "@/lib/supabase/server";
+import { getAdminClient } from "@/lib/supabase/admin";
 import Sidebar from "@/components/dashboard/Sidebar";
 
 export default async function DashboardLayout({
@@ -11,7 +11,7 @@ export default async function DashboardLayout({
   const { userId } = await auth();
   if (!userId) redirect("/sign-in");
 
-  const supabase = await createClient();
+  const supabase = getAdminClient();
   const { data: business } = await supabase
     .from("businesses")
     .select("subscription_status, onboarding_complete")

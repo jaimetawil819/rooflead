@@ -1,6 +1,6 @@
 import { auth } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
-import { createClient } from "@/lib/supabase/server";
+import { getAdminClient } from "@/lib/supabase/admin";
 import Link from "next/link";
 import { Users, Flame, TrendingUp, ArrowRight } from "lucide-react";
 
@@ -25,7 +25,7 @@ export default async function DashboardPage() {
   const { userId } = await auth();
   if (!userId) redirect("/sign-in");
 
-  const supabase = await createClient();
+  const supabase = getAdminClient();
 
   const { data: business } = await supabase
     .from("businesses")

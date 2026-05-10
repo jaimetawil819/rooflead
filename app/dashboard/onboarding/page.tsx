@@ -1,15 +1,12 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useUser } from "@clerk/nextjs";
 import { useRouter } from "next/navigation";
-import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
 
 const STEPS = ["Business Info", "Embed Code", "Send Test Lead"];
 
 export default function OnboardingPage() {
-  const { user } = useUser();
   const router = useRouter();
   const [step, setStep] = useState(0);
   const [name, setName] = useState("");
@@ -19,68 +16,40 @@ export default function OnboardingPage() {
   const [copied, setCopied] = useState(false);
 
   useEffect(() => {
-    if (!user) return;
     const load = async () => {
-      const supabase = createClient();
-      const { data: business } = await supabase
-        .from("businesses")
-        .select("name, notification_phone")
-        .eq("owner_id", user.id)
-        .single();
+      const res = await fetch("/api/dashboard/onboarding");
+      if (!res.ok) return;
+
+      const { business } = await res.json();
       if (business) {
         setName(business.name ?? "");
         setNotificationPhone(business.notification_phone ?? "");
       }
     };
     load();
-  }, [user]);
+  }, []);
 
   async function saveBusinessInfo() {
-    if (!user || !name.trim()) return;
+    if (!name.trim()) return;
     setSaving(true);
-    const supabase = createClient();
+    const res = await fetch("/api/dashboard/onboarding", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ name, notificationPhone }),
+    });
 
-    await supabase
-      .from("businesses")
-      .upsert({ owner_id: user.id, name, notification_phone: notificationPhone });
-
-    const { data: business } = await supabase
-      .from("businesses")
-      .select("id")
-      .eq("owner_id", user.id)
-      .single();
-
-    if (business) {
-      const { data: existingWidget } = await supabase
-        .from("form_widgets")
-        .select("widget_key")
-        .eq("business_id", business.id)
-        .single();
-
-      if (existingWidget) {
-        setWidgetKey(existingWidget.widget_key);
-      } else {
-        const { data: newWidget } = await supabase
-          .from("form_widgets")
-          .insert({ business_id: business.id })
-          .select("widget_key")
-          .single();
-        if (newWidget) setWidgetKey(newWidget.widget_key);
-      }
+    if (res.ok) {
+      const { widgetKey: nextWidgetKey } = await res.json();
+      setWidgetKey(nextWidgetKey);
+      setStep(1);
     }
 
     setSaving(false);
-    setStep(1);
   }
 
   async function finishOnboarding() {
-    if (!user) return;
-    const supabase = createClient();
-    await supabase
-      .from("businesses")
-      .update({ onboarding_complete: true })
-      .eq("owner_id", user.id);
-    router.push("/dashboard");
+    const res = await fetch("/api/dashboard/onboarding", { method: "PATCH" });
+    if (res.ok) router.push("/dashboard");
   }
 
   const embedCode = `<script src="${window.location.origin}/embed.js" data-key="${widgetKey}"></script>`;

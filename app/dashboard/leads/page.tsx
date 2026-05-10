@@ -1,4 +1,4 @@
-import { createClient } from "@/lib/supabase/server";
+import { getAdminClient } from "@/lib/supabase/admin";
 import { auth } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
 import Link from "next/link";
@@ -34,7 +34,7 @@ export default async function LeadsPage({
 
   const { status, score } = await searchParams;
 
-  const supabase = await createClient();
+  const supabase = getAdminClient();
 
   const { data: business } = await supabase
     .from("businesses")

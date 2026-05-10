@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { createClient } from "@/lib/supabase/client";
 import Link from "next/link";
 import { ArrowLeft, Phone, MapPin, Wrench, Calendar } from "lucide-react";
 import { use } from "react";
@@ -15,33 +14,53 @@ const scoreColors: Record<string, string> = {
   unqualified: "bg-gray-100 text-gray-600",
 };
 
+type Lead = {
+  id: string;
+  name: string | null;
+  phone: string | null;
+  address: string | null;
+  service_type: string | null;
+  created_at: string;
+  status: string;
+  lead_score: string | null;
+  summary: string | null;
+};
+
+type Message = {
+  id: string;
+  role: string;
+  body: string;
+};
+
 export default function LeadDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
-  const [lead, setLead] = useState<any>(null);
-  const [messages, setMessages] = useState<any[]>([]);
+  const [lead, setLead] = useState<Lead | null>(null);
+  const [messages, setMessages] = useState<Message[]>([]);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
 
   useEffect(() => {
     const load = async () => {
-      const supabase = createClient();
-      const { data: leadData } = await supabase.from("leads").select("*").eq("id", id).single();
-      setLead(leadData);
-      const { data: msgs } = await supabase
-        .from("messages")
-        .select("*")
-        .eq("lead_id", id)
-        .order("sent_at", { ascending: true });
-      setMessages(msgs ?? []);
+      const res = await fetch(`/api/dashboard/leads/${id}`);
+      if (!res.ok) return;
+
+      const data = await res.json();
+      setLead(data.lead);
+      setMessages(data.messages ?? []);
     };
     load();
   }, [id]);
 
   const updateStatus = async (newStatus: string) => {
     setSaving(true);
-    const supabase = createClient();
-    await supabase.from("leads").update({ status: newStatus }).eq("id", id);
-    setLead((prev: any) => ({ ...prev, status: newStatus }));
+    const res = await fetch(`/api/dashboard/leads/${id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ status: newStatus }),
+    });
+    if (res.ok) {
+      setLead((prev) => (prev ? { ...prev, status: newStatus } : prev));
+    }
     setSaving(false);
     setSaved(true);
     setTimeout(() => setSaved(false), 2000);

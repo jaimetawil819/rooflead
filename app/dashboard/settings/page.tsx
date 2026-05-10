@@ -1,8 +1,6 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useUser } from "@clerk/nextjs";
-import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Building2, Phone, Code, Plus, X } from "lucide-react";
 
@@ -16,7 +14,6 @@ function labelToValue(label: string): string {
 }
 
 export default function SettingsPage() {
-  const { user } = useUser();
   const [name, setName] = useState("");
   const [notificationPhone, setNotificationPhone] = useState("");
   const [widgetKey, setWidgetKey] = useState("");
@@ -31,41 +28,33 @@ export default function SettingsPage() {
   const [savedForm, setSavedForm] = useState(false);
 
   useEffect(() => {
-    if (!user) return;
     const load = async () => {
-      const supabase = createClient();
-      const { data: business } = await supabase
-        .from("businesses")
-        .select("id, name, notification_phone")
-        .eq("owner_id", user.id)
-        .single();
+      const res = await fetch("/api/dashboard/settings");
+      if (!res.ok) return;
+
+      const { business, widget } = await res.json();
       if (business) {
         setName(business.name ?? "");
         setNotificationPhone(business.notification_phone ?? "");
-        const { data: widget } = await supabase
-          .from("form_widgets")
-          .select("id, widget_key, services, intake_question")
-          .eq("business_id", business.id)
-          .single();
-        if (widget) {
-          setWidgetKey(widget.widget_key);
-          setWidgetId(widget.id);
-          setServices(widget.services ?? []);
-          setIntakeQuestion(widget.intake_question ?? "");
-        }
+      }
+
+      if (widget) {
+        setWidgetKey(widget.widget_key);
+        setWidgetId(widget.id);
+        setServices(widget.services ?? []);
+        setIntakeQuestion(widget.intake_question ?? "");
       }
     };
     load();
-  }, [user]);
+  }, []);
 
   const save = async () => {
-    if (!user) return;
     setSaving(true);
-    const supabase = createClient();
-    await supabase
-      .from("businesses")
-      .update({ name, notification_phone: notificationPhone })
-      .eq("owner_id", user.id);
+    await fetch("/api/dashboard/settings", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ name, notificationPhone }),
+    });
     setSaving(false);
     setSaved(true);
     setTimeout(() => setSaved(false), 3000);
@@ -74,11 +63,11 @@ export default function SettingsPage() {
   const saveFormConfig = async () => {
     if (!widgetId) return;
     setSavingForm(true);
-    const supabase = createClient();
-    await supabase
-      .from("form_widgets")
-      .update({ services, intake_question: intakeQuestion })
-      .eq("id", widgetId);
+    await fetch("/api/dashboard/form-widget", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ widgetId, services, intakeQuestion }),
+    });
     setSavingForm(false);
     setSavedForm(true);
     setTimeout(() => setSavedForm(false), 3000);
