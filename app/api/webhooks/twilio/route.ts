@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from "next/server";
+import { after, NextRequest, NextResponse } from "next/server";
 import twilio from "twilio";
 import { getAdminClient } from "@/lib/supabase/admin";
 import { generateConversationReply, generateLeadSummary } from "@/lib/ai";
@@ -9,6 +9,15 @@ import {
   recordSmsOptOut,
 } from "@/lib/sms-opt-outs";
 import { sendSMS } from "@/lib/twilio";
+
+export const maxDuration = 30;
+
+type ProcessLeadConversationInput = {
+  leadId: string;
+  businessId: string;
+  leadName: string | null;
+  from: string;
+};
 
 function getTwilioValidationUrl(req: NextRequest) {
   const requestUrl = new URL(req.url);
@@ -45,6 +54,104 @@ function emptyTwimlResponse() {
   return new NextResponse("<Response></Response>", {
     headers: { "Content-Type": "text/xml" },
   });
+}
+
+async function processLeadConversation({
+  leadId,
+  businessId,
+  leadName,
+  from,
+}: ProcessLeadConversationInput) {
+  const supabase = getAdminClient();
+
+  try {
+    const { data: messages } = await supabase
+      .from("messages")
+      .select("role, body")
+      .eq("lead_id", leadId)
+      .order("sent_at", { ascending: true });
+
+    const history = (messages ?? []).map((m) => ({
+      role: m.role as "user" | "assistant",
+      content: m.body,
+    }));
+
+    const [{ data: business }, { data: widget }] = await Promise.all([
+      supabase
+        .from("businesses")
+        .select("name, notification_phone")
+        .eq("id", businessId)
+        .single(),
+      supabase
+        .from("form_widgets")
+        .select("services, intake_question")
+        .eq("business_id", businessId)
+        .single(),
+    ]);
+
+    const businessName = business?.name ?? "the team";
+    const services = widget?.services ?? [];
+    const intakeQuestion =
+      widget?.intake_question ?? "What type of roofing issue are you dealing with?";
+
+    const { reply, isComplete } = await generateConversationReply(
+      businessName,
+      history,
+      services,
+      intakeQuestion
+    );
+
+    await supabase.from("messages").insert({
+      lead_id: leadId,
+      role: "assistant",
+      body: reply,
+    });
+
+    try {
+      await sendSMS(from, reply);
+    } catch (err) {
+      console.error("SMS send failed:", err);
+    }
+
+    if (!isComplete) return;
+
+    const allMessages = [...history, { role: "assistant", content: reply }];
+    const {
+      summary,
+      score,
+      urgency,
+      timeline,
+      isHomeowner,
+      qualificationReason,
+    } = await generateLeadSummary(allMessages);
+    const nextStatus =
+      score === "unqualified" || isHomeowner === false ? "junk" : "qualified";
+
+    await supabase
+      .from("leads")
+      .update({
+        summary,
+        lead_score: score,
+        urgency,
+        timeline,
+        is_homeowner: isHomeowner,
+        qualification_reason: qualificationReason,
+        status: nextStatus,
+      })
+      .eq("id", leadId);
+
+    if (
+      business?.notification_phone &&
+      !(await isSmsOptedOut(supabase, business.notification_phone))
+    ) {
+      const leadLabel = leadName ?? "New lead";
+      const notifMsg = `${score.toUpperCase()} lead - ${leadLabel}\n${summary}\nCall: ${from}\nView: ${process.env.NEXT_PUBLIC_APP_URL}/dashboard/leads/${leadId}`;
+      await sendSMS(business.notification_phone, notifMsg);
+    }
+  } catch (err) {
+    const message = err instanceof Error ? err.message : "Unknown error";
+    console.error(`Inbound lead processing failed for lead ${leadId}: ${message}`);
+  }
 }
 
 export async function POST(req: NextRequest) {
@@ -140,7 +247,6 @@ export async function POST(req: NextRequest) {
     return emptyTwimlResponse();
   }
 
-  // Save the inbound message
   const { error: inboundMessageError } = await supabase.from("messages").insert({
     lead_id: lead.id,
     role: "user",
@@ -157,100 +263,14 @@ export async function POST(req: NextRequest) {
     return new NextResponse("Message insert failed", { status: 500 });
   }
 
-  // Load full message history
-  const { data: messages } = await supabase
-    .from("messages")
-    .select("role, body")
-    .eq("lead_id", lead.id)
-    .order("sent_at", { ascending: true });
-
-  const history = (messages ?? []).map((m) => ({
-    role: m.role as "user" | "assistant",
-    content: m.body,
-  }));
-
-  // Get business name and widget config
-  const [{ data: business }, { data: widget }] = await Promise.all([
-    supabase
-      .from("businesses")
-      .select("name, notification_phone")
-      .eq("id", lead.business_id)
-      .single(),
-    supabase
-      .from("form_widgets")
-      .select("services, intake_question")
-      .eq("business_id", lead.business_id)
-      .single(),
-  ]);
-
-  const businessName = business?.name ?? "the team";
-  const services = widget?.services ?? [];
-  const intakeQuestion = widget?.intake_question ?? "What type of roofing issue are you dealing with?";
-
-  // Generate AI reply
-  const { reply, isComplete } = await generateConversationReply(
-    businessName,
-    history,
-    services,
-    intakeQuestion
-  );
-
-  // Save AI reply
-  await supabase.from("messages").insert({
-    lead_id: lead.id,
-    role: "assistant",
-    body: reply,
+  after(async () => {
+    await processLeadConversation({
+      leadId: lead.id,
+      businessId: lead.business_id,
+      leadName: lead.name,
+      from,
+    });
   });
-
-  // Send AI reply via SMS
-  try {
-    await sendSMS(from, reply);
-  } catch (err) {
-    console.error("SMS send failed:", err);
-  }
-
-  if (isComplete) {
-    // Generate lead summary
-    const allMessages = [...history, { role: "assistant", content: reply }];
-    try {
-      const {
-        summary,
-        score,
-        urgency,
-        timeline,
-        isHomeowner,
-        qualificationReason,
-      } = await generateLeadSummary(allMessages);
-      const nextStatus =
-        score === "unqualified" || isHomeowner === false ? "junk" : "qualified";
-
-      await supabase
-        .from("leads")
-        .update({
-          summary,
-          lead_score: score,
-          urgency,
-          timeline,
-          is_homeowner: isHomeowner,
-          qualification_reason: qualificationReason,
-          status: nextStatus,
-        })
-        .eq("id", lead.id);
-
-      // Notify the business owner
-      if (
-        business?.notification_phone &&
-        !(await isSmsOptedOut(supabase, business.notification_phone))
-      ) {
-        const scoreEmoji = score === "hot" ? "🔥" : score === "warm" ? "✅" : score === "cold" ? "❄️" : "⚠️";
-        const leadName = lead.name ?? "New lead";
-        const notifMsg = `${scoreEmoji} ${score.toUpperCase()} lead — ${leadName}\n${summary}\nCall: ${from}\nView: ${process.env.NEXT_PUBLIC_APP_URL}/dashboard/leads/${lead.id}`;
-        await sendSMS(business.notification_phone, notifMsg);
-      }
-    } catch (err) {
-      console.error("Summary generation failed:", err);
-    }
-  }
 
   return emptyTwimlResponse();
 }

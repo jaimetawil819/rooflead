@@ -35,6 +35,38 @@ Why this change was made.
 
 ---
 
+## 2026-05-10 - Phase 1 - Async Twilio webhook processing
+
+**Task:** Move normal inbound Twilio processing off the synchronous response path.
+**Status:** completed
+
+**Files changed:**
+- `app/api/webhooks/twilio/route.ts` (modified)
+- `docs/PROJECT_AUDIT.md` (modified)
+- `docs/IMPLEMENTATION_PLAN.md` (modified)
+- `docs/MANUAL_TESTING.md` (modified)
+- `README.md` (modified)
+- `docs/IMPLEMENTATION_LOG.md` (modified)
+
+**Reason:**
+The Twilio webhook previously waited for Anthropic, outbound SMS, lead summary generation, status updates, and owner notification before returning TwiML. That made the route vulnerable to Twilio timeout/retry behavior when providers were slow. The route now validates Twilio, saves the inbound user message, returns empty TwiML quickly, and processes the AI/SMS/summary work using Next.js `after()`.
+
+**Verification performed:**
+- `npx.cmd tsc --noEmit`: clean.
+- `npm.cmd run lint`: clean.
+- `npm.cmd run build`: clean.
+
+**Follow-up needed:**
+- Manual simulator test: run `npm run simulate:inbound`, wait a few seconds, refresh the lead detail page, and confirm the assistant reply appears.
+- After A2P approval, compare behavior against a real Twilio SMS conversation.
+- Consider a durable queue later if pilot volume or provider reliability demands it.
+
+**Notes / surprises:**
+- STOP opt-out handling remains synchronous so the homeowner receives the unsubscribe confirmation immediately.
+- This is an MVP-safe async improvement, not a full queue.
+
+---
+
 ## 2026-05-10 - Phase 1 - Status documentation refresh
 
 **Task:** Analyze current Phase 1 progress and update project docs.

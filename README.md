@@ -95,7 +95,8 @@ Completed in Phase 1:
 - Structured lead extraction
 - AI reliability guardrails
 - Manual inbound SMS simulator
+- Async Twilio webhook processing
 
 Recommended next slice:
 
-- Async Twilio webhook processing
+- Prompt injection mitigation

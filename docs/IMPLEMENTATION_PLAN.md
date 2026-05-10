@@ -21,6 +21,7 @@ Phase 0 is complete. Phase 1 is in progress and has already closed several relia
 - Local inbound SMS simulator
 - Summary parser hardening
 - Renter/unqualified status handling
+- Async Twilio webhook processing
 
 ---
 
@@ -151,21 +152,29 @@ Purpose:
 - Test the real signed Twilio webhook locally before A2P approval.
 - Exercise AI replies, DB writes, structured extraction, and duplicate `MessageSid` behavior.
 
-### 1F - Async Twilio webhook processing - Next recommended
+### 1F - Async Twilio webhook processing - Complete
 
 Problem:
-- Current webhook still waits for Anthropic and outbound SMS before returning.
-- Slow provider calls can trigger Twilio retries.
+- The old webhook waited for Anthropic and outbound SMS before returning.
+- Slow provider calls could trigger Twilio retries.
 
-Likely files:
+Files:
 - `app/api/webhooks/twilio/route.ts`
-- New protected internal route or job processor
-- Possibly a `message_jobs` / `inbound_events` table if using DB-backed queue
+- `docs/MANUAL_TESTING.md`
 
-Goal:
+Implemented:
 - Validate Twilio signature and persist inbound event quickly.
-- Return TwiML fast.
-- Process AI reply in background or via internal async route.
+- Return empty TwiML immediately for normal inbound messages.
+- Process AI reply, outbound SMS, lead summary, status update, and owner notification with Next.js `after()`.
+- Keep STOP opt-out handling synchronous so the user receives immediate unsubscribe confirmation.
+
+Current limitation:
+- This is not a durable queue. It reduces Twilio timeout/retry risk for MVP, but a real queue should be considered if volume grows or provider calls become unreliable.
+
+Verify:
+- Use `npm run simulate:inbound`.
+- The simulator returns quickly.
+- Wait a few seconds, then refresh the lead detail page to see the assistant reply and summary updates.
 
 ### 1G - Prompt injection mitigation - Pending
 
@@ -228,6 +237,6 @@ Do not start until at least one pilot workflow is stable.
 
 ## Current next action
 
-Recommended next engineering slice: **1F - Async Twilio webhook processing**.
+Recommended next engineering slice: **1G - Prompt injection mitigation**.
 
-Reason: it is the biggest remaining backend reliability risk. The simulator now gives us a way to test most of the webhook logic without waiting for A2P approval.
+Reason: business-configurable strings are used inside AI prompts. They should be treated as untrusted context before expanding configurable intake behavior further.

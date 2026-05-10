@@ -14,7 +14,7 @@ Website/test form -> lead record -> AI SMS qualification -> structured lead summ
 
 Phase 0 safety work is complete enough to move forward: secrets are ignored, tracked-file secret scan was clean, Clerk proxy is deny-by-default, Twilio webhooks validate signatures, STOP opt-outs persist, form input is validated, migrations exist, and private dashboard data no longer relies on direct browser Supabase table access.
 
-Phase 1 is partially complete. Billing correctness, idempotency, structured lead extraction, AI guardrails, and local inbound SMS simulation have been implemented. The biggest remaining reliability risk is still the synchronous Twilio webhook: it waits on Anthropic and outbound SMS before returning to Twilio.
+Phase 1 is partially complete. Billing correctness, idempotency, structured lead extraction, AI guardrails, local inbound SMS simulation, and async Twilio webhook processing have been implemented. The biggest remaining reliability risks are now AI prompt injection, stale mid-conversation leads, and production observability.
 
 ---
 
@@ -91,6 +91,7 @@ Manual caveat: provider-side secret rotation and production environment checks a
 | Manual inbound simulator | Complete | `npm run simulate:inbound` |
 | Summary parser hardening | Complete | tolerant JSON extraction in `lib/ai.ts` |
 | Renter/unqualified status rule | Complete | renter/unqualified completed leads become `junk`, not `qualified` |
+| Async Twilio processing | Complete | webhook returns TwiML after insert; AI/SMS work runs via `after()` |
 
 ---
 
@@ -98,22 +99,21 @@ Manual caveat: provider-side secret rotation and production environment checks a
 
 ### Highest priority
 
-1. **Async Twilio webhook processing**
-   - Current risk: Twilio route still waits for Anthropic, DB writes, and SMS.
-   - Impact: Twilio timeout/retry can still happen under slow AI/provider conditions.
-   - Suggested direction: return TwiML quickly and process AI in a background job or protected internal route.
-
-2. **Prompt injection mitigation**
+1. **Prompt injection mitigation**
    - Current risk: business name and intake question are interpolated into the system prompt.
    - Suggested direction: move configurable/user-provided values into delimited context and explicitly instruct the model not to treat them as instructions.
 
-3. **Mid-conversation timeout**
+2. **Mid-conversation timeout**
    - Current risk: leads that stop replying before completion can sit as `new`.
    - Suggested direction: add `last_message_at`, summarize/mark stale leads after a defined timeout.
 
-4. **Structured logging**
+3. **Structured logging**
    - Current risk: debugging production failures will be messy.
    - Suggested direction: request IDs, safe error messages, no full PII transcripts in logs.
+
+4. **Durable background jobs**
+   - Current risk: Next.js `after()` reduces Twilio timeout risk, but it is not a persistent queue.
+   - Suggested direction: keep this for MVP, then add a DB-backed queue or hosted job worker if pilot usage exposes dropped/slow jobs.
 
 ### Lower priority
 
@@ -137,6 +137,6 @@ Manual caveat: provider-side secret rotation and production environment checks a
 ## Current readiness verdict
 
 **Local/pilot-demo readiness:** Good, with simulator-based testing.
-**Real customer readiness:** Not yet. Wait for A2P approval, run production smoke tests, and finish async webhook processing or accept the timeout/retry risk for a tiny first pilot.
+**Real customer readiness:** Close, but not automatic. Wait for A2P approval, run production smoke tests, and complete the remaining Phase 1 reliability work before relying on it for a paying pilot.
 
-Recommended next engineering move: **async Twilio processing** unless the immediate goal is customer demo polish.
+Recommended next engineering move: **prompt injection mitigation** unless the immediate goal is customer demo polish.
