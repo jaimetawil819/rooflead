@@ -21,6 +21,7 @@ const isPublicRoute = createRouteMatcher([
   "/api/forms/(.*)",
   "/api/webhooks/(.*)",
   "/api/cron/(.*)",
+  "/test-form",
   "/test-form/(.*)",
 ]);
 
