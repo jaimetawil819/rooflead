@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { Building2, Phone, Code, Plus, X } from "lucide-react";
+import { Building2, Phone, Code, Plus, X, CreditCard } from "lucide-react";
 
 interface Service {
   label: string;
@@ -26,6 +26,7 @@ export default function SettingsPage() {
   const [intakeQuestion, setIntakeQuestion] = useState("");
   const [savingForm, setSavingForm] = useState(false);
   const [savedForm, setSavedForm] = useState(false);
+  const [billingLoading, setBillingLoading] = useState(false);
 
   useEffect(() => {
     const load = async () => {
@@ -97,6 +98,19 @@ export default function SettingsPage() {
     setTimeout(() => setCopied(false), 2000);
   };
 
+  const openBillingPortal = async () => {
+    setBillingLoading(true);
+    const res = await fetch("/api/billing/portal", { method: "POST" });
+    const data = await res.json().catch(() => null);
+
+    if (res.ok && data?.url) {
+      window.location.href = data.url;
+      return;
+    }
+
+    setBillingLoading(false);
+  };
+
   return (
     <div className="p-8 max-w-2xl">
       <div className="mb-8">
@@ -149,6 +163,19 @@ export default function SettingsPage() {
           </Button>
           {saved && <span className="text-sm text-green-600 font-medium">Saved!</span>}
         </div>
+      </div>
+
+      <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 mb-4">
+        <div className="flex items-center gap-2 mb-2">
+          <CreditCard className="h-4 w-4 text-gray-400" aria-hidden="true" />
+          <h2 className="font-semibold text-slate-900">Billing</h2>
+        </div>
+        <p className="text-sm text-gray-500 mb-4">
+          Manage your payment method, invoices, and subscription in Stripe.
+        </p>
+        <Button variant="outline" size="sm" onClick={openBillingPortal} disabled={billingLoading}>
+          {billingLoading ? "Opening..." : "Manage Billing"}
+        </Button>
       </div>
 
       {/* Lead form config */}

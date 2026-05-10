@@ -35,6 +35,36 @@ Why this change was made.
 
 ---
 
+## 2026-05-10 - Phase 1 - Stripe billing correctness
+
+**Task:** Phase 1 Stripe lifecycle and customer billing management.
+**Status:** code prepared; Supabase SQL migration and Stripe dashboard tests still required
+
+**Files changed:**
+- `supabase/migrations/0004_stripe_billing_hardening.sql` (added)
+- `supabase/migrations/README.md` (updated)
+- `app/api/webhooks/stripe/route.ts` (modified)
+- `app/api/billing/portal/route.ts` (added)
+- `app/dashboard/settings/page.tsx` (modified)
+
+**Reason:**
+The original Stripe webhook only marked a business active after checkout and canceled after deletion. It did not handle subscription updates, failed payments, duplicate webhook delivery, or customer self-service billing management. This change adds a `stripe_events` idempotency table, syncs subscription status from Stripe lifecycle events, marks failed invoices as `past_due`, stores subscription metadata, and adds a Stripe billing portal entry point in Settings.
+
+**Verification performed:**
+- `npx.cmd tsc --noEmit`: clean.
+- `npm.cmd run lint`: clean.
+
+**Follow-up needed:**
+- Apply `supabase/migrations/0004_stripe_billing_hardening.sql` in Supabase SQL Editor before deploying this webhook change.
+- In Stripe Dashboard, configure the customer portal if Stripe asks for portal settings.
+- Trigger/test `checkout.session.completed`, `customer.subscription.updated`, `customer.subscription.deleted`, and `invoice.payment_failed`.
+- Verify duplicate Stripe webhook delivery returns successfully without reprocessing.
+
+**Notes / surprises:**
+- Billing portal is protected by Clerk and returns a Stripe-hosted session for the signed-in business owner only.
+
+---
+
 ## 2026-05-10 - Phase 0 - RLS hardening preparation
 
 **Task:** Close the remaining Phase 0 database exposure before Phase 1.
