@@ -57,12 +57,12 @@ This document is the executable checklist. Work top-down. Do not skip Phase 0 to
 | ✅ Update follow-up cron to skip opted-out phones | code | `app/api/cron/follow-up/route.ts` | Typecheck/build pass |
 | ✅ Update form-greeting send to skip opted-out phones | code | `app/api/forms/[widgetKey]/route.ts` | Typecheck/build pass |
 
-### 0E — Schema / migrations 🟡 partial
+### 0E — Schema / migrations 🟡 ✅
 
 | Step | Type | Files / Action | Verify |
 |------|------|---------------|--------|
 | ✅ Create `supabase/migrations/` directory | code | existing dir | Folder exists |
-| pending Capture current schema as `0001_initial_baseline.sql` | manual + sql | User runs `pg_dump --schema-only --no-owner --no-acl ...` from Supabase, pastes output | File committed; schema reproducible |
+| ✅ Capture current schema as `0001_initial_baseline.sql` | manual + sql | User ran Supabase CLI dump from remote project | File committed; schema reproducible |
 | ✅ Add `0002_sms_opt_outs.sql` (Phase 0D) | sql | `supabase/migrations/0002_sms_opt_outs.sql` | Migration file exists; manual Supabase apply still required |
 | ✅ Add a brief `supabase/migrations/README.md` describing apply order | code | new file | Explains apply order, baseline capture, and SQL Editor workflow |
 

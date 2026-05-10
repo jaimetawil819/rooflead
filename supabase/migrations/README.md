@@ -4,7 +4,7 @@ This folder tracks database changes for RoofLead.
 
 ## Current state
 
-- `0001_initial_baseline.sql` is not committed yet because the current live Supabase schema must be dumped from the real project. Do not recreate it by guessing from app code.
+- `0001_initial_baseline.sql` is the schema snapshot generated from the live Supabase project.
 - `0002_sms_opt_outs.sql` is the first tracked forward migration. It adds durable SMS opt-out storage.
 
 ## Apply order

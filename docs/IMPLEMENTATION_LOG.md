@@ -35,6 +35,34 @@ Why this change was made.
 
 ---
 
+## 2026-05-09 — Phase 0E — Baseline schema captured
+
+**Task:** Complete remaining Phase 0E baseline capture
+**Status:** completed
+
+**Files changed:**
+- `supabase/migrations/0001_initial_baseline.sql` (added — schema-only dump from live Supabase project)
+- `supabase/migrations/0001_INITIAL_BASELINE_PENDING.md` (deleted — no longer needed)
+- `supabase/migrations/README.md` (modified — current state now reflects committed baseline)
+- `.gitignore` (modified — ignores Supabase CLI `.temp` metadata)
+- `docs/IMPLEMENTATION_PLAN.md` (modified — marks 0E complete)
+- `docs/IMPLEMENTATION_LOG.md` (modified — this entry)
+
+**Reason:**
+The live Supabase schema is now captured in the repository as the migration baseline. This makes future database changes reviewable and gives future sessions a real schema reference instead of guessing from application code.
+
+**Verification performed:**
+- `supabase/migrations/0001_initial_baseline.sql` exists and is schema-only sized. ✅
+- `git check-ignore -v supabase/.temp/linked-project.json` confirms Supabase CLI temp files are ignored. ✅
+- Searched baseline file for obvious secret markers (`PASSWORD`, `SUPABASE_SERVICE_ROLE`, `SECRET`, `KEY=`); no matches. ✅
+
+**Follow-up needed:**
+- Still apply `supabase/migrations/0002_sms_opt_outs.sql` in Supabase SQL Editor before deploying/testing Phase 0D behavior.
+
+**Notes / surprises:**
+- Supabase CLI created `supabase/.temp/`; that folder contains local CLI metadata and should stay untracked.
+
+---
 ## 2026-05-09 — Phase 0E — Migration folder discipline
 
 **Task:** Phase 0E from `IMPLEMENTATION_PLAN.md`
