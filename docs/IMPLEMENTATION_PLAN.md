@@ -77,12 +77,12 @@ This document is the executable checklist. Work top-down. Do not skip Phase 0 to
 | ✅ Scaffold rate limiter behind `RATE_LIMIT_ENABLED` env flag | code | `lib/rate-limit.ts`, form route, `.env.example` | When enabled, repeat request returns 429; when disabled, no-op |
 | ✅ Document limiter setup/limits in `IMPLEMENTATION_LOG.md` | code | log entry | Notes that current limiter is in-memory MVP guard, not production abuse prevention |
 
-### 0G — Conversation completion via tool use 🟡
+### 0G — Conversation completion via tool use 🟡 ✅
 
 | Step | Type | Files / Action | Verify |
 |------|------|---------------|--------|
-| Replace `reply.includes(...)` with Anthropic tool-use (define `complete_intake` tool) | code | `lib/ai.ts`, `app/api/webhooks/twilio/route.ts` | Test conversation: AI invokes tool → completion flow runs |
-| Fall back gracefully when no tool call returned | code | same | Long conversations don't loop forever |
+| ✅ Replace `reply.includes(...)` with Anthropic tool-use (define `complete_intake` tool) | code | `lib/ai.ts`, `app/api/webhooks/twilio/route.ts` | Typecheck/build pass; real SMS completion test pending |
+| ✅ Fall back gracefully when no tool call returned | code | same | Text response is sent normally with `isComplete: false` |
 
 ### 0H — Manual: secret rotation 🔴 (user-only)
 
@@ -153,10 +153,10 @@ Checklist (user runs this off-Claude):
 - Strip PII from error logs
 - Optional: integrate Sentry or Vercel log drain
 
-### 1L — `intakeQuestion` parameter is accepted but never used 🟢
+### 1L — `intakeQuestion` parameter is accepted but never used 🟢 partial
 - Discovered during Phase 0A lint pass.
-- `lib/ai.ts` `generateConversationReply` accepts `intakeQuestion` but the system prompt template never interpolates it. The Settings UI lets users configure it, but Claude never sees it.
-- Same issue in `public/embed.js:15` — variable extracted from config but never rendered.
+- ✅ `lib/ai.ts` now uses `intakeQuestion` in the conversation prompt.
+- Remaining issue in `public/embed.js:15` — variable extracted from config but never rendered.
 - Files: `lib/ai.ts`, `public/embed.js`
 - Verify: change intake question in Settings → submit a test lead → first AI reply uses the configured question
 

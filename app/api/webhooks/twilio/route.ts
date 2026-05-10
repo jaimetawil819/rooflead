@@ -156,7 +156,12 @@ export async function POST(req: NextRequest) {
   const intakeQuestion = widget?.intake_question ?? "What type of roofing issue are you dealing with?";
 
   // Generate AI reply
-  const reply = await generateConversationReply(businessName, history, services, intakeQuestion);
+  const { reply, isComplete } = await generateConversationReply(
+    businessName,
+    history,
+    services,
+    intakeQuestion
+  );
 
   // Save AI reply
   await supabase.from("messages").insert({
@@ -171,9 +176,6 @@ export async function POST(req: NextRequest) {
   } catch (err) {
     console.error("SMS send failed:", err);
   }
-
-  // Check if conversation is complete
-  const isComplete = reply.includes("I have everything I need");
 
   if (isComplete) {
     // Generate lead summary

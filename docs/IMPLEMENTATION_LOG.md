@@ -35,6 +35,33 @@ Why this change was made.
 
 ---
 
+## 2026-05-09 — Phase 0G — Structured AI completion signal
+
+**Task:** Phase 0G from `IMPLEMENTATION_PLAN.md`
+**Status:** completed
+
+**Files changed:**
+- `lib/ai.ts` (modified — returns `{ reply, isComplete }`, defines `complete_intake` tool, uses `intakeQuestion` in prompt)
+- `app/api/webhooks/twilio/route.ts` (modified — uses structured `isComplete` instead of phrase matching)
+- `docs/IMPLEMENTATION_PLAN.md` (modified — marks 0G complete and 1L partially resolved)
+- `docs/IMPLEMENTATION_LOG.md` (modified — this entry)
+
+**Reason:**
+The conversation completion flow depended on the assistant reply containing the exact phrase `I have everything I need`. That is brittle: a small model wording change could prevent lead summaries and owner notifications from firing. Replaced that with Anthropic tool use so the model marks intake completion structurally by calling `complete_intake` only after all required qualification fields are collected.
+
+**Verification performed:**
+- **typecheck (`npx.cmd tsc --noEmit`):** clean — no output. ✅
+- **build (`npm.cmd run build`):** ✓ Compiled successfully in 6.6s. All 19 routes detected. ✅
+- **lint (`npm.cmd run lint`):** failed with 16 errors + 2 warnings — known lint debt; `lib/ai.ts` `intakeQuestion` warning is gone.
+
+**Follow-up needed:**
+- After deploy, run a full SMS conversation until completion and confirm lead summary + owner notification still fire.
+- `public/embed.js` still extracts `intakeQuestion` but does not render it. That is left as a small UI/embed cleanup.
+
+**Notes / surprises:**
+- The Anthropic SDK response type needed an explicit `ToolUseBlock` type guard before accessing `toolUse.input`; TypeScript caught this cleanly.
+
+---
 ## 2026-05-09 — Phase 0F — Public form endpoint hardening
 
 **Task:** Phase 0F from `IMPLEMENTATION_PLAN.md`

@@ -1,13 +1,66 @@
 import Anthropic from "@anthropic-ai/sdk";
+import type {
+  ContentBlock,
+  ToolUnion,
+  ToolUseBlock,
+} from "@anthropic-ai/sdk/resources/messages";
 
 const client = new Anthropic();
+
+export type ConversationReply = {
+  reply: string;
+  isComplete: boolean;
+};
+
+const COMPLETE_INTAKE_TOOL: ToolUnion = {
+  name: "complete_intake",
+  description:
+    "Call this only when the homeowner has provided the service needed, urgency, timeline, and whether they own the home. Include the exact final SMS reply to send.",
+  input_schema: {
+    type: "object",
+    properties: {
+      final_reply: {
+        type: "string",
+        description:
+          "Short final SMS message confirming intake is complete and the business will follow up.",
+      },
+    },
+    required: ["final_reply"],
+  },
+};
+
+function getTextContent(content: ContentBlock[]) {
+  return content
+    .filter((block) => block.type === "text")
+    .map((block) => block.text)
+    .join("\n")
+    .trim();
+}
+
+function getCompleteIntakeReply(content: ContentBlock[]) {
+  const toolUse = content.find(
+    (block): block is ToolUseBlock =>
+      block.type === "tool_use" && block.name === "complete_intake"
+  );
+
+  if (!toolUse || typeof toolUse.input !== "object" || toolUse.input === null) {
+    return null;
+  }
+
+  const input = toolUse.input as Record<string, unknown>;
+  const finalReply = input.final_reply;
+
+  return typeof finalReply === "string" && finalReply.trim()
+    ? finalReply.trim()
+    : null;
+}
 
 export async function generateConversationReply(
   businessName: string,
   messageHistory: { role: "user" | "assistant"; content: string }[],
   services: { label: string; value: string }[] = [],
   intakeQuestion: string = "What type of roofing issue are you dealing with?"
-): Promise<string> {
+): Promise<ConversationReply> {
   const serviceList = services.length > 0
     ? services.map((s) => s.label).join(", ")
     : "repair, replacement, storm damage, inspection";
@@ -17,7 +70,7 @@ export async function generateConversationReply(
     max_tokens: 200,
     system: `You are a friendly intake assistant for ${businessName}.
 Your job is to collect these 4 things from the homeowner, one question at a time:
-1. Type of service needed (${serviceList})
+1. Type of service needed (${serviceList}). Use this service question when needed: "${intakeQuestion}"
 2. Urgency (emergency/active issue, needs attention soon, or just getting estimates)
 3. Timeline (ASAP, within a month, or planning ahead)
 4. Whether they own the home
@@ -27,11 +80,24 @@ Rules:
 - Ask only one question at a time.
 - Be friendly and natural, not robotic.
 - Never quote prices. If asked about cost, say "Someone from ${businessName} will go over pricing when they reach out."
-- Once you have all 4 pieces of info, end with exactly this phrase: "Perfect, I have everything I need! Someone from ${businessName} will be in touch very soon."`,
+- Once you have all 4 pieces of info, call the complete_intake tool. Do not call it before all 4 are known.`,
     messages: messageHistory,
+    tools: [COMPLETE_INTAKE_TOOL],
   });
 
-  return (response.content[0] as { text: string }).text;
+  const completionReply = getCompleteIntakeReply(response.content);
+
+  if (completionReply) {
+    return {
+      reply: completionReply,
+      isComplete: true,
+    };
+  }
+
+  return {
+    reply: getTextContent(response.content),
+    isComplete: false,
+  };
 }
 
 export async function generateLeadSummary(
