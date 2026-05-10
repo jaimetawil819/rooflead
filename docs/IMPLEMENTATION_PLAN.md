@@ -84,17 +84,19 @@ This document is the executable checklist. Work top-down. Do not skip Phase 0 to
 | ✅ Replace `reply.includes(...)` with Anthropic tool-use (define `complete_intake` tool) | code | `lib/ai.ts`, `app/api/webhooks/twilio/route.ts` | Typecheck/build pass; real SMS completion test pending |
 | ✅ Fall back gracefully when no tool call returned | code | same | Text response is sent normally with `isComplete: false` |
 
-### 0H — Manual: secret rotation 🔴 (user-only)
+### 0H — Manual: secret rotation 🔴 checklist ready
 
 Checklist (user runs this off-Claude):
-- Rotate Supabase service role key + anon key (Settings → API → "Reset" both)
-- Rotate Twilio Auth Token (Console → Account → API keys)
-- Rotate Anthropic API key (console.anthropic.com → API keys)
-- Rotate Stripe secret keys + webhook signing secret
+- Use `docs/SECRET_ROTATION_CHECKLIST.md`
+- Rotate Supabase service role key + anon key
+- Rotate Twilio Auth Token
+- Rotate Anthropic API key
+- Rotate Stripe secret key + webhook signing secret
 - Rotate Clerk secret key
-- Update all values in Vercel → Settings → Environment Variables
-- Redeploy: `npx vercel --prod`
-- Verify via test signup that everything still works
+- Rotate `CRON_SECRET`
+- Update all values in `.env.local`, Vercel, and cron-job.org
+- Redeploy: `npx.cmd vercel --prod`
+- Verify auth, checkout, form submit, SMS, inbound webhook, STOP opt-out, and cron
 
 ---
 

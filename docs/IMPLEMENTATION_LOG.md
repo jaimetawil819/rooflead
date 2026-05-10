@@ -35,6 +35,33 @@ Why this change was made.
 
 ---
 
+## 2026-05-09 — Phase 0H — Secret rotation checklist
+
+**Task:** Phase 0H from `IMPLEMENTATION_PLAN.md`
+**Status:** checklist created; user rotation remains manual
+
+**Files changed:**
+- `docs/SECRET_ROTATION_CHECKLIST.md` (added — step-by-step provider rotation checklist)
+- `docs/IMPLEMENTATION_PLAN.md` (modified — points 0H to the dedicated checklist)
+- `docs/IMPLEMENTATION_LOG.md` (modified — this entry)
+
+**Reason:**
+Several development secrets were visible during setup screenshots/transcripts. The application should not move toward pilot customers with old keys. Rotating secrets is dashboard work the user must perform, so the repo now has a durable checklist with provider order, where each secret lives, where to update it, and what to verify after redeploy.
+
+**Verification performed:**
+- Checklist includes Supabase, Twilio, Anthropic, Stripe, Clerk, and Cron.
+- Checklist explicitly warns not to paste secrets into chat/screenshots/docs.
+- Checklist notes that `TWILIO_VALIDATE_REQUESTS=false` must not be set in Vercel production.
+- No app code changed in this phase.
+
+**Follow-up needed:**
+- User should perform the rotations before onboarding a real pilot customer.
+- After rotations, update `.env.local`, Vercel env vars, cron-job.org, redeploy, and run the checklist tests.
+
+**Notes / surprises:**
+- Treat test-mode secrets as compromised too. This is boring security work, which is exactly why it belongs in a checklist.
+
+---
 ## 2026-05-09 — Phase 0G — Structured AI completion signal
 
 **Task:** Phase 0G from `IMPLEMENTATION_PLAN.md`
