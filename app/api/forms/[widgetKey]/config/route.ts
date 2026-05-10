@@ -1,6 +1,21 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getAdminClient } from "@/lib/supabase/admin";
 
+type WidgetBusiness = { name: string | null };
+type WidgetConfigRow = {
+  services: { label: string; value: string }[] | null;
+  intake_question: string | null;
+  businesses: WidgetBusiness | WidgetBusiness[] | null;
+};
+
+function getBusinessName(businesses: WidgetConfigRow["businesses"]) {
+  if (Array.isArray(businesses)) {
+    return businesses[0]?.name ?? "";
+  }
+
+  return businesses?.name ?? "";
+}
+
 export async function GET(
   _req: NextRequest,
   { params }: { params: Promise<{ widgetKey: string }> }
@@ -18,12 +33,13 @@ export async function GET(
     return NextResponse.json({ error: "Invalid widget key" }, { status: 404 });
   }
 
-  const businessName = (widget.businesses as any)?.name ?? "";
+  const typedWidget = widget as WidgetConfigRow;
+  const businessName = getBusinessName(typedWidget.businesses);
 
   const res = NextResponse.json({
     businessName,
-    services: widget.services ?? [],
-    intakeQuestion: widget.intake_question ?? "",
+    services: typedWidget.services ?? [],
+    intakeQuestion: typedWidget.intake_question ?? "",
   });
 
   res.headers.set("Access-Control-Allow-Origin", "*");

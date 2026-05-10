@@ -20,14 +20,14 @@
 
       var serviceField = services.length > 0
         ? '<div style="margin-bottom:16px;">' +
-            '<label style="display:block;margin-bottom:4px;font-weight:500;">What do you need?</label>' +
+            '<label style="display:block;margin-bottom:4px;font-weight:500;">' + intakeQuestion + '</label>' +
             '<select name="serviceType" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:4px;box-sizing:border-box;">' +
               '<option value="">Select...</option>' +
               serviceOptions +
             '</select>' +
           '</div>'
         : '<div style="margin-bottom:16px;">' +
-            '<label style="display:block;margin-bottom:4px;font-weight:500;">What do you need?</label>' +
+            '<label style="display:block;margin-bottom:4px;font-weight:500;">' + intakeQuestion + '</label>' +
             '<input name="serviceType" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:4px;box-sizing:border-box;" placeholder="Describe what you need..." />' +
           '</div>';
 

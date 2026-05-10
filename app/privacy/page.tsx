@@ -9,7 +9,7 @@ export default function PrivacyPage() {
 
           <section>
             <h2 className="text-xl font-semibold text-slate-900 mb-3">1. Who We Are</h2>
-            <p>RoofLead ("we," "us," or "our") provides an AI-powered lead qualification platform for roofing companies. Our service is accessible at rooflead-mu.vercel.app. Questions about this policy can be directed to jaimetawil819@gmail.com.</p>
+            <p>RoofLead (&quot;we,&quot; &quot;us,&quot; or &quot;our&quot;) provides an AI-powered lead qualification platform for roofing companies. Our service is accessible at rooflead-mu.vercel.app. Questions about this policy can be directed to jaimetawil819@gmail.com.</p>
           </section>
 
           <section>
@@ -38,7 +38,7 @@ export default function PrivacyPage() {
 
           <section>
             <h2 className="text-xl font-semibold text-slate-900 mb-3">4. SMS Messaging</h2>
-            <p>Homeowners who submit a lead form on a roofing company's website explicitly consent to receive SMS messages from that business via RoofLead. Consent language is displayed on every form prior to submission. We do not send unsolicited SMS messages. Homeowners may opt out at any time by replying STOP to any message.</p>
+            <p>Homeowners who submit a lead form on a roofing company&apos;s website explicitly consent to receive SMS messages from that business via RoofLead. Consent language is displayed on every form prior to submission. We do not send unsolicited SMS messages. Homeowners may opt out at any time by replying STOP to any message.</p>
           </section>
 
           <section>

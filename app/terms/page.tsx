@@ -6,20 +6,19 @@ export default function TermsPage() {
         <p className="text-sm text-gray-500 mb-10">Last updated: May 9, 2026</p>
 
         <div className="prose prose-slate max-w-none space-y-8 text-gray-700 leading-relaxed">
-
           <section>
             <h2 className="text-xl font-semibold text-slate-900 mb-3">1. Program Description</h2>
-            <p>RoofLead provides an AI-powered SMS lead qualification service for roofing companies. When a homeowner submits a lead inquiry form on a participating roofing company's website, RoofLead sends automated SMS messages to qualify the lead on behalf of that business. Message and data rates may apply. Message frequency varies based on lead form submissions — typically 3–6 messages per lead conversation.</p>
+            <p>RoofLead provides an AI-powered SMS lead qualification service for roofing companies. When a homeowner submits a lead inquiry form on a participating roofing company&apos;s website, RoofLead sends automated SMS messages to qualify the lead on behalf of that business. Message and data rates may apply. Message frequency varies based on lead form submissions, typically 3-6 messages per lead conversation.</p>
           </section>
 
           <section>
             <h2 className="text-xl font-semibold text-slate-900 mb-3">2. Acceptance of Terms</h2>
-            <p>By using RoofLead — either as a business account holder or as a homeowner who submits a lead form — you agree to these Terms and Conditions. If you do not agree, do not use the service.</p>
+            <p>By using RoofLead, either as a business account holder or as a homeowner who submits a lead form, you agree to these Terms and Conditions. If you do not agree, do not use the service.</p>
           </section>
 
           <section>
             <h2 className="text-xl font-semibold text-slate-900 mb-3">3. SMS Opt-In and Consent</h2>
-            <p>Homeowners consent to receive SMS messages by submitting a lead form that displays the following opt-in language: "By submitting, you agree to receive SMS messages from this business. Reply STOP to opt out." This consent is specific to lead qualification messages from the roofing business whose form was submitted. No additional marketing messages will be sent without separate consent.</p>
+            <p>Homeowners consent to receive SMS messages by submitting a lead form that displays the following opt-in language: &quot;By submitting, you agree to receive SMS messages from this business. Reply STOP to opt out.&quot; This consent is specific to lead qualification messages from the roofing business whose form was submitted. No additional marketing messages will be sent without separate consent.</p>
           </section>
 
           <section>
@@ -49,7 +48,7 @@ export default function TermsPage() {
 
           <section>
             <h2 className="text-xl font-semibold text-slate-900 mb-3">9. Limitation of Liability</h2>
-            <p>RoofLead is provided "as is." We are not liable for missed leads, lost revenue, or damages arising from use of the service. Our liability is limited to the amount paid for the service in the month in which the claim arose.</p>
+            <p>RoofLead is provided &quot;as is.&quot; We are not liable for missed leads, lost revenue, or damages arising from use of the service. Our liability is limited to the amount paid for the service in the month in which the claim arose.</p>
           </section>
 
           <section>
@@ -61,7 +60,6 @@ export default function TermsPage() {
             <h2 className="text-xl font-semibold text-slate-900 mb-3">11. Contact</h2>
             <p>For support or questions: jaimetawil819@gmail.com<br />Reply <strong>HELP</strong> to any SMS message for assistance.<br />Reply <strong>STOP</strong> to any SMS message to opt out.</p>
           </section>
-
         </div>
       </div>
     </div>
