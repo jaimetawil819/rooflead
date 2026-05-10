@@ -1,11 +1,29 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, use } from "react";
 import Link from "next/link";
-import { ArrowLeft, Phone, MapPin, Wrench, Calendar, Clock, Home } from "lucide-react";
-import { use } from "react";
+import { useRouter } from "next/navigation";
+import {
+  ArrowLeft,
+  Phone,
+  MapPin,
+  Wrench,
+  Calendar,
+  Clock,
+  Home,
+  Trash2,
+} from "lucide-react";
 
-const STATUSES = ["new", "contacted", "qualified", "appointment_set", "won", "lost", "junk"];
+const STATUSES = [
+  "new",
+  "contacted",
+  "qualified",
+  "appointment_set",
+  "won",
+  "lost",
+  "junk",
+  "unresponsive",
+];
 
 const scoreColors: Record<string, string> = {
   hot: "bg-red-100 text-red-700",
@@ -36,12 +54,37 @@ type Message = {
   body: string;
 };
 
-export default function LeadDetailPage({ params }: { params: Promise<{ id: string }> }) {
+function titleCase(value: string) {
+  return value
+    .replace(/_/g, " ")
+    .replace(/\b\w/g, (char) => char.toUpperCase());
+}
+
+function formatServiceType(serviceType: string | null) {
+  if (!serviceType) return null;
+
+  const labels: Record<string, string> = {
+    repair: "Roof Repair",
+    replacement: "Full Replacement",
+    inspection: "Inspection",
+    storm_damage: "Storm Damage",
+  };
+
+  return labels[serviceType] ?? titleCase(serviceType);
+}
+
+export default function LeadDetailPage({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}) {
   const { id } = use(params);
+  const router = useRouter();
   const [lead, setLead] = useState<Lead | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
+  const [deleting, setDeleting] = useState(false);
 
   useEffect(() => {
     const load = async () => {
@@ -62,12 +105,36 @@ export default function LeadDetailPage({ params }: { params: Promise<{ id: strin
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ status: newStatus }),
     });
+
     if (res.ok) {
       setLead((prev) => (prev ? { ...prev, status: newStatus } : prev));
     }
+
     setSaving(false);
     setSaved(true);
     setTimeout(() => setSaved(false), 2000);
+  };
+
+  const deleteLead = async () => {
+    const confirmed = window.confirm(
+      "Delete this lead and its conversation? This cannot be undone."
+    );
+
+    if (!confirmed) return;
+
+    setDeleting(true);
+    const res = await fetch(`/api/dashboard/leads/${id}`, {
+      method: "DELETE",
+    });
+
+    if (res.ok) {
+      router.push("/dashboard/leads");
+      router.refresh();
+      return;
+    }
+
+    setDeleting(false);
+    window.alert("Could not delete this lead. Please try again.");
   };
 
   if (!lead) {
@@ -82,12 +149,17 @@ export default function LeadDetailPage({ params }: { params: Promise<{ id: strin
     {
       icon: Phone,
       label: "Phone",
-      value: lead.phone
-        ? <a href={`tel:${lead.phone}`} className="text-blue-600 hover:underline font-medium">{lead.phone}</a>
-        : "—",
+      value: lead.phone ? (
+        <a
+          href={`tel:${lead.phone}`}
+          className="text-blue-600 hover:underline font-medium"
+        >
+          {lead.phone}
+        </a>
+      ) : null,
     },
     { icon: MapPin, label: "Address", value: lead.address },
-    { icon: Wrench, label: "Service", value: lead.service_type },
+    { icon: Wrench, label: "Service", value: formatServiceType(lead.service_type) },
     { icon: Clock, label: "Urgency", value: lead.urgency },
     { icon: Calendar, label: "Timeline", value: lead.timeline },
     {
@@ -95,7 +167,11 @@ export default function LeadDetailPage({ params }: { params: Promise<{ id: strin
       label: "Homeowner",
       value: lead.is_homeowner === null ? null : lead.is_homeowner ? "Yes" : "No",
     },
-    { icon: Calendar, label: "Received", value: new Date(lead.created_at).toLocaleString() },
+    {
+      icon: Calendar,
+      label: "Received",
+      value: new Date(lead.created_at).toLocaleString(),
+    },
   ];
 
   return (
@@ -107,31 +183,36 @@ export default function LeadDetailPage({ params }: { params: Promise<{ id: strin
         <ArrowLeft className="h-4 w-4" /> Back to leads
       </Link>
 
-      {/* Header */}
       <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 mb-4">
         <div className="flex items-start justify-between gap-4 flex-wrap">
           <div>
-            <h1 className="text-2xl font-bold text-slate-900">{lead.name ?? "Unknown"}</h1>
+            <h1 className="text-2xl font-bold text-slate-900">
+              {lead.name ?? "Unknown"}
+            </h1>
             <p className="text-gray-400 text-sm mt-1">
               Lead received {new Date(lead.created_at).toLocaleDateString()}
             </p>
           </div>
           {lead.lead_score && (
-            <span className={`text-sm font-bold px-4 py-1.5 rounded-full ${scoreColors[lead.lead_score] ?? "bg-gray-100 text-gray-600"}`}>
+            <span
+              className={`text-sm font-bold px-4 py-1.5 rounded-full ${scoreColors[lead.lead_score] ?? "bg-gray-100 text-gray-600"}`}
+            >
               {lead.lead_score.toUpperCase()}
             </span>
           )}
         </div>
 
-        <div className="grid grid-cols-2 gap-3 mt-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-6">
           {infoItems.map(({ icon: Icon, label, value }) => (
-            <div key={label} className="flex items-start gap-2.5">
+            <div key={label} className="flex items-start gap-2.5 min-w-0">
               <div className="h-8 w-8 rounded-lg bg-gray-50 flex items-center justify-center flex-shrink-0 mt-0.5">
                 <Icon className="h-4 w-4 text-gray-400" aria-hidden="true" />
               </div>
-              <div>
+              <div className="min-w-0">
                 <p className="text-xs text-gray-400">{label}</p>
-                <div className="text-sm font-medium text-slate-900">{value ?? "—"}</div>
+                <div className="text-sm font-medium text-slate-900 break-words">
+                  {value ?? "-"}
+                </div>
               </div>
             </div>
           ))}
@@ -150,10 +231,11 @@ export default function LeadDetailPage({ params }: { params: Promise<{ id: strin
         )}
       </div>
 
-      {/* AI Summary */}
       {lead.summary && (
         <div className="bg-blue-50 border border-blue-100 rounded-2xl p-6 mb-4">
-          <p className="text-xs font-semibold text-blue-600 uppercase tracking-wide mb-2">AI Summary</p>
+          <p className="text-xs font-semibold text-blue-600 uppercase tracking-wide mb-2">
+            AI Summary
+          </p>
           <p className="text-slate-700 text-sm leading-relaxed">{lead.summary}</p>
           {lead.qualification_reason && (
             <p className="text-slate-500 text-sm leading-relaxed mt-3">
@@ -164,28 +246,44 @@ export default function LeadDetailPage({ params }: { params: Promise<{ id: strin
         </div>
       )}
 
-      {/* Status */}
       <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 mb-4">
-        <p className="text-sm font-semibold text-slate-900 mb-3">Update Status</p>
-        <div className="flex items-center gap-3 flex-wrap">
-          <select
-            value={lead.status}
-            onChange={(e) => updateStatus(e.target.value)}
-            disabled={saving}
-            className="border border-gray-200 rounded-lg px-3 py-2 text-sm text-slate-900 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50"
+        <div className="flex items-start justify-between gap-4 flex-wrap">
+          <div>
+            <p className="text-sm font-semibold text-slate-900 mb-3">
+              Update Status
+            </p>
+            <div className="flex items-center gap-3 flex-wrap">
+              <select
+                value={lead.status}
+                onChange={(e) => updateStatus(e.target.value)}
+                disabled={saving || deleting}
+                className="border border-gray-200 rounded-lg px-3 py-2 text-sm text-slate-900 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50"
+              >
+                {STATUSES.map((status) => (
+                  <option key={status} value={status}>
+                    {titleCase(status)}
+                  </option>
+                ))}
+              </select>
+              {saving && <span className="text-sm text-gray-400">Saving...</span>}
+              {saved && (
+                <span className="text-sm text-green-600 font-medium">Saved!</span>
+              )}
+            </div>
+          </div>
+
+          <button
+            type="button"
+            onClick={deleteLead}
+            disabled={deleting}
+            className="inline-flex items-center gap-2 rounded-lg border border-red-100 bg-red-50 px-3 py-2 text-sm font-semibold text-red-600 transition-colors hover:bg-red-100 disabled:opacity-50"
           >
-            {STATUSES.map((s) => (
-              <option key={s} value={s}>
-                {s.replace("_", " ").replace(/\b\w/g, (c) => c.toUpperCase())}
-              </option>
-            ))}
-          </select>
-          {saving && <span className="text-sm text-gray-400">Saving…</span>}
-          {saved && <span className="text-sm text-green-600 font-medium">Saved!</span>}
+            <Trash2 className="h-4 w-4" />
+            {deleting ? "Deleting..." : "Delete Lead"}
+          </button>
         </div>
       </div>
 
-      {/* Conversation */}
       <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
         <p className="text-sm font-semibold text-slate-900 mb-4">Conversation</p>
         {messages.length === 0 ? (
@@ -193,7 +291,10 @@ export default function LeadDetailPage({ params }: { params: Promise<{ id: strin
         ) : (
           <div className="space-y-3">
             {messages.map((msg) => (
-              <div key={msg.id} className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}>
+              <div
+                key={msg.id}
+                className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}
+              >
                 <div
                   className={`max-w-xs sm:max-w-sm px-4 py-2.5 rounded-2xl text-sm leading-relaxed ${
                     msg.role === "user"

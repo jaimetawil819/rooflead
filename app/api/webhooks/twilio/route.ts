@@ -107,6 +107,11 @@ async function processLeadConversation({
       body: reply,
     });
 
+    await supabase
+      .from("leads")
+      .update({ last_message_at: new Date().toISOString() })
+      .eq("id", leadId);
+
     try {
       await sendSMS(from, reply);
     } catch (err) {
@@ -262,6 +267,11 @@ export async function POST(req: NextRequest) {
     console.error("Inbound message insert failed:", inboundMessageError.message);
     return new NextResponse("Message insert failed", { status: 500 });
   }
+
+  await supabase
+    .from("leads")
+    .update({ last_message_at: new Date().toISOString() })
+    .eq("id", lead.id);
 
   after(async () => {
     await processLeadConversation({

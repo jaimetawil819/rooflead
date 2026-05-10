@@ -10,6 +10,7 @@ This folder tracks database changes for RoofLead.
 - `0004_stripe_billing_hardening.sql` adds Stripe webhook idempotency storage and subscription metadata columns.
 - `0005_twilio_message_idempotency.sql` adds a nullable unique Twilio message SID column for inbound webhook replay protection.
 - `0006_structured_lead_extraction.sql` adds structured lead qualification fields.
+- `0007_last_message_at.sql` adds conversation activity tracking for follow-up and stale-lead timeout logic.
 
 ## Apply order
 
@@ -21,6 +22,7 @@ Apply migrations in numeric order:
 4. `0004_stripe_billing_hardening.sql` - run before deploying the expanded Stripe webhook. It creates `stripe_events` and adds optional subscription metadata columns to `businesses`.
 5. `0005_twilio_message_idempotency.sql` - run before deploying the Twilio idempotency change. It adds `messages.twilio_message_sid` with a unique partial index for non-null SIDs.
 6. `0006_structured_lead_extraction.sql` - run before deploying structured lead extraction. It adds `timeline`, `is_homeowner`, and `qualification_reason` to `leads`.
+7. `0007_last_message_at.sql` - run before deploying mid-conversation timeout logic. It adds `leads.last_message_at`, backfills it from message history, and indexes it for cron queries.
 
 ## Capturing the baseline
 

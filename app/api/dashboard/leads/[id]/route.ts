@@ -94,3 +94,45 @@ export async function PATCH(
 
   return NextResponse.json({ success: true });
 }
+
+export async function DELETE(
+  _req: Request,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  const { userId } = await auth();
+  if (!userId) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  const { id } = await params;
+  const lead = await getOwnedLead(id, userId);
+
+  if (!lead) {
+    return NextResponse.json({ error: "Lead not found" }, { status: 404 });
+  }
+
+  const supabase = getAdminClient();
+
+  const { error: messagesError } = await supabase
+    .from("messages")
+    .delete()
+    .eq("lead_id", id);
+
+  if (messagesError) {
+    return NextResponse.json(
+      { error: "Failed to delete lead messages" },
+      { status: 500 }
+    );
+  }
+
+  const { error: leadError } = await supabase
+    .from("leads")
+    .delete()
+    .eq("id", id);
+
+  if (leadError) {
+    return NextResponse.json({ error: "Failed to delete lead" }, { status: 500 });
+  }
+
+  return NextResponse.json({ success: true });
+}

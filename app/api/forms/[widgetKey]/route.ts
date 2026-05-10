@@ -93,6 +93,7 @@ export async function POST(
       address,
       service_type: serviceType,
       status: "new",
+      last_message_at: new Date().toISOString(),
     })
     .select()
     .single();
@@ -118,12 +119,17 @@ export async function POST(
         console.error("SMS failed:", err);
       }
 
-      // Save greeting to messages table
+      // Save greeting to messages table.
       await supabase.from("messages").insert({
         lead_id: lead.id,
         role: "assistant",
         body: greeting,
       });
+
+      await supabase
+        .from("leads")
+        .update({ last_message_at: new Date().toISOString() })
+        .eq("id", lead.id);
     }
   }
 

@@ -97,7 +97,8 @@ Completed in Phase 1:
 - Manual inbound SMS simulator
 - Async Twilio webhook processing
 - Prompt injection mitigation
+- Mid-conversation timeout
 
 Recommended next slice:
 
-- Mid-conversation timeout
+- Structured logging

@@ -3,8 +3,33 @@ import { getAdminClient } from "@/lib/supabase/admin";
 import { isSmsOptedOut } from "@/lib/sms-opt-outs";
 import { sendSMS } from "@/lib/twilio";
 
-// Called by Vercel Cron every 10 minutes.
-// Finds leads with no reply after 30 min → sends one follow-up → marks unresponsive if still no reply after 60 min.
+const FOLLOW_UP_DELAY_MINUTES = 30;
+const UNRESPONSIVE_AFTER_FOLLOW_UP_MINUTES = 60;
+const STALE_CONVERSATION_MINUTES = 120;
+
+type FollowUpLead = {
+  id: string;
+  phone: string | null;
+  name: string | null;
+  business_id: string;
+};
+
+function minutesAgo(minutes: number) {
+  return new Date(Date.now() - minutes * 60 * 1000).toISOString();
+}
+
+async function hasUserMessages(supabase: ReturnType<typeof getAdminClient>, leadId: string) {
+  const { count } = await supabase
+    .from("messages")
+    .select("id", { count: "exact", head: true })
+    .eq("lead_id", leadId)
+    .eq("role", "user");
+
+  return (count ?? 0) > 0;
+}
+
+// Called by cron. Sends one follow-up to untouched leads, then marks stale
+// conversations unresponsive when the homeowner stops replying.
 export async function GET(req: NextRequest) {
   const authHeader = req.headers.get("authorization");
   if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
@@ -13,39 +38,67 @@ export async function GET(req: NextRequest) {
 
   const supabase = getAdminClient();
 
-  const now = new Date();
-  const thirtyMinAgo = new Date(now.getTime() - 30 * 60 * 1000).toISOString();
-  const sixtyMinAgo = new Date(now.getTime() - 60 * 60 * 1000).toISOString();
+  const followUpCutoff = minutesAgo(FOLLOW_UP_DELAY_MINUTES);
+  const followUpUnresponsiveCutoff = minutesAgo(
+    UNRESPONSIVE_AFTER_FOLLOW_UP_MINUTES
+  );
+  const staleConversationCutoff = minutesAgo(STALE_CONVERSATION_MINUTES);
 
-  // 1. Mark as unresponsive: follow-up was sent 30+ min ago and no reply since
+  let markedUnresponsive = 0;
+  let markedStaleConversations = 0;
+
   const { data: toMarkUnresponsive } = await supabase
     .from("leads")
     .select("id")
     .eq("status", "new")
     .eq("follow_up_sent", true)
-    .lt("created_at", sixtyMinAgo);
+    .lt("last_message_at", followUpUnresponsiveCutoff);
 
   if (toMarkUnresponsive && toMarkUnresponsive.length > 0) {
-    const ids = toMarkUnresponsive.map((l) => l.id);
-    await supabase.from("leads").update({ status: "unresponsive" }).in("id", ids);
+    const ids = toMarkUnresponsive.map((lead) => lead.id);
+    await supabase
+      .from("leads")
+      .update({ status: "unresponsive" })
+      .in("id", ids);
+    markedUnresponsive = ids.length;
   }
 
-  // 2. Send follow-up: no response 30+ min after creation, follow-up not yet sent
+  const { data: staleCandidates } = await supabase
+    .from("leads")
+    .select("id")
+    .eq("status", "new")
+    .eq("follow_up_sent", false)
+    .lt("last_message_at", staleConversationCutoff);
+
+  for (const lead of staleCandidates ?? []) {
+    if (await hasUserMessages(supabase, lead.id)) {
+      await supabase
+        .from("leads")
+        .update({ status: "unresponsive" })
+        .eq("id", lead.id);
+      markedStaleConversations++;
+    }
+  }
+
   const { data: toFollowUp } = await supabase
     .from("leads")
     .select("id, phone, name, business_id")
     .eq("status", "new")
     .eq("follow_up_sent", false)
-    .lt("created_at", thirtyMinAgo);
-
-  if (!toFollowUp || toFollowUp.length === 0) {
-    return NextResponse.json({ sent: 0, markedUnresponsive: toMarkUnresponsive?.length ?? 0 });
-  }
+    .lt("last_message_at", followUpCutoff);
 
   let sent = 0;
   let skippedOptOuts = 0;
+  let skippedActiveConversations = 0;
 
-  for (const lead of toFollowUp) {
+  for (const lead of (toFollowUp ?? []) as FollowUpLead[]) {
+    if (!lead.phone) continue;
+
+    if (await hasUserMessages(supabase, lead.id)) {
+      skippedActiveConversations++;
+      continue;
+    }
+
     if (await isSmsOptedOut(supabase, lead.phone)) {
       await supabase
         .from("leads")
@@ -58,19 +111,6 @@ export async function GET(req: NextRequest) {
       continue;
     }
 
-    // Check if the lead has replied at all (has any user messages)
-    const { count } = await supabase
-      .from("messages")
-      .select("id", { count: "exact", head: true })
-      .eq("lead_id", lead.id)
-      .eq("role", "user");
-
-    if ((count ?? 0) > 0) {
-      // They replied — conversation is active, don't send follow-up
-      await supabase.from("leads").update({ follow_up_sent: true }).eq("id", lead.id);
-      continue;
-    }
-
     const { data: business } = await supabase
       .from("businesses")
       .select("name")
@@ -79,21 +119,34 @@ export async function GET(req: NextRequest) {
 
     const businessName = business?.name ?? "us";
     const firstName = lead.name?.split(" ")[0] ?? "there";
-    const followUpMsg = `Hi ${firstName}, just following up from ${businessName}! We'd love to help — what can we assist you with today?`;
+    const followUpMsg = `Hi ${firstName}, just following up from ${businessName}! We'd love to help - what can we assist you with today?`;
 
     try {
       await sendSMS(lead.phone, followUpMsg);
-      await supabase.from("messages").insert({ lead_id: lead.id, role: "assistant", body: followUpMsg });
-      await supabase.from("leads").update({ follow_up_sent: true }).eq("id", lead.id);
+      await supabase.from("messages").insert({
+        lead_id: lead.id,
+        role: "assistant",
+        body: followUpMsg,
+      });
+      await supabase
+        .from("leads")
+        .update({
+          follow_up_sent: true,
+          last_message_at: new Date().toISOString(),
+        })
+        .eq("id", lead.id);
       sent++;
     } catch (err) {
-      console.error(`Follow-up SMS failed for lead ${lead.id}:`, err);
+      const message = err instanceof Error ? err.message : "Unknown error";
+      console.error(`Follow-up SMS failed for lead ${lead.id}: ${message}`);
     }
   }
 
   return NextResponse.json({
     sent,
     skippedOptOuts,
-    markedUnresponsive: toMarkUnresponsive?.length ?? 0,
+    skippedActiveConversations,
+    markedUnresponsive,
+    markedStaleConversations,
   });
 }

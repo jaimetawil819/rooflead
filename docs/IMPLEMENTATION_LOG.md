@@ -35,6 +35,66 @@ Why this change was made.
 
 ---
 
+## 2026-05-10 - Dashboard - Lead deletion
+
+**Task:** Add a safe way to delete test/unwanted leads from the dashboard.
+**Status:** completed
+
+**Files changed:**
+- `app/api/dashboard/leads/[id]/route.ts` (modified)
+- `app/dashboard/leads/[id]/page.tsx` (modified)
+- `docs/IMPLEMENTATION_LOG.md` (modified)
+
+**Reason:**
+Testing creates noisy lead records, and the dashboard had no owner-facing cleanup path. The lead detail page now has a confirmed delete action. The protected dashboard API verifies ownership, deletes related messages, then deletes the lead.
+
+**Verification performed:**
+- `npx.cmd tsc --noEmit`: clean.
+- `npm.cmd run lint`: clean.
+- `npm.cmd run build`: clean.
+
+**Follow-up needed:**
+- Manually delete a test lead from the dashboard and confirm it disappears from the leads list.
+
+**Notes / surprises:**
+- No database migration was required.
+
+---
+
+## 2026-05-10 - Phase 1 - Mid-conversation timeout
+
+**Task:** Track lead conversation activity and mark stale conversations unresponsive.
+**Status:** completed
+
+**Files changed:**
+- `supabase/migrations/0007_last_message_at.sql` (added)
+- `supabase/migrations/README.md` (modified)
+- `app/api/forms/[widgetKey]/route.ts` (modified)
+- `app/api/webhooks/twilio/route.ts` (modified)
+- `app/api/cron/follow-up/route.ts` (modified)
+- `docs/PROJECT_AUDIT.md` (modified)
+- `docs/IMPLEMENTATION_PLAN.md` (modified)
+- `README.md` (modified)
+- `docs/IMPLEMENTATION_LOG.md` (modified)
+
+**Reason:**
+Leads could remain `new` forever if a homeowner replied once and then stopped mid-intake. Follow-up logic also used `created_at`, which does not represent the latest conversation activity. This change adds `leads.last_message_at`, updates it when form greetings and Twilio messages are saved, and makes the cron route use it for follow-ups and stale-conversation timeout.
+
+**Verification performed:**
+- `npx.cmd tsc --noEmit`: clean.
+- `npm.cmd run lint`: clean.
+- `npm.cmd run build`: clean.
+
+**Follow-up needed:**
+- Apply `supabase/migrations/0007_last_message_at.sql` in Supabase before deploying this code.
+- After applying the migration, submit a test lead and simulate one inbound SMS to confirm `last_message_at` updates.
+- Run the cron endpoint manually and verify the JSON counters return.
+
+**Notes / surprises:**
+- This marks stale conversations `unresponsive`; it does not yet generate partial summaries for abandoned conversations. That can be added later if owners want partial context surfaced more clearly.
+
+---
+
 ## 2026-05-10 - Phase 1 - Prompt injection mitigation
 
 **Task:** Treat configurable business data and homeowner transcript text as untrusted AI context.
