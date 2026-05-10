@@ -52,8 +52,8 @@ This document is the executable checklist. Work top-down. Do not skip Phase 0 to
 
 | Step | Type | Files / Action | Verify |
 |------|------|---------------|--------|
-| ✅ Migration: create `sms_opt_outs` table | sql | new `supabase/migrations/0002_sms_opt_outs.sql` | Manual Supabase apply still required |
-| ✅ Update Twilio webhook to insert opt-out + update lead on STOP/UNSUBSCRIBE/CANCEL/END/QUIT | code | `app/api/webhooks/twilio/route.ts` | Typecheck/build pass; real SMS test pending after migration |
+| ✅ Migration: create `sms_opt_outs` table | sql | new `supabase/migrations/0002_sms_opt_outs.sql` | Applied in Supabase SQL Editor |
+| ✅ Update Twilio webhook to insert opt-out + update lead on STOP/UNSUBSCRIBE/CANCEL/END/QUIT | code | `app/api/webhooks/twilio/route.ts` | Typecheck/build pass; real SMS STOP test pending after deploy |
 | ✅ Update follow-up cron to skip opted-out phones | code | `app/api/cron/follow-up/route.ts` | Typecheck/build pass |
 | ✅ Update form-greeting send to skip opted-out phones | code | `app/api/forms/[widgetKey]/route.ts` | Typecheck/build pass |
 

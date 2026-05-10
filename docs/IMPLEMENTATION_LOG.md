@@ -35,6 +35,28 @@ Why this change was made.
 
 ---
 
+## 2026-05-09 — Phase 0D — Manual Supabase migration applied
+
+**Task:** Manual apply for `supabase/migrations/0002_sms_opt_outs.sql`
+**Status:** completed
+
+**Files changed:**
+- `docs/IMPLEMENTATION_PLAN.md` (modified — removes manual-apply pending note)
+- `docs/IMPLEMENTATION_LOG.md` (modified — this entry)
+
+**Reason:**
+The `sms_opt_outs` table and `leads.sms_opted_out_at` column were applied in Supabase SQL Editor, so the database is now ready for the Phase 0D app code.
+
+**Verification performed:**
+- User confirmed Supabase SQL Editor migration was completed.
+
+**Follow-up needed:**
+- After deploy, test real inbound `STOP` SMS and verify an opt-out row is created.
+
+**Notes / surprises:**
+- None.
+
+---
 ## 2026-05-09 — Phase 0E — Baseline schema captured
 
 **Task:** Complete remaining Phase 0E baseline capture
