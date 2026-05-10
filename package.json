@@ -6,7 +6,8 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "simulate:inbound": "node --env-file=.env.local scripts/simulate-inbound.mjs"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.95.1",

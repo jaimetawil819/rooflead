@@ -109,12 +109,60 @@ function asNullableBoolean(value: unknown) {
   return typeof value === "boolean" ? value : null;
 }
 
+function extractJsonObject(text: string) {
+  const cleaned = text
+    .trim()
+    .replace(/^```(?:json)?/i, "")
+    .replace(/```$/i, "")
+    .replace(/^json\s*/i, "")
+    .trim();
+
+  const start = cleaned.indexOf("{");
+  if (start === -1) return cleaned;
+
+  let depth = 0;
+  let inString = false;
+  let escaped = false;
+
+  for (let i = start; i < cleaned.length; i++) {
+    const char = cleaned[i];
+
+    if (escaped) {
+      escaped = false;
+      continue;
+    }
+
+    if (char === "\\") {
+      escaped = true;
+      continue;
+    }
+
+    if (char === '"') {
+      inString = !inString;
+      continue;
+    }
+
+    if (inString) continue;
+
+    if (char === "{") depth++;
+    if (char === "}") depth--;
+
+    if (depth === 0) {
+      return cleaned.slice(start, i + 1);
+    }
+  }
+
+  return cleaned;
+}
+
 function parseLeadSummaryJson(text: string): LeadSummary {
+  const jsonText = extractJsonObject(text);
+
   try {
-    const parsed = JSON.parse(text) as Record<string, unknown>;
+    const parsed = JSON.parse(jsonText) as Record<string, unknown>;
 
     return {
-      summary: asString(parsed.summary, text),
+      summary: asString(parsed.summary, jsonText),
       score: asLeadScore(parsed.score),
       urgency: asUrgency(parsed.urgency),
       timeline: asString(parsed.timeline) || null,
@@ -123,7 +171,7 @@ function parseLeadSummaryJson(text: string): LeadSummary {
     };
   } catch {
     return {
-      summary: text,
+      summary: text.trim() || "AI summary could not be parsed. Review the conversation manually.",
       score: "warm",
       urgency: "unknown",
       timeline: null,
@@ -204,7 +252,7 @@ export async function generateLeadSummary(
     const response = await client.messages.create({
       model: "claude-sonnet-4-6",
       max_tokens: 400,
-      system: "You analyze lead qualification conversations and return JSON only. No other text.",
+      system: "You analyze lead qualification conversations. Return raw JSON only: no markdown, no code fences, no leading 'json' label, and no explanatory text.",
       messages: [
         {
           role: "user",

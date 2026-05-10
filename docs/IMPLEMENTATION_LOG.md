@@ -35,6 +35,54 @@ Why this change was made.
 
 ---
 
+## 2026-05-10 - Phase 1 - Manual inbound SMS simulator
+
+**Task:** Add local test utility for AI conversation flow while A2P approval is pending.
+**Status:** completed
+
+**Files changed:**
+- `scripts/simulate-inbound.mjs` (added)
+- `package.json` (modified)
+- `docs/MANUAL_TESTING.md` (added)
+- `docs/IMPLEMENTATION_LOG.md` (modified)
+
+**Reason:**
+A2P approval blocks full live SMS testing, but we still need a way to test the actual Twilio webhook path, AI replies, structured extraction, and duplicate `MessageSid` handling. This utility signs a local webhook request with the Twilio auth token from `.env.local` and posts it to `/api/webhooks/twilio`, exercising the real route without creating a new public dev endpoint.
+
+**Verification performed:**
+- Pending final typecheck/lint/build in this session.
+
+**Follow-up needed:**
+- Use `docs/MANUAL_TESTING.md` to simulate a complete conversation against a test lead.
+
+**Notes / surprises:**
+- The simulator contains no hardcoded credentials or phone numbers.
+
+---
+
+## 2026-05-10 - Phase 1 - Structured summary parser hardening
+
+**Task:** Fix malformed summary display found during manual inbound simulation.
+**Status:** completed
+
+**Files changed:**
+- `lib/ai.ts` (modified)
+- `docs/IMPLEMENTATION_LOG.md` (modified)
+
+**Reason:**
+Manual inbound simulation showed the AI summary card displaying a raw JSON blob instead of the parsed summary. The summary model returned JSON with extra formatting/prefix text, so strict `JSON.parse(text)` failed and the fallback stored the whole blob as the summary. The parser now strips common markdown/code-fence wrappers, removes a leading `json` label, extracts the first balanced JSON object, and then parses it.
+
+**Verification performed:**
+- Pending final typecheck/lint/build in this session.
+
+**Follow-up needed:**
+- Re-run the simulator on a new test lead and confirm the lead detail page shows a normal summary plus structured fields.
+
+**Notes / surprises:**
+- The summary prompt now explicitly asks for raw JSON only, but the parser is tolerant because model output can still drift.
+
+---
+
 ## 2026-05-10 - Phase 1 - AI reliability guardrails
 
 **Task:** Phase 1 AI reliability improvements that can be tested without A2P approval.

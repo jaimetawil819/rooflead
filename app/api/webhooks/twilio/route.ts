@@ -221,6 +221,9 @@ export async function POST(req: NextRequest) {
         isHomeowner,
         qualificationReason,
       } = await generateLeadSummary(allMessages);
+      const nextStatus =
+        score === "unqualified" || isHomeowner === false ? "junk" : "qualified";
+
       await supabase
         .from("leads")
         .update({
@@ -230,7 +233,7 @@ export async function POST(req: NextRequest) {
           timeline,
           is_homeowner: isHomeowner,
           qualification_reason: qualificationReason,
-          status: "qualified",
+          status: nextStatus,
         })
         .eq("id", lead.id);
 
