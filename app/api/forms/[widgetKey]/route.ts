@@ -64,6 +64,25 @@ export async function POST(
   const typedWidget = widget as WidgetRow;
   const businessName = getBusinessName(typedWidget.businesses);
   const intakeQuestion = widget.intake_question ?? "What type of roofing issue are you dealing with?";
+  const duplicateWindowStart = new Date(Date.now() - 5 * 60 * 1000).toISOString();
+
+  const { data: recentLead } = await supabase
+    .from("leads")
+    .select("id")
+    .eq("business_id", typedWidget.business_id)
+    .eq("phone", phone)
+    .gte("created_at", duplicateWindowStart)
+    .order("created_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  if (recentLead) {
+    return NextResponse.json({
+      success: true,
+      duplicate: true,
+      leadId: recentLead.id,
+    });
+  }
 
   const { data: lead, error } = await supabase
     .from("leads")

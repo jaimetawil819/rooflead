@@ -35,6 +35,34 @@ Why this change was made.
 
 ---
 
+## 2026-05-10 - Phase 1 - Twilio and form idempotency
+
+**Task:** Phase 1 message and lead duplicate protection.
+**Status:** code prepared; Supabase SQL migration still requires manual application
+
+**Files changed:**
+- `supabase/migrations/0005_twilio_message_idempotency.sql` (added)
+- `supabase/migrations/README.md` (updated)
+- `app/api/webhooks/twilio/route.ts` (modified)
+- `app/api/forms/[widgetKey]/route.ts` (modified)
+- `docs/IMPLEMENTATION_LOG.md` (modified)
+
+**Reason:**
+Twilio may retry webhook delivery, and browsers/users may submit the public form more than once. Before this change, duplicate Twilio delivery could insert duplicate inbound messages and trigger a second AI/SMS reply. Duplicate form submissions could create duplicate leads and send duplicate greetings. This change stores Twilio `MessageSid` values on inbound messages and skips already-processed SIDs before AI work. It also treats a same-business, same-phone form submission within five minutes as a duplicate and returns the existing lead.
+
+**Verification performed:**
+- Pending final typecheck/lint/build in this session.
+
+**Follow-up needed:**
+- Apply `supabase/migrations/0005_twilio_message_idempotency.sql` in Supabase SQL Editor before deploying this webhook change.
+- Replay the same Twilio webhook payload with the same `MessageSid` and confirm it does not create another message or AI reply.
+- Submit the same test form twice within five minutes and confirm only one lead is created.
+
+**Notes / surprises:**
+- STOP opt-outs may update multiple matching active leads, but only one stored message receives the Twilio SID so duplicate webhook delivery is still detected.
+
+---
+
 ## 2026-05-10 - Phase 1 - Stripe billing correctness
 
 **Task:** Phase 1 Stripe lifecycle and customer billing management.

@@ -8,6 +8,7 @@ This folder tracks database changes for RoofLead.
 - `0002_sms_opt_outs.sql` is the first tracked forward migration. It adds durable SMS opt-out storage.
 - `0003_secure_rls.sql` removes permissive direct table access after dashboard data access has moved behind protected API routes.
 - `0004_stripe_billing_hardening.sql` adds Stripe webhook idempotency storage and subscription metadata columns.
+- `0005_twilio_message_idempotency.sql` adds a nullable unique Twilio message SID column for inbound webhook replay protection.
 
 ## Apply order
 
@@ -17,6 +18,7 @@ Apply migrations in numeric order:
 2. `0002_sms_opt_outs.sql` - run in Supabase SQL Editor before deploying code that references `sms_opt_outs` or `leads.sms_opted_out_at`.
 3. `0003_secure_rls.sql` - run only after deploying the protected dashboard API routes. It removes permissive anon/authenticated table access and expects private data access to go through server-owned API routes using Clerk ownership checks.
 4. `0004_stripe_billing_hardening.sql` - run before deploying the expanded Stripe webhook. It creates `stripe_events` and adds optional subscription metadata columns to `businesses`.
+5. `0005_twilio_message_idempotency.sql` - run before deploying the Twilio idempotency change. It adds `messages.twilio_message_sid` with a unique partial index for non-null SIDs.
 
 ## Capturing the baseline
 

@@ -27,6 +27,26 @@ function shouldValidateTwilioRequest() {
   return process.env.TWILIO_VALIDATE_REQUESTS !== "false";
 }
 
+async function hasProcessedTwilioMessage(messageSid: string | undefined) {
+  if (!messageSid) return false;
+
+  const supabase = getAdminClient();
+  const { data } = await supabase
+    .from("messages")
+    .select("id")
+    .eq("twilio_message_sid", messageSid)
+    .limit(1)
+    .maybeSingle();
+
+  return Boolean(data);
+}
+
+function emptyTwimlResponse() {
+  return new NextResponse("<Response></Response>", {
+    headers: { "Content-Type": "text/xml" },
+  });
+}
+
 export async function POST(req: NextRequest) {
   const supabase = getAdminClient();
   const body = await req.text();
@@ -50,9 +70,14 @@ export async function POST(req: NextRequest) {
 
   const from = params.From;
   const text = params.Body?.trim();
+  const messageSid = params.MessageSid;
 
   if (!from || !text) {
     return new NextResponse("Bad request", { status: 400 });
+  }
+
+  if (await hasProcessedTwilioMessage(messageSid)) {
+    return emptyTwimlResponse();
   }
 
   const phoneCandidates = getPhoneLookupCandidates(from);
@@ -71,10 +96,11 @@ export async function POST(req: NextRequest) {
 
     if (optedOutLeadIds.length > 0) {
       await supabase.from("messages").insert(
-        optedOutLeadIds.map((leadId) => ({
+        optedOutLeadIds.map((leadId, index) => ({
           lead_id: leadId,
           role: "user",
           body: text,
+          twilio_message_sid: index === 0 ? messageSid : null,
         }))
       );
 
@@ -95,9 +121,7 @@ export async function POST(req: NextRequest) {
   }
 
   if (await isSmsOptedOut(supabase, from)) {
-    return new NextResponse("<Response></Response>", {
-      headers: { "Content-Type": "text/xml" },
-    });
+    return emptyTwimlResponse();
   }
 
   // Find the most recent active lead for this phone number.
@@ -113,17 +137,25 @@ export async function POST(req: NextRequest) {
     .single();
 
   if (!lead) {
-    return new NextResponse("<Response></Response>", {
-      headers: { "Content-Type": "text/xml" },
-    });
+    return emptyTwimlResponse();
   }
 
   // Save the inbound message
-  await supabase.from("messages").insert({
+  const { error: inboundMessageError } = await supabase.from("messages").insert({
     lead_id: lead.id,
     role: "user",
     body: text,
+    twilio_message_sid: messageSid ?? null,
   });
+
+  if (inboundMessageError?.code === "23505") {
+    return emptyTwimlResponse();
+  }
+
+  if (inboundMessageError) {
+    console.error("Inbound message insert failed:", inboundMessageError.message);
+    return new NextResponse("Message insert failed", { status: 500 });
+  }
 
   // Load full message history
   const { data: messages } = await supabase
@@ -202,7 +234,5 @@ export async function POST(req: NextRequest) {
     }
   }
 
-  return new NextResponse("<Response></Response>", {
-    headers: { "Content-Type": "text/xml" },
-  });
+  return emptyTwimlResponse();
 }
