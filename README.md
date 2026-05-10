@@ -84,7 +84,7 @@ More detail: `docs/MANUAL_TESTING.md`.
 
 ## Current Phase
 
-Phase 1: reliability and backend correctness.
+Phase 2: product improvements.
 
 Completed in Phase 1:
 
@@ -99,7 +99,8 @@ Completed in Phase 1:
 - Prompt injection mitigation
 - Mid-conversation timeout
 - Structured logging
+- Final local and production smoke test
 
 Recommended next slice:
 
-- Phase 1 final smoke test and pilot-readiness review
+- Manual owner SMS reply from dashboard

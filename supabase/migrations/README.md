@@ -11,6 +11,7 @@ This folder tracks database changes for RoofLead.
 - `0005_twilio_message_idempotency.sql` adds a nullable unique Twilio message SID column for inbound webhook replay protection.
 - `0006_structured_lead_extraction.sql` adds structured lead qualification fields.
 - `0007_last_message_at.sql` adds conversation activity tracking for follow-up and stale-lead timeout logic.
+- `0008_human_handoff.sql` adds durable human-review state for owner handoff.
 
 ## Apply order
 
@@ -23,6 +24,7 @@ Apply migrations in numeric order:
 5. `0005_twilio_message_idempotency.sql` - run before deploying the Twilio idempotency change. It adds `messages.twilio_message_sid` with a unique partial index for non-null SIDs.
 6. `0006_structured_lead_extraction.sql` - run before deploying structured lead extraction. It adds `timeline`, `is_homeowner`, and `qualification_reason` to `leads`.
 7. `0007_last_message_at.sql` - run before deploying mid-conversation timeout logic. It adds `leads.last_message_at`, backfills it from message history, and indexes it for cron queries.
+8. `0008_human_handoff.sql` - run before deploying Phase 2A. It adds `needs_human_review` and `handoff_reason` to `leads`.
 
 ## Capturing the baseline
 

@@ -12,6 +12,7 @@ export default function LeadsFilter() {
 
   const currentStatus = searchParams.get("status") ?? "all";
   const currentScore = searchParams.get("score") ?? "all";
+  const currentReview = searchParams.get("review") ?? "all";
 
   function update(key: string, value: string) {
     const params = new URLSearchParams(searchParams.toString());
@@ -52,6 +53,18 @@ export default function LeadsFilter() {
               {s === "all" ? "All scores" : s.charAt(0).toUpperCase() + s.slice(1)}
             </option>
           ))}
+        </select>
+      </div>
+
+      <div className="flex items-center gap-2">
+        <span className="text-xs font-medium text-gray-500">Review</span>
+        <select
+          value={currentReview}
+          onChange={(e) => update("review", e.target.value)}
+          className="border border-gray-200 rounded-lg px-2.5 py-1.5 text-sm text-slate-700 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+        >
+          <option value="all">All leads</option>
+          <option value="needs_review">Needs review</option>
         </select>
       </div>
     </div>

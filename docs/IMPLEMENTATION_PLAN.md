@@ -10,7 +10,7 @@ This is the execution checklist. Work one slice at a time, verify, commit, then 
 
 ## Status summary
 
-Phase 0 is complete. Phase 1 is in progress and has already closed several reliability gaps:
+Phase 0 and Phase 1 are complete. Phase 1 closed the core reliability gaps needed before moving into product features:
 
 - Stripe lifecycle + billing portal
 - Stripe webhook idempotency
@@ -25,6 +25,9 @@ Phase 0 is complete. Phase 1 is in progress and has already closed several relia
 - Prompt injection mitigation
 - Mid-conversation timeout
 - Structured logging
+- Final local and production smoke test confirmed by the user
+
+Current focus: **Phase 2A - Human handoff / owner takeover** is complete and tested.
 
 ---
 
@@ -262,7 +265,11 @@ Verify:
 
 Do not start until at least one pilot workflow is stable.
 
-- Human handoff / owner takeover
+- Human handoff / owner takeover - Complete
+  - Add durable `needs_human_review` and `handoff_reason` fields on leads.
+  - Let the AI/backend mark a lead for review when conversation processing fails or the intake exceeds the safe message cap.
+  - Add dashboard visibility and manual mark/resolve controls.
+  - Keep this separate from manual owner SMS replies; that is the next slice, not part of 2A.
 - Manual owner SMS reply from dashboard
 - Scheduling/inspection booking
 - ROI metrics
@@ -289,6 +296,6 @@ Do not start until at least one pilot workflow is stable.
 
 ## Current next action
 
-Recommended next engineering slice: **Phase 1 final smoke test and pilot-readiness review**.
+Recommended next engineering slice: **Manual owner SMS reply from dashboard.**
 
-Reason: the main Phase 1 reliability slices are now complete. Before starting Phase 2 product features, verify the full end-to-end pilot workflow locally and in production.
+Reason: the AI flow is now reliable enough for MVP testing, and the handoff state is implemented. The next practical product step is letting an owner act from that handoff.

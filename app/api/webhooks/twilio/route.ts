@@ -100,12 +100,13 @@ async function processLeadConversation({
     const intakeQuestion =
       widget?.intake_question ?? "What type of roofing issue are you dealing with?";
 
-    const { reply, isComplete } = await generateConversationReply(
-      businessName,
-      history,
-      services,
-      intakeQuestion
-    );
+    const { reply, isComplete, needsHumanReview, handoffReason } =
+      await generateConversationReply(
+        businessName,
+        history,
+        services,
+        intakeQuestion
+      );
 
     await supabase.from("messages").insert({
       lead_id: leadId,
@@ -115,7 +116,16 @@ async function processLeadConversation({
 
     await supabase
       .from("leads")
-      .update({ last_message_at: new Date().toISOString() })
+      .update({
+        last_message_at: new Date().toISOString(),
+        ...(needsHumanReview
+          ? {
+              needs_human_review: true,
+              handoff_reason: handoffReason,
+              status: "contacted",
+            }
+          : {}),
+      })
       .eq("id", leadId);
 
     try {
@@ -148,6 +158,8 @@ async function processLeadConversation({
         is_homeowner: isHomeowner,
         qualification_reason: qualificationReason,
         status: nextStatus,
+        needs_human_review: false,
+        handoff_reason: null,
       })
       .eq("id", leadId);
 
@@ -166,6 +178,14 @@ async function processLeadConversation({
       isComplete,
     });
   } catch (err) {
+    await supabase
+      .from("leads")
+      .update({
+        needs_human_review: true,
+        handoff_reason: "Conversation processing failed.",
+      })
+      .eq("id", leadId);
+
     logger.error("twilio.conversation_processing_failed", err, {
       leadId,
       businessId,

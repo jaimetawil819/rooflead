@@ -6,6 +6,70 @@ This is a running log of every change made under the controlled-implementation p
 
 ---
 
+## 2026-05-10 - Phase 2A - Human handoff / owner takeover
+
+**Task:** Add durable human-review state before owner takeover features.
+**Status:** completed
+
+**Files changed:**
+- `supabase/migrations/0008_human_handoff.sql` (added)
+- `supabase/migrations/README.md` (modified)
+- `lib/ai.ts` (modified)
+- `app/api/webhooks/twilio/route.ts` (modified)
+- `app/api/dashboard/leads/[id]/route.ts` (modified)
+- `app/dashboard/leads/page.tsx` (modified)
+- `components/dashboard/LeadsFilter.tsx` (modified)
+- `app/dashboard/leads/[id]/page.tsx` (modified)
+- `docs/PROJECT_AUDIT.md` (modified)
+- `docs/IMPLEMENTATION_PLAN.md` (modified)
+- `README.md` (modified)
+- `docs/IMPLEMENTATION_LOG.md` (modified)
+
+**Reason:**
+The AI flow needs a clean owner handoff boundary before adding manual SMS replies or scheduling. This change adds durable `needs_human_review` and `handoff_reason` fields, marks leads for review when AI conversation processing fails or exceeds the safe message cap, shows review state in the leads list/detail page, adds a review filter, and lets the owner manually mark or resolve review.
+
+**Verification performed:**
+- `npx.cmd tsc --noEmit`: clean.
+- `npm.cmd run lint`: clean.
+- `npm.cmd run build`: clean.
+- User applied/tested the feature in the app and confirmed it works.
+
+**Follow-up needed:**
+- Next product slice: manual owner SMS reply from dashboard.
+
+**Notes / surprises:**
+- This intentionally does not send owner-authored SMS yet. It only creates the state and UI needed to know when a human should step in.
+
+---
+
+## 2026-05-10 - Phase 1 - Completion and smoke test
+
+**Task:** Close Phase 1 reliability and backend correctness.
+**Status:** completed
+
+**Files changed:**
+- `docs/PROJECT_AUDIT.md` (modified)
+- `docs/IMPLEMENTATION_PLAN.md` (modified)
+- `README.md` (modified)
+- `docs/IMPLEMENTATION_LOG.md` (modified)
+
+**Reason:**
+Phase 1 reliability work is complete: Stripe lifecycle handling, idempotency, structured extraction, AI guardrails, simulator testing, async Twilio processing, prompt-injection mitigation, mid-conversation timeout, structured logging, lead deletion, and the public A2P test form are in place. The user confirmed the final smoke test works, so the project can move into Phase 2 product improvements.
+
+**Verification performed:**
+- Previous final smoke test: typecheck clean, lint clean, build clean.
+- Previous route smoke test: public pages and test form returned 200, logged-out dashboard redirected, unauthorized cron returned 401, invalid form/widget/webhooks returned safe errors.
+- User confirmed production smoke test works.
+
+**Follow-up needed:**
+- Continue to Phase 2A: human handoff / owner takeover.
+- Run a real live SMS test after Twilio A2P approval.
+
+**Notes / surprises:**
+- Phase 2 should stay focused. Manual owner SMS replies and scheduling are useful, but human handoff state should come first.
+
+---
+
 ## Entry template
 
 ```

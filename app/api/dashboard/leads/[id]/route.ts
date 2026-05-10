@@ -14,8 +14,10 @@ const STATUSES = new Set([
   "unresponsive",
 ]);
 
-type StatusPatch = {
+type LeadPatch = {
   status?: unknown;
+  needsHumanReview?: unknown;
+  handoffReason?: unknown;
 };
 
 async function getOwnedLead(id: string, userId: string) {
@@ -72,11 +74,37 @@ export async function PATCH(
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const body = (await req.json().catch(() => null)) as StatusPatch | null;
+  const body = (await req.json().catch(() => null)) as LeadPatch | null;
   const status = typeof body?.status === "string" ? body.status : "";
 
-  if (!STATUSES.has(status)) {
+  if (body?.status !== undefined && !STATUSES.has(status)) {
     return NextResponse.json({ error: "Invalid status" }, { status: 400 });
+  }
+
+  const update: Record<string, string | boolean | null> = {};
+
+  if (body?.status !== undefined) {
+    update.status = status;
+  }
+
+  if (body?.needsHumanReview !== undefined) {
+    if (typeof body.needsHumanReview !== "boolean") {
+      return NextResponse.json(
+        { error: "Invalid review flag" },
+        { status: 400 }
+      );
+    }
+
+    update.needs_human_review = body.needsHumanReview;
+    update.handoff_reason = body.needsHumanReview
+      ? typeof body.handoffReason === "string" && body.handoffReason.trim()
+        ? body.handoffReason.trim().slice(0, 250)
+        : "Marked for review by owner."
+      : null;
+  }
+
+  if (Object.keys(update).length === 0) {
+    return NextResponse.json({ error: "No valid fields" }, { status: 400 });
   }
 
   const { id } = await params;
@@ -87,7 +115,7 @@ export async function PATCH(
   }
 
   const supabase = getAdminClient();
-  const { error } = await supabase.from("leads").update({ status }).eq("id", id);
+  const { error } = await supabase.from("leads").update(update).eq("id", id);
 
   if (error) {
     return NextResponse.json({ error: "Failed to update lead" }, { status: 500 });

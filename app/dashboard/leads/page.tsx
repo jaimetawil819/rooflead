@@ -32,6 +32,7 @@ type LeadRow = {
   lead_score: string | null;
   status: string;
   created_at: string;
+  needs_human_review: boolean | null;
 };
 
 function titleCase(value: string) {
@@ -64,12 +65,12 @@ function getDisplayStatus(lead: LeadRow) {
 export default async function LeadsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ status?: string; score?: string }>;
+  searchParams: Promise<{ status?: string; score?: string; review?: string }>;
 }) {
   const { userId } = await auth();
   if (!userId) redirect("/sign-in");
 
-  const { status, score } = await searchParams;
+  const { status, score, review } = await searchParams;
 
   const supabase = getAdminClient();
 
@@ -87,6 +88,7 @@ export default async function LeadsPage({
 
   if (status && status !== "all") query = query.eq("status", status);
   if (score && score !== "all") query = query.eq("lead_score", score);
+  if (review === "needs_review") query = query.eq("needs_human_review", true);
 
   const { data: leads } = await query;
   const leadRows = (leads ?? []) as LeadRow[];
@@ -142,6 +144,11 @@ export default async function LeadsPage({
                     <div className="min-w-0">
                       <p className="font-medium text-slate-900 text-sm group-hover:text-blue-600 transition-colors flex items-center gap-1 truncate">
                         {lead.name ?? "Unknown"}
+                        {lead.needs_human_review && (
+                          <span className="rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-amber-700">
+                            Needs Review
+                          </span>
+                        )}
                         <ArrowRight className="h-3.5 w-3.5 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity" />
                       </p>
                       <p className="text-xs text-gray-400 mt-0.5 truncate">

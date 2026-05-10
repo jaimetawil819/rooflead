@@ -1,7 +1,7 @@
 # Project Audit - RoofLead
 
 **Last updated:** 2026-05-10
-**Current phase:** Phase 1 - Reliability and backend correctness
+**Current phase:** Phase 2 - Product improvements
 **Purpose:** Fast source of truth for future sessions. Read this with `docs/IMPLEMENTATION_PLAN.md` and `docs/IMPLEMENTATION_LOG.md`.
 
 ---
@@ -14,7 +14,7 @@ Website/test form -> lead record -> AI SMS qualification -> structured lead summ
 
 Phase 0 safety work is complete enough to move forward: secrets are ignored, tracked-file secret scan was clean, Clerk proxy is deny-by-default, Twilio webhooks validate signatures, STOP opt-outs persist, form input is validated, migrations exist, and private dashboard data no longer relies on direct browser Supabase table access.
 
-Phase 1 reliability work is substantially complete. Billing correctness, idempotency, structured lead extraction, AI guardrails, local inbound SMS simulation, async Twilio webhook processing, prompt injection mitigation, mid-conversation timeout handling, and structured backend logging have been implemented. The biggest remaining risks are now external-provider readiness, production smoke testing, and the normal limits of an MVP implementation.
+Phase 1 reliability work is complete. Billing correctness, idempotency, structured lead extraction, AI guardrails, local inbound SMS simulation, async Twilio webhook processing, prompt injection mitigation, mid-conversation timeout handling, structured backend logging, and final smoke testing have been completed. The biggest remaining risks are now external-provider readiness, pilot onboarding, and the normal limits of an MVP implementation.
 
 ---
 
@@ -98,25 +98,21 @@ Manual caveat: provider-side secret rotation and production environment checks a
 
 ---
 
-## Remaining Phase 1 work
+## Phase 1 completion
 
-### Highest priority
+Phase 1 is closed. The user confirmed the final smoke test worked after local checks passed for typecheck, lint, build, public test form, protected dashboard redirect, invalid webhook rejection, form submission, simulator flow, lead dashboard, and production deployment.
 
-1. **Full pilot-readiness smoke test**
-   - Current risk: individual slices pass, but the whole local/production workflow still needs one deliberate pass.
-   - Suggested direction: test checkout, onboarding, form submit, simulator/Twilio webhook, dashboard, delete, cron, and Stripe webhook after deploy.
+## Phase 2 focus
 
-2. **Durable background jobs**
-   - Current risk: Next.js `after()` reduces Twilio timeout risk, but it is not a persistent queue.
-   - Suggested direction: keep this for MVP, then add a DB-backed queue or hosted job worker if pilot usage exposes dropped/slow jobs.
+1. **Human handoff / owner takeover**
+   - Current state: complete and manually tested with durable `needs_human_review` state, dashboard badges/filtering, manual mark/resolve controls, and AI/backend handoff marking on failure or message-cap cases.
 
-### Lower priority
+2. **Manual owner SMS reply from dashboard**
+   - Current risk: owners can call leads, but cannot yet take over the text conversation from RoofLead.
+   - Suggested direction: add after handoff state exists.
 
-5. **Pro tier checkout**
-   - Defer until there is evidence customers want multiple tiers.
-
-6. **Stripe live mode**
-   - Defer until domain, production Clerk, A2P, and first real customer are ready.
+3. **Scheduling/inspection booking**
+   - Current risk: appointment booking could be valuable, but needs business availability settings and a human handoff boundary first.
 
 ---
 
@@ -132,6 +128,6 @@ Manual caveat: provider-side secret rotation and production environment checks a
 ## Current readiness verdict
 
 **Local/pilot-demo readiness:** Good, with simulator-based testing.
-**Real customer readiness:** Close, but not automatic. Wait for A2P approval, run production smoke tests, and complete the remaining Phase 1 reliability work before relying on it for a paying pilot.
+**Real customer readiness:** Close, but not automatic. Wait for A2P approval and run a real SMS pilot test before relying on it for a paying customer.
 
-Recommended next engineering move: **Phase 1 final smoke test and pilot-readiness review** before starting Phase 2 features.
+Recommended next engineering move: **Manual owner SMS reply from dashboard.**

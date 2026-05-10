@@ -12,6 +12,8 @@ import {
   Clock,
   Home,
   Trash2,
+  AlertTriangle,
+  CheckCircle2,
 } from "lucide-react";
 
 const STATUSES = [
@@ -46,6 +48,8 @@ type Lead = {
   timeline: string | null;
   is_homeowner: boolean | null;
   qualification_reason: string | null;
+  needs_human_review: boolean | null;
+  handoff_reason: string | null;
 };
 
 type Message = {
@@ -135,6 +139,34 @@ export default function LeadDetailPage({
 
     setDeleting(false);
     window.alert("Could not delete this lead. Please try again.");
+  };
+
+  const updateHumanReview = async (needsReview: boolean) => {
+    setSaving(true);
+    const res = await fetch(`/api/dashboard/leads/${id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        needsHumanReview: needsReview,
+        handoffReason: needsReview ? "Marked for review by owner." : null,
+      }),
+    });
+
+    if (res.ok) {
+      setLead((prev) =>
+        prev
+          ? {
+              ...prev,
+              needs_human_review: needsReview,
+              handoff_reason: needsReview ? "Marked for review by owner." : null,
+            }
+          : prev
+      );
+    }
+
+    setSaving(false);
+    setSaved(true);
+    setTimeout(() => setSaved(false), 2000);
   };
 
   if (!lead) {
@@ -245,6 +277,53 @@ export default function LeadDetailPage({
           )}
         </div>
       )}
+
+      <div
+        className={`rounded-2xl border p-6 mb-4 ${
+          lead.needs_human_review
+            ? "bg-amber-50 border-amber-100"
+            : "bg-white border-gray-100 shadow-sm"
+        }`}
+      >
+        <div className="flex items-start justify-between gap-4 flex-wrap">
+          <div className="flex gap-3">
+            <div
+              className={`h-9 w-9 rounded-lg flex items-center justify-center ${
+                lead.needs_human_review ? "bg-amber-100" : "bg-gray-50"
+              }`}
+            >
+              {lead.needs_human_review ? (
+                <AlertTriangle className="h-4 w-4 text-amber-700" />
+              ) : (
+                <CheckCircle2 className="h-4 w-4 text-gray-400" />
+              )}
+            </div>
+            <div>
+              <p className="text-sm font-semibold text-slate-900">
+                {lead.needs_human_review ? "Needs Human Review" : "AI Handling"}
+              </p>
+              <p className="text-sm text-slate-600 mt-1">
+                {lead.needs_human_review
+                  ? lead.handoff_reason ?? "This lead should be reviewed by a person."
+                  : "No handoff has been requested for this lead."}
+              </p>
+            </div>
+          </div>
+
+          <button
+            type="button"
+            onClick={() => updateHumanReview(!lead.needs_human_review)}
+            disabled={saving || deleting}
+            className={`inline-flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-semibold transition-colors disabled:opacity-50 ${
+              lead.needs_human_review
+                ? "bg-white border border-amber-200 text-amber-700 hover:bg-amber-100"
+                : "bg-amber-50 border border-amber-100 text-amber-700 hover:bg-amber-100"
+            }`}
+          >
+            {lead.needs_human_review ? "Resolve Review" : "Mark Needs Review"}
+          </button>
+        </div>
+      </div>
 
       <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 mb-4">
         <div className="flex items-start justify-between gap-4 flex-wrap">

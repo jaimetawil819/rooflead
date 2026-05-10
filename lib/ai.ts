@@ -28,6 +28,8 @@ type BusinessPromptContext = {
 export type ConversationReply = {
   reply: string;
   isComplete: boolean;
+  needsHumanReview: boolean;
+  handoffReason: string | null;
 };
 
 export type LeadScore = "hot" | "warm" | "cold" | "unqualified";
@@ -239,7 +241,9 @@ export async function generateConversationReply(
   if (messageHistory.length >= MAX_CONVERSATION_MESSAGES) {
     return {
       reply: handoffReply(businessContext.business_name),
-      isComplete: true,
+      isComplete: false,
+      needsHumanReview: true,
+      handoffReason: "Conversation exceeded the safe AI message limit.",
     };
   }
 
@@ -279,18 +283,24 @@ Rules:
       return {
         reply: completionReply,
         isComplete: true,
+        needsHumanReview: false,
+        handoffReason: null,
       };
     }
 
     return {
       reply: getTextContent(response.content) || EMPTY_REPLY_FALLBACK,
       isComplete: false,
+      needsHumanReview: false,
+      handoffReason: null,
     };
   } catch (error) {
     logAiError("Anthropic conversation reply", error);
     return {
       reply: "Sorry, I had trouble processing that. Someone from the team will follow up shortly.",
       isComplete: false,
+      needsHumanReview: true,
+      handoffReason: "AI conversation reply failed.",
     };
   }
 }
