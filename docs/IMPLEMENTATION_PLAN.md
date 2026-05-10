@@ -24,6 +24,7 @@ Phase 0 is complete. Phase 1 is in progress and has already closed several relia
 - Async Twilio webhook processing
 - Prompt injection mitigation
 - Mid-conversation timeout
+- Structured logging
 
 ---
 
@@ -228,15 +229,32 @@ Verify:
 - Simulate an inbound SMS and confirm `last_message_at` updates.
 - Run the cron endpoint with `Authorization: Bearer <CRON_SECRET>` and confirm JSON counters return.
 
-### 1I - Structured logging - Pending
+### 1I - Structured logging - Complete
 
 Problem:
 - Debugging production failures will be difficult.
 
-Goal:
+Implemented:
 - Add request IDs and safe logs.
 - Avoid logging full PII transcripts.
-- Optional later: Sentry.
+- Emit JSON logs with `level`, `event`, `timestamp`, `scope`, `requestId`, and safe IDs/counters.
+- Add `x-request-id` response headers on major API routes.
+- Replace ad hoc server `console.error` calls in core backend paths with structured logging.
+
+Files:
+- `lib/logger.ts`
+- `lib/ai.ts`
+- `lib/sms-opt-outs.ts`
+- `app/api/forms/[widgetKey]/route.ts`
+- `app/api/webhooks/twilio/route.ts`
+- `app/api/webhooks/stripe/route.ts`
+- `app/api/cron/follow-up/route.ts`
+- `app/api/dashboard/leads/[id]/route.ts`
+
+Verify:
+- Typecheck/lint/build pass.
+- Trigger form submit, Twilio simulator, Stripe webhook, cron, and lead delete paths.
+- Confirm terminal/Vercel logs show structured JSON lines without full message bodies, phone numbers, secrets, or transcripts.
 
 ---
 
@@ -271,6 +289,6 @@ Do not start until at least one pilot workflow is stable.
 
 ## Current next action
 
-Recommended next engineering slice: **1I - Structured logging**.
+Recommended next engineering slice: **Phase 1 final smoke test and pilot-readiness review**.
 
-Reason: production failures will be difficult to debug without request IDs and safer structured logs.
+Reason: the main Phase 1 reliability slices are now complete. Before starting Phase 2 product features, verify the full end-to-end pilot workflow locally and in production.

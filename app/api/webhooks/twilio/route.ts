@@ -9,6 +9,7 @@ import {
   recordSmsOptOut,
 } from "@/lib/sms-opt-outs";
 import { sendSMS } from "@/lib/twilio";
+import { createRequestLogger } from "@/lib/logger";
 
 export const maxDuration = 30;
 
@@ -17,6 +18,7 @@ type ProcessLeadConversationInput = {
   businessId: string;
   leadName: string | null;
   from: string;
+  logger: ReturnType<typeof createRequestLogger>;
 };
 
 function getTwilioValidationUrl(req: NextRequest) {
@@ -50,9 +52,12 @@ async function hasProcessedTwilioMessage(messageSid: string | undefined) {
   return Boolean(data);
 }
 
-function emptyTwimlResponse() {
+function emptyTwimlResponse(requestId?: string) {
   return new NextResponse("<Response></Response>", {
-    headers: { "Content-Type": "text/xml" },
+    headers: {
+      "Content-Type": "text/xml",
+      ...(requestId ? { "x-request-id": requestId } : {}),
+    },
   });
 }
 
@@ -61,6 +66,7 @@ async function processLeadConversation({
   businessId,
   leadName,
   from,
+  logger,
 }: ProcessLeadConversationInput) {
   const supabase = getAdminClient();
 
@@ -115,7 +121,7 @@ async function processLeadConversation({
     try {
       await sendSMS(from, reply);
     } catch (err) {
-      console.error("SMS send failed:", err);
+      logger.error("twilio.reply_sms_failed", err, { leadId, businessId });
     }
 
     if (!isComplete) return;
@@ -153,14 +159,23 @@ async function processLeadConversation({
       const notifMsg = `${score.toUpperCase()} lead - ${leadLabel}\n${summary}\nCall: ${from}\nView: ${process.env.NEXT_PUBLIC_APP_URL}/dashboard/leads/${leadId}`;
       await sendSMS(business.notification_phone, notifMsg);
     }
+
+    logger.info("twilio.conversation_processed", {
+      leadId,
+      businessId,
+      isComplete,
+    });
   } catch (err) {
-    const message = err instanceof Error ? err.message : "Unknown error";
-    console.error(`Inbound lead processing failed for lead ${leadId}: ${message}`);
+    logger.error("twilio.conversation_processing_failed", err, {
+      leadId,
+      businessId,
+    });
   }
 }
 
 export async function POST(req: NextRequest) {
   const supabase = getAdminClient();
+  const logger = createRequestLogger("twilio_webhook");
   const body = await req.text();
   const params = Object.fromEntries(new URLSearchParams(body));
 
@@ -176,7 +191,11 @@ export async function POST(req: NextRequest) {
       !authToken ||
       !twilio.validateRequest(authToken, signature, validationUrl, params)
     ) {
-      return new NextResponse("Forbidden", { status: 403 });
+      logger.warn("twilio.signature_invalid");
+      return new NextResponse("Forbidden", {
+        status: 403,
+        headers: { "x-request-id": logger.requestId },
+      });
     }
   }
 
@@ -185,11 +204,16 @@ export async function POST(req: NextRequest) {
   const messageSid = params.MessageSid;
 
   if (!from || !text) {
-    return new NextResponse("Bad request", { status: 400 });
+    logger.warn("twilio.bad_request");
+    return new NextResponse("Bad request", {
+      status: 400,
+      headers: { "x-request-id": logger.requestId },
+    });
   }
 
   if (await hasProcessedTwilioMessage(messageSid)) {
-    return emptyTwimlResponse();
+    logger.info("twilio.duplicate_message", { messageSid });
+    return emptyTwimlResponse(logger.requestId);
   }
 
   const phoneCandidates = getPhoneLookupCandidates(from);
@@ -226,14 +250,24 @@ export async function POST(req: NextRequest) {
         .in("id", optedOutLeadIds);
     }
 
+    logger.info("twilio.opt_out_recorded", {
+      leadCount: optedOutLeadIds.length,
+    });
+
     return new NextResponse(
       "<Response><Message>You have been unsubscribed and will receive no further messages.</Message></Response>",
-      { headers: { "Content-Type": "text/xml" } }
+      {
+        headers: {
+          "Content-Type": "text/xml",
+          "x-request-id": logger.requestId,
+        },
+      }
     );
   }
 
   if (await isSmsOptedOut(supabase, from)) {
-    return emptyTwimlResponse();
+    logger.info("twilio.opted_out_message_skipped");
+    return emptyTwimlResponse(logger.requestId);
   }
 
   // Find the most recent active lead for this phone number.
@@ -249,7 +283,8 @@ export async function POST(req: NextRequest) {
     .single();
 
   if (!lead) {
-    return emptyTwimlResponse();
+    logger.info("twilio.no_active_lead");
+    return emptyTwimlResponse(logger.requestId);
   }
 
   const { error: inboundMessageError } = await supabase.from("messages").insert({
@@ -260,12 +295,19 @@ export async function POST(req: NextRequest) {
   });
 
   if (inboundMessageError?.code === "23505") {
-    return emptyTwimlResponse();
+    logger.info("twilio.duplicate_message_insert", { messageSid });
+    return emptyTwimlResponse(logger.requestId);
   }
 
   if (inboundMessageError) {
-    console.error("Inbound message insert failed:", inboundMessageError.message);
-    return new NextResponse("Message insert failed", { status: 500 });
+    logger.error("twilio.inbound_message_insert_failed", inboundMessageError, {
+      leadId: lead.id,
+      businessId: lead.business_id,
+    });
+    return new NextResponse("Message insert failed", {
+      status: 500,
+      headers: { "x-request-id": logger.requestId },
+    });
   }
 
   await supabase
@@ -279,8 +321,15 @@ export async function POST(req: NextRequest) {
       businessId: lead.business_id,
       leadName: lead.name,
       from,
+      logger,
     });
   });
 
-  return emptyTwimlResponse();
+  logger.info("twilio.inbound_message_accepted", {
+    leadId: lead.id,
+    businessId: lead.business_id,
+    messageSid,
+  });
+
+  return emptyTwimlResponse(logger.requestId);
 }

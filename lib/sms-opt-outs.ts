@@ -1,5 +1,6 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { getPhoneLookupCandidates, normalizePhoneNumber } from "@/lib/phone";
+import { logServerError } from "@/lib/logger";
 
 const SMS_OPT_OUT_KEYWORDS = new Set([
   "STOP",
@@ -28,7 +29,7 @@ export async function isSmsOptedOut(
     .maybeSingle();
 
   if (error) {
-    console.error("SMS opt-out lookup failed:", error.message);
+    logServerError("sms_opt_out.lookup_failed", error);
     return false;
   }
 
@@ -56,7 +57,7 @@ export async function recordSmsOptOut(
   );
 
   if (error) {
-    console.error("SMS opt-out record failed:", error.message);
+    logServerError("sms_opt_out.record_failed", error);
   }
 
   return normalizedPhone;

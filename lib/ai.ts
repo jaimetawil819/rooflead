@@ -4,6 +4,7 @@ import type {
   ToolUnion,
   ToolUseBlock,
 } from "@anthropic-ai/sdk/resources/messages";
+import { logServerError } from "@/lib/logger";
 
 const client = new Anthropic();
 const MAX_CONVERSATION_MESSAGES = 20;
@@ -93,8 +94,7 @@ function handoffReply(businessName: string) {
 }
 
 function logAiError(area: string, error: unknown) {
-  const message = error instanceof Error ? error.message : "Unknown error";
-  console.error(`${area} failed: ${message}`);
+  logServerError("ai.request_failed", error, { area });
 }
 
 function asString(value: unknown, fallback = "") {

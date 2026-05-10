@@ -1,6 +1,7 @@
 import { auth } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
 import { getAdminClient } from "@/lib/supabase/admin";
+import { createRequestLogger } from "@/lib/logger";
 
 const STATUSES = new Set([
   "new",
@@ -99,16 +100,25 @@ export async function DELETE(
   _req: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const logger = createRequestLogger("dashboard_lead_delete");
   const { userId } = await auth();
   if (!userId) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    logger.warn("lead_delete.unauthorized");
+    return NextResponse.json(
+      { error: "Unauthorized", requestId: logger.requestId },
+      { status: 401, headers: { "x-request-id": logger.requestId } }
+    );
   }
 
   const { id } = await params;
   const lead = await getOwnedLead(id, userId);
 
   if (!lead) {
-    return NextResponse.json({ error: "Lead not found" }, { status: 404 });
+    logger.warn("lead_delete.not_found", { leadId: id });
+    return NextResponse.json(
+      { error: "Lead not found", requestId: logger.requestId },
+      { status: 404, headers: { "x-request-id": logger.requestId } }
+    );
   }
 
   const supabase = getAdminClient();
@@ -119,9 +129,13 @@ export async function DELETE(
     .eq("lead_id", id);
 
   if (messagesError) {
+    logger.error("lead_delete.messages_failed", messagesError, { leadId: id });
     return NextResponse.json(
-      { error: "Failed to delete lead messages" },
-      { status: 500 }
+      {
+        error: "Failed to delete lead messages",
+        requestId: logger.requestId,
+      },
+      { status: 500, headers: { "x-request-id": logger.requestId } }
     );
   }
 
@@ -131,8 +145,16 @@ export async function DELETE(
     .eq("id", id);
 
   if (leadError) {
-    return NextResponse.json({ error: "Failed to delete lead" }, { status: 500 });
+    logger.error("lead_delete.lead_failed", leadError, { leadId: id });
+    return NextResponse.json(
+      { error: "Failed to delete lead", requestId: logger.requestId },
+      { status: 500, headers: { "x-request-id": logger.requestId } }
+    );
   }
 
-  return NextResponse.json({ success: true });
+  logger.info("lead_delete.completed", { leadId: id });
+  return NextResponse.json(
+    { success: true },
+    { headers: { "x-request-id": logger.requestId } }
+  );
 }

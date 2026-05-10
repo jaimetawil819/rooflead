@@ -14,7 +14,7 @@ Website/test form -> lead record -> AI SMS qualification -> structured lead summ
 
 Phase 0 safety work is complete enough to move forward: secrets are ignored, tracked-file secret scan was clean, Clerk proxy is deny-by-default, Twilio webhooks validate signatures, STOP opt-outs persist, form input is validated, migrations exist, and private dashboard data no longer relies on direct browser Supabase table access.
 
-Phase 1 is partially complete. Billing correctness, idempotency, structured lead extraction, AI guardrails, local inbound SMS simulation, async Twilio webhook processing, prompt injection mitigation, and mid-conversation timeout handling have been implemented. The biggest remaining reliability risk is now production observability.
+Phase 1 reliability work is substantially complete. Billing correctness, idempotency, structured lead extraction, AI guardrails, local inbound SMS simulation, async Twilio webhook processing, prompt injection mitigation, mid-conversation timeout handling, and structured backend logging have been implemented. The biggest remaining risks are now external-provider readiness, production smoke testing, and the normal limits of an MVP implementation.
 
 ---
 
@@ -94,6 +94,7 @@ Manual caveat: provider-side secret rotation and production environment checks a
 | Async Twilio processing | Complete | webhook returns TwiML after insert; AI/SMS work runs via `after()` |
 | Prompt injection mitigation | Complete | business config and transcripts treated as untrusted context in `lib/ai.ts` |
 | Mid-conversation timeout | Complete | `leads.last_message_at`, cron timeout/follow-up logic |
+| Structured logging | Complete | JSON logs with request IDs and safe metadata in core backend paths |
 
 ---
 
@@ -101,9 +102,9 @@ Manual caveat: provider-side secret rotation and production environment checks a
 
 ### Highest priority
 
-1. **Structured logging**
-   - Current risk: debugging production failures will be messy.
-   - Suggested direction: request IDs, safe error messages, no full PII transcripts in logs.
+1. **Full pilot-readiness smoke test**
+   - Current risk: individual slices pass, but the whole local/production workflow still needs one deliberate pass.
+   - Suggested direction: test checkout, onboarding, form submit, simulator/Twilio webhook, dashboard, delete, cron, and Stripe webhook after deploy.
 
 2. **Durable background jobs**
    - Current risk: Next.js `after()` reduces Twilio timeout risk, but it is not a persistent queue.
@@ -133,4 +134,4 @@ Manual caveat: provider-side secret rotation and production environment checks a
 **Local/pilot-demo readiness:** Good, with simulator-based testing.
 **Real customer readiness:** Close, but not automatic. Wait for A2P approval, run production smoke tests, and complete the remaining Phase 1 reliability work before relying on it for a paying pilot.
 
-Recommended next engineering move: **structured logging** unless the immediate goal is customer demo polish.
+Recommended next engineering move: **Phase 1 final smoke test and pilot-readiness review** before starting Phase 2 features.

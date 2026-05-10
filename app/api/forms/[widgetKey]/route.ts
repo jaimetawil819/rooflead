@@ -4,6 +4,7 @@ import { getClientIp, checkRateLimit } from "@/lib/rate-limit";
 import { getAdminClient } from "@/lib/supabase/admin";
 import { isSmsOptedOut } from "@/lib/sms-opt-outs";
 import { sendSMS } from "@/lib/twilio";
+import { createRequestLogger } from "@/lib/logger";
 
 type WidgetBusiness = { name: string | null };
 type WidgetRow = {
@@ -26,6 +27,7 @@ export async function POST(
 ) {
   const supabase = getAdminClient();
   const { widgetKey } = await params;
+  const logger = createRequestLogger("lead_form");
 
   const clientIp = getClientIp(req.headers);
   const rateLimit = checkRateLimit(`lead-form:${widgetKey}:${clientIp}`);
@@ -58,7 +60,11 @@ export async function POST(
     .single();
 
   if (!widget) {
-    return NextResponse.json({ error: "Invalid widget key" }, { status: 404 });
+    logger.warn("invalid_widget_key");
+    return NextResponse.json(
+      { error: "Invalid widget key", requestId: logger.requestId },
+      { status: 404, headers: { "x-request-id": logger.requestId } }
+    );
   }
 
   const typedWidget = widget as WidgetRow;
@@ -99,7 +105,13 @@ export async function POST(
     .single();
 
   if (error) {
-    return NextResponse.json({ error: "Failed to create lead" }, { status: 500 });
+    logger.error("lead_create_failed", error, {
+      businessId: typedWidget.business_id,
+    });
+    return NextResponse.json(
+      { error: "Failed to create lead", requestId: logger.requestId },
+      { status: 500, headers: { "x-request-id": logger.requestId } }
+    );
   }
 
   // Send greeting SMS to the lead unless this phone has opted out.
@@ -116,7 +128,10 @@ export async function POST(
       try {
         await sendSMS(phone, greeting);
       } catch (err) {
-        console.error("SMS failed:", err);
+        logger.error("greeting_sms_failed", err, {
+          leadId: lead.id,
+          businessId: typedWidget.business_id,
+        });
       }
 
       // Save greeting to messages table.
@@ -133,5 +148,13 @@ export async function POST(
     }
   }
 
-  return NextResponse.json({ success: true, leadId: lead.id });
+  logger.info("lead_form_submitted", {
+    leadId: lead.id,
+    businessId: typedWidget.business_id,
+  });
+
+  return NextResponse.json(
+    { success: true, leadId: lead.id },
+    { headers: { "x-request-id": logger.requestId } }
+  );
 }

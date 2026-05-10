@@ -35,6 +35,43 @@ Why this change was made.
 
 ---
 
+## 2026-05-10 - Phase 1 - Structured logging
+
+**Task:** Add request IDs and safer structured logs for production debugging.
+**Status:** completed
+
+**Files changed:**
+- `lib/logger.ts` (added)
+- `lib/ai.ts` (modified)
+- `lib/sms-opt-outs.ts` (modified)
+- `app/api/forms/[widgetKey]/route.ts` (modified)
+- `app/api/webhooks/twilio/route.ts` (modified)
+- `app/api/webhooks/stripe/route.ts` (modified)
+- `app/api/cron/follow-up/route.ts` (modified)
+- `app/api/dashboard/leads/[id]/route.ts` (modified)
+- `docs/PROJECT_AUDIT.md` (modified)
+- `docs/IMPLEMENTATION_PLAN.md` (modified)
+- `README.md` (modified)
+- `docs/IMPLEMENTATION_LOG.md` (modified)
+
+**Reason:**
+Production failures would have been hard to trace because API routes logged plain strings and raw error objects. This change adds a small JSON logger with request IDs and safe metadata, then wires it into the main backend paths: public lead form, Twilio webhook, Stripe webhook, follow-up cron, AI failures, opt-out failures, and lead deletion.
+
+**Verification performed:**
+- `npx.cmd tsc --noEmit`: clean.
+- `npm.cmd run lint`: clean.
+- `npm.cmd run build`: clean.
+- `rg -n "console\\.error|console\\.warn|console\\.info" app lib`: only `lib/logger.ts` writes to console.
+
+**Follow-up needed:**
+- During the final smoke test, confirm logs show request IDs and do not include message bodies, phone numbers, transcripts, secrets, or full provider payloads.
+- Consider Sentry or another hosted error tracker after the first pilot if logs alone become too thin.
+
+**Notes / surprises:**
+- No external logging dependency was added. This keeps the MVP simple and lets Vercel capture structured JSON logs.
+
+---
+
 ## 2026-05-10 - Dashboard - Lead deletion
 
 **Task:** Add a safe way to delete test/unwanted leads from the dashboard.

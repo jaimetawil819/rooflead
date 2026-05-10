@@ -98,7 +98,8 @@ Completed in Phase 1:
 - Async Twilio webhook processing
 - Prompt injection mitigation
 - Mid-conversation timeout
+- Structured logging
 
 Recommended next slice:
 
-- Structured logging
+- Phase 1 final smoke test and pilot-readiness review

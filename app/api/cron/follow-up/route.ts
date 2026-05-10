@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getAdminClient } from "@/lib/supabase/admin";
 import { isSmsOptedOut } from "@/lib/sms-opt-outs";
 import { sendSMS } from "@/lib/twilio";
+import { createRequestLogger } from "@/lib/logger";
 
 const FOLLOW_UP_DELAY_MINUTES = 30;
 const UNRESPONSIVE_AFTER_FOLLOW_UP_MINUTES = 60;
@@ -31,9 +32,14 @@ async function hasUserMessages(supabase: ReturnType<typeof getAdminClient>, lead
 // Called by cron. Sends one follow-up to untouched leads, then marks stale
 // conversations unresponsive when the homeowner stops replying.
 export async function GET(req: NextRequest) {
+  const logger = createRequestLogger("follow_up_cron");
   const authHeader = req.headers.get("authorization");
   if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    logger.warn("cron.unauthorized");
+    return NextResponse.json(
+      { error: "Unauthorized", requestId: logger.requestId },
+      { status: 401, headers: { "x-request-id": logger.requestId } }
+    );
   }
 
   const supabase = getAdminClient();
@@ -137,16 +143,29 @@ export async function GET(req: NextRequest) {
         .eq("id", lead.id);
       sent++;
     } catch (err) {
-      const message = err instanceof Error ? err.message : "Unknown error";
-      console.error(`Follow-up SMS failed for lead ${lead.id}: ${message}`);
+      logger.error("cron.follow_up_sms_failed", err, {
+        leadId: lead.id,
+        businessId: lead.business_id,
+      });
     }
   }
 
-  return NextResponse.json({
+  logger.info("cron.follow_up_completed", {
     sent,
     skippedOptOuts,
     skippedActiveConversations,
     markedUnresponsive,
     markedStaleConversations,
   });
+
+  return NextResponse.json(
+    {
+      sent,
+      skippedOptOuts,
+      skippedActiveConversations,
+      markedUnresponsive,
+      markedStaleConversations,
+    },
+    { headers: { "x-request-id": logger.requestId } }
+  );
 }

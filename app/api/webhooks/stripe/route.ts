@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import Stripe from "stripe";
 import { getAdminClient } from "@/lib/supabase/admin";
+import { createRequestLogger, logServerError } from "@/lib/logger";
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!);
 
@@ -25,7 +26,10 @@ async function rememberStripeEvent(event: Stripe.Event) {
   if (!error) return { ok: true, duplicate: false };
   if (error.code === "23505") return { ok: true, duplicate: true };
 
-  console.error("Stripe event idempotency insert failed:", error.message);
+  logServerError("stripe.event_idempotency_insert_failed", error, {
+    stripeEventId: event.id,
+    stripeEventType: event.type,
+  });
   return { ok: false, duplicate: false };
 }
 
@@ -58,6 +62,7 @@ async function markInvoicePaymentFailed(invoice: Stripe.Invoice) {
 }
 
 export async function POST(req: NextRequest) {
+  const logger = createRequestLogger("stripe_webhook");
   const body = await req.text();
   const signature = req.headers.get("stripe-signature")!;
 
@@ -70,17 +75,36 @@ export async function POST(req: NextRequest) {
       process.env.STRIPE_WEBHOOK_SECRET!
     );
   } catch {
-    return new NextResponse("Webhook signature verification failed", { status: 400 });
+    logger.warn("stripe.signature_verification_failed");
+    return new NextResponse("Webhook signature verification failed", {
+      status: 400,
+      headers: { "x-request-id": logger.requestId },
+    });
   }
+
+  logger.info("stripe.event_received", {
+    stripeEventId: event.id,
+    stripeEventType: event.type,
+  });
 
   const eventMemory = await rememberStripeEvent(event);
 
   if (!eventMemory.ok) {
-    return NextResponse.json({ error: "Failed to record Stripe event" }, { status: 500 });
+    return NextResponse.json(
+      { error: "Failed to record Stripe event", requestId: logger.requestId },
+      { status: 500, headers: { "x-request-id": logger.requestId } }
+    );
   }
 
   if (eventMemory.duplicate) {
-    return NextResponse.json({ received: true, duplicate: true });
+    logger.info("stripe.duplicate_event_skipped", {
+      stripeEventId: event.id,
+      stripeEventType: event.type,
+    });
+    return NextResponse.json(
+      { received: true, duplicate: true },
+      { headers: { "x-request-id": logger.requestId } }
+    );
   }
 
   switch (event.type) {
@@ -114,5 +138,13 @@ export async function POST(req: NextRequest) {
       break;
   }
 
-  return NextResponse.json({ received: true });
+  logger.info("stripe.event_processed", {
+    stripeEventId: event.id,
+    stripeEventType: event.type,
+  });
+
+  return NextResponse.json(
+    { received: true },
+    { headers: { "x-request-id": logger.requestId } }
+  );
 }
