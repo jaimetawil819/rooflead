@@ -35,6 +35,29 @@ Why this change was made.
 
 ---
 
+## 2026-05-10 - Phase 1 - AI reliability guardrails
+
+**Task:** Phase 1 AI reliability improvements that can be tested without A2P approval.
+**Status:** completed
+
+**Files changed:**
+- `lib/ai.ts` (modified)
+- `docs/IMPLEMENTATION_LOG.md` (modified)
+
+**Reason:**
+Live SMS testing is blocked while A2P approval is pending, but we can still make the AI layer safer. Before this change, an empty Anthropic response could produce an empty outbound SMS, and Anthropic API failures could bubble up through the webhook path. Long conversations could also keep looping indefinitely. This change adds a blank-response fallback, catches Anthropic failures with a safe SMS response or manual-review summary, and caps conversations at 20 messages with a handoff reply.
+
+**Verification performed:**
+- Pending final typecheck/lint/build in this session.
+
+**Follow-up needed:**
+- After A2P approval, complete a live SMS conversation and confirm fallback behavior does not interfere with normal completion.
+
+**Notes / surprises:**
+- Error logs intentionally include only the failure area and error message, not full conversation content.
+
+---
+
 ## 2026-05-10 - Phase 1 - Structured lead extraction
 
 **Task:** Phase 1 structured lead extraction.

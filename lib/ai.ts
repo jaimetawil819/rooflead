@@ -6,6 +6,9 @@ import type {
 } from "@anthropic-ai/sdk/resources/messages";
 
 const client = new Anthropic();
+const MAX_CONVERSATION_MESSAGES = 20;
+const EMPTY_REPLY_FALLBACK =
+  "Thanks. Could you share a little more detail about the roofing issue?";
 
 export type ConversationReply = {
   reply: string;
@@ -71,6 +74,15 @@ function getFirstTextBlock(content: ContentBlock[]) {
   return text?.type === "text" ? text.text : "";
 }
 
+function handoffReply(businessName: string) {
+  return `Thanks, I have enough to pass this along. Someone from ${businessName} will follow up shortly.`;
+}
+
+function logAiError(area: string, error: unknown) {
+  const message = error instanceof Error ? error.message : "Unknown error";
+  console.error(`${area} failed: ${message}`);
+}
+
 function asString(value: unknown, fallback = "") {
   return typeof value === "string" && value.trim() ? value.trim() : fallback;
 }
@@ -127,14 +139,22 @@ export async function generateConversationReply(
   services: { label: string; value: string }[] = [],
   intakeQuestion: string = "What type of roofing issue are you dealing with?"
 ): Promise<ConversationReply> {
+  if (messageHistory.length >= MAX_CONVERSATION_MESSAGES) {
+    return {
+      reply: handoffReply(businessName),
+      isComplete: true,
+    };
+  }
+
   const serviceList = services.length > 0
     ? services.map((s) => s.label).join(", ")
     : "repair, replacement, storm damage, inspection";
 
-  const response = await client.messages.create({
-    model: "claude-haiku-4-5-20251001",
-    max_tokens: 200,
-    system: `You are a friendly intake assistant for ${businessName}.
+  try {
+    const response = await client.messages.create({
+      model: "claude-haiku-4-5-20251001",
+      max_tokens: 200,
+      system: `You are a friendly intake assistant for ${businessName}.
 Your job is to collect these 4 things from the homeowner, one question at a time:
 1. Type of service needed (${serviceList}). Use this service question when needed: "${intakeQuestion}"
 2. Urgency (emergency/active issue, needs attention soon, or just getting estimates)
@@ -147,23 +167,30 @@ Rules:
 - Be friendly and natural, not robotic.
 - Never quote prices. If asked about cost, say "Someone from ${businessName} will go over pricing when they reach out."
 - Once you have all 4 pieces of info, call the complete_intake tool. Do not call it before all 4 are known.`,
-    messages: messageHistory,
-    tools: [COMPLETE_INTAKE_TOOL],
-  });
+      messages: messageHistory,
+      tools: [COMPLETE_INTAKE_TOOL],
+    });
 
-  const completionReply = getCompleteIntakeReply(response.content);
+    const completionReply = getCompleteIntakeReply(response.content);
 
-  if (completionReply) {
+    if (completionReply) {
+      return {
+        reply: completionReply,
+        isComplete: true,
+      };
+    }
+
     return {
-      reply: completionReply,
-      isComplete: true,
+      reply: getTextContent(response.content) || EMPTY_REPLY_FALLBACK,
+      isComplete: false,
+    };
+  } catch (error) {
+    logAiError("Anthropic conversation reply", error);
+    return {
+      reply: "Sorry, I had trouble processing that. Someone from the team will follow up shortly.",
+      isComplete: false,
     };
   }
-
-  return {
-    reply: getTextContent(response.content),
-    isComplete: false,
-  };
 }
 
 export async function generateLeadSummary(
@@ -173,14 +200,15 @@ export async function generateLeadSummary(
     .map((m) => `${m.role}: ${m.content}`)
     .join("\n");
 
-  const response = await client.messages.create({
-    model: "claude-sonnet-4-6",
-    max_tokens: 400,
-    system: "You analyze lead qualification conversations and return JSON only. No other text.",
-    messages: [
-      {
-        role: "user",
-        content: `Based on this conversation, return a JSON object with exactly six fields:
+  try {
+    const response = await client.messages.create({
+      model: "claude-sonnet-4-6",
+      max_tokens: 400,
+      system: "You analyze lead qualification conversations and return JSON only. No other text.",
+      messages: [
+        {
+          role: "user",
+          content: `Based on this conversation, return a JSON object with exactly six fields:
 - "summary": a 2-3 sentence summary of the lead (issue, urgency, timeline)
 - "score": one of "hot", "warm", "cold", or "unqualified"
 - "urgency": one of "emergency", "soon", "estimate", or "unknown"
@@ -198,9 +226,20 @@ Conversation:
 ${transcript}
 
 Return only the JSON object.`,
-      },
-    ],
-  });
+        },
+      ],
+    });
 
-  return parseLeadSummaryJson(getFirstTextBlock(response.content));
+    return parseLeadSummaryJson(getFirstTextBlock(response.content));
+  } catch (error) {
+    logAiError("Anthropic lead summary", error);
+    return {
+      summary: "AI summary could not be generated. Review the conversation manually.",
+      score: "warm",
+      urgency: "unknown",
+      timeline: null,
+      isHomeowner: null,
+      qualificationReason: "Summary generation failed, so the lead needs manual review.",
+    };
+  }
 }
