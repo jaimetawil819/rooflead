@@ -1,7 +1,24 @@
 import { NextRequest, NextResponse } from "next/server";
+import { parseLeadFormBody } from "@/lib/form-validation";
+import { getClientIp, checkRateLimit } from "@/lib/rate-limit";
 import { getAdminClient } from "@/lib/supabase/admin";
 import { isSmsOptedOut } from "@/lib/sms-opt-outs";
 import { sendSMS } from "@/lib/twilio";
+
+type WidgetBusiness = { name: string | null };
+type WidgetRow = {
+  business_id: string;
+  intake_question: string | null;
+  businesses: WidgetBusiness | WidgetBusiness[] | null;
+};
+
+function getBusinessName(businesses: WidgetRow["businesses"]) {
+  if (Array.isArray(businesses)) {
+    return businesses[0]?.name ?? "the team";
+  }
+
+  return businesses?.name ?? "the team";
+}
 
 export async function POST(
   req: NextRequest,
@@ -9,7 +26,30 @@ export async function POST(
 ) {
   const supabase = getAdminClient();
   const { widgetKey } = await params;
-  const { name, phone, address, serviceType } = await req.json();
+
+  const clientIp = getClientIp(req.headers);
+  const rateLimit = checkRateLimit(`lead-form:${widgetKey}:${clientIp}`);
+
+  if (!rateLimit.allowed) {
+    return NextResponse.json(
+      { error: "Too many requests. Please try again shortly." },
+      {
+        status: 429,
+        headers: { "Retry-After": String(rateLimit.retryAfterSeconds) },
+      }
+    );
+  }
+
+  const validation = parseLeadFormBody(await req.text());
+
+  if (!validation.ok) {
+    return NextResponse.json(
+      { error: validation.error },
+      { status: validation.status }
+    );
+  }
+
+  const { name, phone, address, serviceType } = validation.data;
 
   const { data: widget } = await supabase
     .from("form_widgets")
@@ -21,13 +61,14 @@ export async function POST(
     return NextResponse.json({ error: "Invalid widget key" }, { status: 404 });
   }
 
-  const businessName = (widget.businesses as any)?.name ?? "the team";
+  const typedWidget = widget as WidgetRow;
+  const businessName = getBusinessName(typedWidget.businesses);
   const intakeQuestion = widget.intake_question ?? "What type of roofing issue are you dealing with?";
 
   const { data: lead, error } = await supabase
     .from("leads")
     .insert({
-      business_id: widget.business_id,
+      business_id: typedWidget.business_id,
       name,
       phone,
       address,

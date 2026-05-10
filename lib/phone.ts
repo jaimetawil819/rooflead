@@ -18,7 +18,7 @@ export function normalizePhoneNumber(phone: string | null | undefined) {
     return `+${digits}`;
   }
 
-  return trimmed;
+  return null;
 }
 
 export function getPhoneLookupCandidates(phone: string | null | undefined) {

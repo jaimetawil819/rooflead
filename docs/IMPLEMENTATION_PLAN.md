@@ -63,19 +63,19 @@ This document is the executable checklist. Work top-down. Do not skip Phase 0 to
 |------|------|---------------|--------|
 | ✅ Create `supabase/migrations/` directory | code | existing dir | Folder exists |
 | ✅ Capture current schema as `0001_initial_baseline.sql` | manual + sql | User ran Supabase CLI dump from remote project | File committed; schema reproducible |
-| ✅ Add `0002_sms_opt_outs.sql` (Phase 0D) | sql | `supabase/migrations/0002_sms_opt_outs.sql` | Migration file exists; manual Supabase apply still required |
+| ✅ Add `0002_sms_opt_outs.sql` (Phase 0D) | sql | `supabase/migrations/0002_sms_opt_outs.sql` | Migration applied in Supabase SQL Editor |
 | ✅ Add a brief `supabase/migrations/README.md` describing apply order | code | new file | Explains apply order, baseline capture, and SQL Editor workflow |
 
-### 0F — Form endpoint hardening 🟡
+### 0F — Form endpoint hardening 🟡 ✅
 
 | Step | Type | Files / Action | Verify |
 |------|------|---------------|--------|
-| Validate required fields (name, phone) | code | `app/api/forms/[widgetKey]/route.ts` | Empty payload returns 400 |
-| Length caps (name ≤ 100, phone ≤ 20, address ≤ 250, serviceType ≤ 50) | code | same | Oversized payload rejected |
-| Strip control chars from text inputs | code | same | XSS smoke test |
-| Normalize phone to E.164 (use `libphonenumber-js`) | code | same; possibly `lib/phone.ts` | `(619) 555-1234` → `+16195551234` in DB |
-| Scaffold rate limiter (Upstash) behind `RATE_LIMIT_ENABLED` env flag | code | same; new `lib/rate-limit.ts` | When enabled, 6th request in 60s → 429; when disabled, no-op |
-| Document Upstash setup steps in `IMPLEMENTATION_LOG.md` | code | log entry | User can follow instructions |
+| ✅ Validate required fields (name, phone) | code | `app/api/forms/[widgetKey]/route.ts`, `lib/form-validation.ts` | Empty payload returns 400 |
+| ✅ Length caps (name ≤ 100, phone ≤ 20, address ≤ 250, serviceType ≤ 50) | code | `lib/form-validation.ts` | Oversized field values are trimmed/capped; body >5KB rejected |
+| ✅ Strip control chars from text inputs | code | `lib/form-validation.ts` | Control chars normalized to spaces before insert |
+| ✅ Normalize phone to E.164 | code | `lib/phone.ts`, form route | `(619) 555-1234` stores/sends as `+16195551234` |
+| ✅ Scaffold rate limiter behind `RATE_LIMIT_ENABLED` env flag | code | `lib/rate-limit.ts`, form route, `.env.example` | When enabled, repeat request returns 429; when disabled, no-op |
+| ✅ Document limiter setup/limits in `IMPLEMENTATION_LOG.md` | code | log entry | Notes that current limiter is in-memory MVP guard, not production abuse prevention |
 
 ### 0G — Conversation completion via tool use 🟡
 

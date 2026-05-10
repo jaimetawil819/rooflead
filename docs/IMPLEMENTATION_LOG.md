@@ -35,6 +35,37 @@ Why this change was made.
 
 ---
 
+## 2026-05-09 — Phase 0F — Public form endpoint hardening
+
+**Task:** Phase 0F from `IMPLEMENTATION_PLAN.md`
+**Status:** completed
+
+**Files changed:**
+- `app/api/forms/[widgetKey]/route.ts` (modified — validates/sanitizes request body, normalizes phone, applies optional rate limit)
+- `lib/form-validation.ts` (added — JSON parsing, required fields, length caps, control-char stripping)
+- `lib/rate-limit.ts` (added — env-gated in-memory MVP rate limiter)
+- `lib/phone.ts` (modified — invalid phone input now returns `null` instead of preserving garbage)
+- `.env.example` (modified — documents `RATE_LIMIT_ENABLED`, `RATE_LIMIT_WINDOW_MS`, `RATE_LIMIT_MAX`)
+- `docs/IMPLEMENTATION_PLAN.md` (modified — marks 0F complete)
+- `docs/IMPLEMENTATION_LOG.md` (modified — this entry)
+
+**Reason:**
+The public lead form endpoint accepted arbitrary JSON and inserted raw values directly into Supabase. That made it too easy to submit empty leads, oversized strings, control characters, or unusable phone numbers. Hardened the endpoint before more demo/customer traffic.
+
+**Verification performed:**
+- **typecheck (`npx.cmd tsc --noEmit`):** clean — no output. ✅
+- **build (`npm.cmd run build`):** ✓ Compiled successfully in 4.1s. All 19 routes detected. ✅
+- **lint (`npm.cmd run lint`):** failed with 16 errors + 3 warnings — known lint debt, and one prior form-route `any` error was removed.
+- **manual smoke test:** with rate limiting enabled locally (`RATE_LIMIT_ENABLED=true`, `RATE_LIMIT_MAX=1`), first invalid request returned `400`, second immediate request returned `429`. ✅
+
+**Follow-up needed:**
+- Current rate limiter is an in-memory MVP guard. It helps local/dev and some single-instance runtime abuse, but it is not reliable enough as the final production limiter on serverless infrastructure. Before paid traffic, replace or back it with Upstash/Vercel Firewall/another shared limiter.
+- Valid form submission should be tested after next deploy using the real test form and a real phone number.
+
+**Notes / surprises:**
+- This phase intentionally did not add a new paid dependency. Phone normalization remains US-first and lightweight; deeper international parsing can wait until the business needs it.
+
+---
 ## 2026-05-09 — Phase 0D — Manual Supabase migration applied
 
 **Task:** Manual apply for `supabase/migrations/0002_sms_opt_outs.sql`
