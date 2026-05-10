@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { ArrowLeft, Phone, MapPin, Wrench, Calendar } from "lucide-react";
+import { ArrowLeft, Phone, MapPin, Wrench, Calendar, Clock, Home } from "lucide-react";
 import { use } from "react";
 
 const STATUSES = ["new", "contacted", "qualified", "appointment_set", "won", "lost", "junk"];
@@ -24,6 +24,10 @@ type Lead = {
   status: string;
   lead_score: string | null;
   summary: string | null;
+  urgency: string | null;
+  timeline: string | null;
+  is_homeowner: boolean | null;
+  qualification_reason: string | null;
 };
 
 type Message = {
@@ -84,6 +88,13 @@ export default function LeadDetailPage({ params }: { params: Promise<{ id: strin
     },
     { icon: MapPin, label: "Address", value: lead.address },
     { icon: Wrench, label: "Service", value: lead.service_type },
+    { icon: Clock, label: "Urgency", value: lead.urgency },
+    { icon: Calendar, label: "Timeline", value: lead.timeline },
+    {
+      icon: Home,
+      label: "Homeowner",
+      value: lead.is_homeowner === null ? null : lead.is_homeowner ? "Yes" : "No",
+    },
     { icon: Calendar, label: "Received", value: new Date(lead.created_at).toLocaleString() },
   ];
 
@@ -144,6 +155,12 @@ export default function LeadDetailPage({ params }: { params: Promise<{ id: strin
         <div className="bg-blue-50 border border-blue-100 rounded-2xl p-6 mb-4">
           <p className="text-xs font-semibold text-blue-600 uppercase tracking-wide mb-2">AI Summary</p>
           <p className="text-slate-700 text-sm leading-relaxed">{lead.summary}</p>
+          {lead.qualification_reason && (
+            <p className="text-slate-500 text-sm leading-relaxed mt-3">
+              <span className="font-medium text-slate-700">Why this score:</span>{" "}
+              {lead.qualification_reason}
+            </p>
+          )}
         </div>
       )}
 

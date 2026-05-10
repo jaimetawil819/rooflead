@@ -213,10 +213,25 @@ export async function POST(req: NextRequest) {
     // Generate lead summary
     const allMessages = [...history, { role: "assistant", content: reply }];
     try {
-      const { summary, score } = await generateLeadSummary(allMessages);
+      const {
+        summary,
+        score,
+        urgency,
+        timeline,
+        isHomeowner,
+        qualificationReason,
+      } = await generateLeadSummary(allMessages);
       await supabase
         .from("leads")
-        .update({ summary, lead_score: score, status: "qualified" })
+        .update({
+          summary,
+          lead_score: score,
+          urgency,
+          timeline,
+          is_homeowner: isHomeowner,
+          qualification_reason: qualificationReason,
+          status: "qualified",
+        })
         .eq("id", lead.id);
 
       // Notify the business owner

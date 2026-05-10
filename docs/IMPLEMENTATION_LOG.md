@@ -35,6 +35,34 @@ Why this change was made.
 
 ---
 
+## 2026-05-10 - Phase 1 - Structured lead extraction
+
+**Task:** Phase 1 structured lead extraction.
+**Status:** code prepared; Supabase SQL migration still requires manual application
+
+**Files changed:**
+- `supabase/migrations/0006_structured_lead_extraction.sql` (added)
+- `supabase/migrations/README.md` (updated)
+- `lib/ai.ts` (modified)
+- `app/api/webhooks/twilio/route.ts` (modified)
+- `app/dashboard/leads/[id]/page.tsx` (modified)
+- `docs/IMPLEMENTATION_LOG.md` (modified)
+
+**Reason:**
+Completed AI conversations previously stored only a free-text summary and lead score. That is useful for a demo, but not strong enough for follow-up workflows, filtering, scheduling, or CRM-style reporting. This change makes the summary step return structured fields: score, urgency, timeline, homeowner status, and qualification reason. The Twilio webhook persists those fields when a lead is qualified, and the lead detail page displays them.
+
+**Verification performed:**
+- Pending final typecheck/lint/build in this session.
+
+**Follow-up needed:**
+- Apply `supabase/migrations/0006_structured_lead_extraction.sql` in Supabase SQL Editor before deploying this webhook change.
+- Complete a test SMS conversation and verify `urgency`, `timeline`, `is_homeowner`, and `qualification_reason` populate on the lead record.
+
+**Notes / surprises:**
+- Existing leads will show blank structured fields until they complete a new AI conversation or are backfilled later.
+
+---
+
 ## 2026-05-10 - Phase 1 - Twilio and form idempotency
 
 **Task:** Phase 1 message and lead duplicate protection.

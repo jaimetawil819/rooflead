@@ -12,6 +12,17 @@ export type ConversationReply = {
   isComplete: boolean;
 };
 
+export type LeadScore = "hot" | "warm" | "cold" | "unqualified";
+export type LeadUrgency = "emergency" | "soon" | "estimate" | "unknown";
+export type LeadSummary = {
+  summary: string;
+  score: LeadScore;
+  urgency: LeadUrgency;
+  timeline: string | null;
+  isHomeowner: boolean | null;
+  qualificationReason: string | null;
+};
+
 const COMPLETE_INTAKE_TOOL: ToolUnion = {
   name: "complete_intake",
   description:
@@ -53,6 +64,61 @@ function getCompleteIntakeReply(content: ContentBlock[]) {
   return typeof finalReply === "string" && finalReply.trim()
     ? finalReply.trim()
     : null;
+}
+
+function getFirstTextBlock(content: ContentBlock[]) {
+  const text = content.find((block) => block.type === "text");
+  return text?.type === "text" ? text.text : "";
+}
+
+function asString(value: unknown, fallback = "") {
+  return typeof value === "string" && value.trim() ? value.trim() : fallback;
+}
+
+function asLeadScore(value: unknown): LeadScore {
+  return value === "hot" ||
+    value === "warm" ||
+    value === "cold" ||
+    value === "unqualified"
+    ? value
+    : "warm";
+}
+
+function asUrgency(value: unknown): LeadUrgency {
+  return value === "emergency" ||
+    value === "soon" ||
+    value === "estimate" ||
+    value === "unknown"
+    ? value
+    : "unknown";
+}
+
+function asNullableBoolean(value: unknown) {
+  return typeof value === "boolean" ? value : null;
+}
+
+function parseLeadSummaryJson(text: string): LeadSummary {
+  try {
+    const parsed = JSON.parse(text) as Record<string, unknown>;
+
+    return {
+      summary: asString(parsed.summary, text),
+      score: asLeadScore(parsed.score),
+      urgency: asUrgency(parsed.urgency),
+      timeline: asString(parsed.timeline) || null,
+      isHomeowner: asNullableBoolean(parsed.is_homeowner),
+      qualificationReason: asString(parsed.qualification_reason) || null,
+    };
+  } catch {
+    return {
+      summary: text,
+      score: "warm",
+      urgency: "unknown",
+      timeline: null,
+      isHomeowner: null,
+      qualificationReason: null,
+    };
+  }
 }
 
 export async function generateConversationReply(
@@ -102,7 +168,7 @@ Rules:
 
 export async function generateLeadSummary(
   messageHistory: { role: string; content: string }[]
-): Promise<{ summary: string; score: "hot" | "warm" | "cold" | "unqualified" }> {
+): Promise<LeadSummary> {
   const transcript = messageHistory
     .map((m) => `${m.role}: ${m.content}`)
     .join("\n");
@@ -114,9 +180,13 @@ export async function generateLeadSummary(
     messages: [
       {
         role: "user",
-        content: `Based on this conversation, return a JSON object with exactly two fields:
+        content: `Based on this conversation, return a JSON object with exactly six fields:
 - "summary": a 2-3 sentence summary of the lead (issue, urgency, timeline)
 - "score": one of "hot", "warm", "cold", or "unqualified"
+- "urgency": one of "emergency", "soon", "estimate", or "unknown"
+- "timeline": short phrase such as "ASAP", "this week", "within a month", "planning ahead", or null
+- "is_homeowner": true, false, or null if unclear
+- "qualification_reason": one concise sentence explaining why the score was chosen
 
 Scoring guide:
 - hot = active damage or emergency, ready to move forward immediately
@@ -132,10 +202,5 @@ Return only the JSON object.`,
     ],
   });
 
-  const text = (response.content[0] as { text: string }).text;
-  try {
-    return JSON.parse(text);
-  } catch {
-    return { summary: text, score: "warm" as const };
-  }
+  return parseLeadSummaryJson(getFirstTextBlock(response.content));
 }

@@ -9,6 +9,7 @@ This folder tracks database changes for RoofLead.
 - `0003_secure_rls.sql` removes permissive direct table access after dashboard data access has moved behind protected API routes.
 - `0004_stripe_billing_hardening.sql` adds Stripe webhook idempotency storage and subscription metadata columns.
 - `0005_twilio_message_idempotency.sql` adds a nullable unique Twilio message SID column for inbound webhook replay protection.
+- `0006_structured_lead_extraction.sql` adds structured lead qualification fields.
 
 ## Apply order
 
@@ -19,6 +20,7 @@ Apply migrations in numeric order:
 3. `0003_secure_rls.sql` - run only after deploying the protected dashboard API routes. It removes permissive anon/authenticated table access and expects private data access to go through server-owned API routes using Clerk ownership checks.
 4. `0004_stripe_billing_hardening.sql` - run before deploying the expanded Stripe webhook. It creates `stripe_events` and adds optional subscription metadata columns to `businesses`.
 5. `0005_twilio_message_idempotency.sql` - run before deploying the Twilio idempotency change. It adds `messages.twilio_message_sid` with a unique partial index for non-null SIDs.
+6. `0006_structured_lead_extraction.sql` - run before deploying structured lead extraction. It adds `timeline`, `is_homeowner`, and `qualification_reason` to `leads`.
 
 ## Capturing the baseline
 
