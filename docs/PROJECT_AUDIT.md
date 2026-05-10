@@ -14,7 +14,7 @@ Website/test form -> lead record -> AI SMS qualification -> structured lead summ
 
 Phase 0 safety work is complete enough to move forward: secrets are ignored, tracked-file secret scan was clean, Clerk proxy is deny-by-default, Twilio webhooks validate signatures, STOP opt-outs persist, form input is validated, migrations exist, and private dashboard data no longer relies on direct browser Supabase table access.
 
-Phase 1 is partially complete. Billing correctness, idempotency, structured lead extraction, AI guardrails, local inbound SMS simulation, and async Twilio webhook processing have been implemented. The biggest remaining reliability risks are now AI prompt injection, stale mid-conversation leads, and production observability.
+Phase 1 is partially complete. Billing correctness, idempotency, structured lead extraction, AI guardrails, local inbound SMS simulation, async Twilio webhook processing, and prompt injection mitigation have been implemented. The biggest remaining reliability risks are now stale mid-conversation leads and production observability.
 
 ---
 
@@ -92,6 +92,7 @@ Manual caveat: provider-side secret rotation and production environment checks a
 | Summary parser hardening | Complete | tolerant JSON extraction in `lib/ai.ts` |
 | Renter/unqualified status rule | Complete | renter/unqualified completed leads become `junk`, not `qualified` |
 | Async Twilio processing | Complete | webhook returns TwiML after insert; AI/SMS work runs via `after()` |
+| Prompt injection mitigation | Complete | business config and transcripts treated as untrusted context in `lib/ai.ts` |
 
 ---
 
@@ -99,19 +100,15 @@ Manual caveat: provider-side secret rotation and production environment checks a
 
 ### Highest priority
 
-1. **Prompt injection mitigation**
-   - Current risk: business name and intake question are interpolated into the system prompt.
-   - Suggested direction: move configurable/user-provided values into delimited context and explicitly instruct the model not to treat them as instructions.
-
-2. **Mid-conversation timeout**
+1. **Mid-conversation timeout**
    - Current risk: leads that stop replying before completion can sit as `new`.
    - Suggested direction: add `last_message_at`, summarize/mark stale leads after a defined timeout.
 
-3. **Structured logging**
+2. **Structured logging**
    - Current risk: debugging production failures will be messy.
    - Suggested direction: request IDs, safe error messages, no full PII transcripts in logs.
 
-4. **Durable background jobs**
+3. **Durable background jobs**
    - Current risk: Next.js `after()` reduces Twilio timeout risk, but it is not a persistent queue.
    - Suggested direction: keep this for MVP, then add a DB-backed queue or hosted job worker if pilot usage exposes dropped/slow jobs.
 
@@ -139,4 +136,4 @@ Manual caveat: provider-side secret rotation and production environment checks a
 **Local/pilot-demo readiness:** Good, with simulator-based testing.
 **Real customer readiness:** Close, but not automatic. Wait for A2P approval, run production smoke tests, and complete the remaining Phase 1 reliability work before relying on it for a paying pilot.
 
-Recommended next engineering move: **prompt injection mitigation** unless the immediate goal is customer demo polish.
+Recommended next engineering move: **mid-conversation timeout** unless the immediate goal is customer demo polish.

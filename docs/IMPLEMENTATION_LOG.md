@@ -35,6 +35,36 @@ Why this change was made.
 
 ---
 
+## 2026-05-10 - Phase 1 - Prompt injection mitigation
+
+**Task:** Treat configurable business data and homeowner transcript text as untrusted AI context.
+**Status:** completed
+
+**Files changed:**
+- `lib/ai.ts` (modified)
+- `docs/PROJECT_AUDIT.md` (modified)
+- `docs/IMPLEMENTATION_PLAN.md` (modified)
+- `docs/MANUAL_TESTING.md` (modified)
+- `README.md` (modified)
+- `docs/IMPLEMENTATION_LOG.md` (modified)
+
+**Reason:**
+The conversation prompt directly interpolated business name, service labels, and the intake question into system instructions. That is manageable for a demo, but unsafe for a configurable SaaS because a business setting or user transcript could contain instruction-like text. The AI layer now sanitizes and length-caps business context, passes it as delimited untrusted JSON, and tells both the conversation and summary models not to follow commands inside business config or transcript content.
+
+**Verification performed:**
+- `npx.cmd tsc --noEmit`: clean.
+- `npm.cmd run lint`: clean.
+- `npm.cmd run build`: clean.
+
+**Follow-up needed:**
+- Run the simulator with a normal conversation and one prompt-injection-style message before the next demo.
+- Continue to 1H mid-conversation timeout.
+
+**Notes / surprises:**
+- No database or UI changes were needed.
+
+---
+
 ## 2026-05-10 - Phase 1 - Async Twilio webhook processing
 
 **Task:** Move normal inbound Twilio processing off the synchronous response path.

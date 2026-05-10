@@ -96,7 +96,8 @@ Completed in Phase 1:
 - AI reliability guardrails
 - Manual inbound SMS simulator
 - Async Twilio webhook processing
+- Prompt injection mitigation
 
 Recommended next slice:
 
-- Prompt injection mitigation
+- Mid-conversation timeout
