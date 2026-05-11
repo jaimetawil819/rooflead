@@ -6,6 +6,41 @@ This is a running log of every change made under the controlled-implementation p
 
 ---
 
+## 2026-05-10 - Phase 2F - Pilot demo readiness planning
+
+**Task:** Create a source of truth for demo readiness before adding larger features.
+**Status:** completed
+
+**Files changed:**
+- `docs/PILOT_DEMO_CHECKLIST.md` (added)
+- `components/dashboard/DashboardQuickActions.tsx` (added)
+- `app/dashboard/page.tsx` (modified)
+- `app/dashboard/leads/[id]/page.tsx` (modified)
+- `docs/IMPLEMENTATION_PLAN.md` (modified)
+- `docs/PROJECT_AUDIT.md` (modified)
+- `README.md` (modified)
+- `docs/IMPLEMENTATION_LOG.md` (modified)
+
+**Reason:**
+RoofLead now has enough functionality to demo, but a demo can still fail if data is messy, provider setup is stale, or the story is unclear. This checklist defines the five-minute demo flow, technical pre-checks, demo data rules, and stop conditions. The dashboard now has demo actions for opening/copying the test form, reviewing leads, and opening settings. Lead detail labels were clarified for demo narration.
+
+**Verification performed:**
+- Documentation reviewed against current product state.
+- `npx.cmd tsc --noEmit`: clean.
+- `npm.cmd run lint`: clean.
+- `npm.cmd run build`: clean.
+- User accepted the Phase 2F pilot-demo readiness slice.
+
+**Follow-up needed:**
+- Run the checklist before the first roofer demo.
+- Commit and push Phase 2F.
+- Run a production demo smoke test before scheduling/inspection booking.
+
+**Notes / surprises:**
+- Scheduling should wait until at least one or two demo conversations validate that it is a buying trigger, not just a nice feature.
+
+---
+
 ## 2026-05-10 - Phase 2E - Basic ROI metrics
 
 **Task:** Add simple dashboard ROI metrics.

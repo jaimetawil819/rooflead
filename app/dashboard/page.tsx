@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { getAdminClient } from "@/lib/supabase/admin";
 import Link from "next/link";
 import { Users, Flame, TrendingUp, ArrowRight, AlertTriangle, Trophy, DollarSign } from "lucide-react";
+import DashboardQuickActions from "@/components/dashboard/DashboardQuickActions";
 
 const scoreColors: Record<string, string> = {
   hot: "bg-red-100 text-red-700",
@@ -64,6 +65,9 @@ export default async function DashboardPage() {
   const averageJobValueCents = business.average_job_value_cents ?? 800000;
   const estimatedRevenueCents = won * averageJobValueCents;
   const recent = leads?.slice(0, 5) ?? [];
+  const testFormPath = widget?.widget_key
+    ? `/test-form/${widget.widget_key}`
+    : null;
 
   const stats = [
     { label: "Total Leads", value: total, icon: Users, color: "bg-blue-50 text-blue-600" },
@@ -87,6 +91,8 @@ export default async function DashboardPage() {
         </h1>
         <p className="text-gray-500 mt-1">Here&apos;s what&apos;s happening with your leads.</p>
       </div>
+
+      <DashboardQuickActions testFormPath={testFormPath} />
 
       {/* Stats */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
@@ -119,10 +125,13 @@ export default async function DashboardPage() {
         {recent.length === 0 ? (
           <div className="px-6 py-12 text-center">
             <p className="text-gray-500 font-medium">No leads yet</p>
-            <p className="text-gray-400 text-sm mt-1 mb-4">Submit a test lead to see the full flow in action.</p>
-            {widget?.widget_key && (
+            <p className="text-gray-400 text-sm mt-1 mb-4">
+              Start with a realistic test lead so the dashboard has something
+              useful to show during a demo.
+            </p>
+            {testFormPath && (
               <Link
-                href={`/test-form/${widget.widget_key}`}
+                href={testFormPath}
                 target="_blank"
                 className="inline-flex items-center gap-1.5 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium px-4 py-2 rounded-lg transition-colors"
               >
@@ -141,7 +150,7 @@ export default async function DashboardPage() {
                 <div>
                   <p className="font-medium text-slate-900 text-sm">{lead.name ?? "Unknown"}</p>
                   <p className="text-xs text-gray-400 mt-0.5">
-                    {lead.service_type ?? "No service type"} · {new Date(lead.created_at).toLocaleDateString()}
+                    {lead.service_type ?? "No service type"} - {new Date(lead.created_at).toLocaleDateString()}
                   </p>
                 </div>
                 <div className="flex items-center gap-2">

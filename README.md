@@ -72,6 +72,7 @@ More detail: `docs/MANUAL_TESTING.md`.
 - `docs/PROJECT_AUDIT.md` - current architecture/product audit
 - `docs/IMPLEMENTATION_PLAN.md` - active execution checklist
 - `docs/IMPLEMENTATION_LOG.md` - running change log
+- `docs/PILOT_DEMO_CHECKLIST.md` - pilot demo script and readiness checklist
 - `docs/SECRET_ROTATION_CHECKLIST.md` - pre-pilot secret rotation checklist
 - `supabase/migrations/README.md` - database migration order
 
@@ -103,4 +104,4 @@ Completed in Phase 1:
 
 Recommended next slice:
 
-- Decide between scheduling/inspection booking and demo polish
+- Production demo smoke test before scheduling/inspection booking

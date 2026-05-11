@@ -16,6 +16,8 @@ Phase 0 safety work is complete enough to move forward: secrets are ignored, tra
 
 Phase 1 reliability work is complete. Billing correctness, idempotency, structured lead extraction, AI guardrails, local inbound SMS simulation, async Twilio webhook processing, prompt injection mitigation, mid-conversation timeout handling, structured backend logging, and final smoke testing have been completed. The biggest remaining risks are now external-provider readiness, pilot onboarding, and the normal limits of an MVP implementation.
 
+Phase 2 has added the most important demo-facing workflows: human review, owner SMS takeover, lead pagination/search, and simple ROI metrics. The product is now close to demo-ready, but should go through a dedicated pilot-demo readiness pass before scheduling or larger features.
+
 ---
 
 ## Product understanding
@@ -119,6 +121,10 @@ Phase 1 is closed. The user confirmed the final smoke test worked after local ch
 5. **Basic ROI metrics**
    - Current state: complete and manually tested with configurable average job value in Settings and dashboard cards for total leads, hot leads, qualified leads, needs-review leads, won leads, and estimated revenue.
 
+6. **Pilot demo readiness**
+   - Current state: complete. `docs/PILOT_DEMO_CHECKLIST.md` defines the demo goal, five-minute demo script, pre-demo technical checks, demo data rules, and stop conditions. Dashboard demo actions and lead-detail labels have been polished for walkthroughs.
+   - Suggested direction: run one production demo smoke test, then move into scheduling foundations if the demo path is clean.
+
 ---
 
 ## Known external blockers
@@ -135,4 +141,4 @@ Phase 1 is closed. The user confirmed the final smoke test worked after local ch
 **Local/pilot-demo readiness:** Good, with simulator-based testing.
 **Real customer readiness:** Close, but not automatic. Wait for A2P approval and run a real SMS pilot test before relying on it for a paying customer.
 
-Recommended next engineering move: **Decide between scheduling/inspection booking and demo polish.**
+Recommended next engineering move: **Run a production demo smoke test before scheduling/inspection booking.**

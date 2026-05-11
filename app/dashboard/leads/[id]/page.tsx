@@ -35,6 +35,17 @@ const scoreColors: Record<string, string> = {
   unqualified: "bg-gray-100 text-gray-600",
 };
 
+const statusColors: Record<string, string> = {
+  new: "bg-blue-100 text-blue-700",
+  contacted: "bg-purple-100 text-purple-700",
+  qualified: "bg-green-100 text-green-700",
+  appointment_set: "bg-yellow-100 text-yellow-700",
+  won: "bg-emerald-100 text-emerald-700",
+  lost: "bg-red-100 text-red-700",
+  junk: "bg-gray-100 text-gray-600",
+  unresponsive: "bg-gray-100 text-gray-600",
+};
+
 type Lead = {
   id: string;
   name: string | null;
@@ -260,6 +271,9 @@ export default function LeadDetailPage({
       </Link>
 
       <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 mb-4">
+        <p className="mb-3 text-xs font-semibold uppercase tracking-wide text-gray-400">
+          Lead Snapshot
+        </p>
         <div className="flex items-start justify-between gap-4 flex-wrap">
           <div>
             <h1 className="text-2xl font-bold text-slate-900">
@@ -269,13 +283,20 @@ export default function LeadDetailPage({
               Lead received {new Date(lead.created_at).toLocaleDateString()}
             </p>
           </div>
-          {lead.lead_score && (
+          <div className="flex items-center gap-2 flex-wrap">
+            {lead.lead_score && (
+              <span
+                className={`text-sm font-bold px-4 py-1.5 rounded-full ${scoreColors[lead.lead_score] ?? "bg-gray-100 text-gray-600"}`}
+              >
+                {lead.lead_score.toUpperCase()}
+              </span>
+            )}
             <span
-              className={`text-sm font-bold px-4 py-1.5 rounded-full ${scoreColors[lead.lead_score] ?? "bg-gray-100 text-gray-600"}`}
+              className={`text-sm font-semibold px-4 py-1.5 rounded-full ${statusColors[lead.status] ?? "bg-gray-100 text-gray-600"}`}
             >
-              {lead.lead_score.toUpperCase()}
+              {titleCase(lead.status)}
             </span>
-          )}
+          </div>
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-6">
@@ -344,7 +365,7 @@ export default function LeadDetailPage({
             </div>
             <div>
               <p className="text-sm font-semibold text-slate-900">
-                {lead.needs_human_review ? "Needs Human Review" : "AI Handling"}
+                {lead.needs_human_review ? "Owner Review Needed" : "Owner Handoff"}
               </p>
               <p className="text-sm text-slate-600 mt-1">
                 {lead.needs_human_review
@@ -366,7 +387,7 @@ export default function LeadDetailPage({
                 : "bg-amber-50 border border-amber-100 text-amber-700 hover:bg-amber-100"
             }`}
           >
-            {lead.needs_human_review ? "Resolve Review" : "Mark Needs Review"}
+            {lead.needs_human_review ? "Mark Reviewed" : "Flag For Owner"}
           </button>
         </div>
       </div>
@@ -375,7 +396,7 @@ export default function LeadDetailPage({
         <div className="flex items-start justify-between gap-4 flex-wrap">
           <div>
             <p className="text-sm font-semibold text-slate-900 mb-3">
-              Update Status
+              Pipeline Status
             </p>
             <div className="flex items-center gap-3 flex-wrap">
               <select
@@ -404,7 +425,7 @@ export default function LeadDetailPage({
             className="inline-flex items-center gap-2 rounded-lg border border-red-100 bg-red-50 px-3 py-2 text-sm font-semibold text-red-600 transition-colors hover:bg-red-100 disabled:opacity-50"
           >
             <Trash2 className="h-4 w-4" />
-            {deleting ? "Deleting..." : "Delete Lead"}
+            {deleting ? "Deleting..." : "Delete Test Lead"}
           </button>
         </div>
       </div>
@@ -412,7 +433,9 @@ export default function LeadDetailPage({
       <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
         <div className="flex items-start justify-between gap-3 mb-4">
           <div>
-            <p className="text-sm font-semibold text-slate-900">Conversation</p>
+            <p className="text-sm font-semibold text-slate-900">
+              Conversation & Manual Reply
+            </p>
             {lead.owner_takeover_at && (
               <p className="text-xs text-gray-400 mt-1">
                 Owner takeover active

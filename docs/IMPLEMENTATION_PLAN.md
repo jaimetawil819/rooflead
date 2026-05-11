@@ -27,7 +27,7 @@ Phase 0 and Phase 1 are complete. Phase 1 closed the core reliability gaps neede
 - Structured logging
 - Final local and production smoke test confirmed by the user
 
-Current focus: **Lead search and ROI metrics** are complete and tested.
+Current focus: **Pilot demo readiness** is complete. Next step is a production demo smoke test before adding scheduling.
 
 ---
 
@@ -291,6 +291,12 @@ Do not start until at least one pilot workflow is stable.
   - Add URL-based search over name, phone, address, service type, and summary.
   - Preserve existing status, score, review, and pagination behavior.
   - Reset to page 1 when search changes.
+- Pilot demo readiness - Complete
+  - Create a demo checklist and 5-minute demo script.
+  - Define pre-demo technical checks.
+  - Identify demo data cleanup rules.
+  - Polish dashboard/lead detail only where it improves a real pilot demo.
+  - Add dashboard demo actions for opening/copying the test form, reviewing leads, and opening settings.
 - CRM/Zapier/webhook export
 
 ---
@@ -310,6 +316,6 @@ Do not start until at least one pilot workflow is stable.
 
 ## Current next action
 
-Recommended next engineering slice: **Decide between scheduling/inspection booking and demo polish.**
+Recommended next engineering slice: **Production demo smoke test, then scheduling foundations.**
 
-Reason: the AI flow is now reliable enough for MVP testing, and the handoff state is implemented. The next practical product step is letting an owner act from that handoff.
+Reason: the core workflow is now broad enough for a demo. The next practical step is making sure the product looks credible and runs cleanly in front of a roofing company owner.
