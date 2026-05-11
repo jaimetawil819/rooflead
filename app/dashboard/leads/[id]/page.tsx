@@ -14,6 +14,7 @@ import {
   Trash2,
   AlertTriangle,
   CheckCircle2,
+  Send,
 } from "lucide-react";
 
 const STATUSES = [
@@ -50,12 +51,14 @@ type Lead = {
   qualification_reason: string | null;
   needs_human_review: boolean | null;
   handoff_reason: string | null;
+  owner_takeover_at: string | null;
 };
 
 type Message = {
   id: string;
   role: string;
   body: string;
+  sent_at?: string;
 };
 
 function titleCase(value: string) {
@@ -89,6 +92,9 @@ export default function LeadDetailPage({
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [manualReply, setManualReply] = useState("");
+  const [sendingReply, setSendingReply] = useState(false);
+  const [replyError, setReplyError] = useState("");
 
   useEffect(() => {
     const load = async () => {
@@ -167,6 +173,44 @@ export default function LeadDetailPage({
     setSaving(false);
     setSaved(true);
     setTimeout(() => setSaved(false), 2000);
+  };
+
+  const sendManualReply = async () => {
+    const body = manualReply.trim();
+    if (body.length < 2) return;
+
+    setSendingReply(true);
+    setReplyError("");
+
+    const res = await fetch(`/api/dashboard/leads/${id}/messages`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ body }),
+    });
+
+    const data = await res.json().catch(() => null);
+
+    if (res.ok && data?.message) {
+      setMessages((prev) => [...prev, data.message]);
+      setManualReply("");
+      setLead((prev) =>
+        prev
+          ? {
+              ...prev,
+              status: prev.status === "new" ? "contacted" : prev.status,
+              needs_human_review: false,
+              handoff_reason: null,
+              owner_takeover_at: new Date().toISOString(),
+            }
+          : prev
+      );
+      setSaved(true);
+      setTimeout(() => setSaved(false), 2000);
+    } else {
+      setReplyError(data?.error ?? "Could not send this reply.");
+    }
+
+    setSendingReply(false);
   };
 
   if (!lead) {
@@ -305,7 +349,9 @@ export default function LeadDetailPage({
               <p className="text-sm text-slate-600 mt-1">
                 {lead.needs_human_review
                   ? lead.handoff_reason ?? "This lead should be reviewed by a person."
-                  : "No handoff has been requested for this lead."}
+                  : lead.owner_takeover_at
+                    ? "Owner takeover is active. New homeowner replies will be saved without AI auto-replying."
+                    : "No handoff has been requested for this lead."}
               </p>
             </div>
           </div>
@@ -364,7 +410,16 @@ export default function LeadDetailPage({
       </div>
 
       <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
-        <p className="text-sm font-semibold text-slate-900 mb-4">Conversation</p>
+        <div className="flex items-start justify-between gap-3 mb-4">
+          <div>
+            <p className="text-sm font-semibold text-slate-900">Conversation</p>
+            {lead.owner_takeover_at && (
+              <p className="text-xs text-gray-400 mt-1">
+                Owner takeover active
+              </p>
+            )}
+          </div>
+        </div>
         {messages.length === 0 ? (
           <p className="text-gray-400 text-sm">No messages yet.</p>
         ) : (
@@ -378,15 +433,67 @@ export default function LeadDetailPage({
                   className={`max-w-xs sm:max-w-sm px-4 py-2.5 rounded-2xl text-sm leading-relaxed ${
                     msg.role === "user"
                       ? "bg-blue-600 text-white rounded-tr-sm"
+                      : msg.role === "owner"
+                        ? "bg-emerald-50 text-emerald-900 border border-emerald-100 rounded-tl-sm"
                       : "bg-gray-100 text-slate-800 rounded-tl-sm"
                   }`}
                 >
+                  {msg.role === "owner" && (
+                    <p className="mb-1 text-[10px] font-semibold uppercase tracking-wide text-emerald-600">
+                      Owner
+                    </p>
+                  )}
                   {msg.body}
                 </div>
               </div>
             ))}
           </div>
         )}
+
+        <div className="mt-6 border-t border-gray-100 pt-4">
+          <label
+            htmlFor="manual-reply"
+            className="text-sm font-semibold text-slate-900"
+          >
+            Send manual SMS
+          </label>
+          <p className="text-xs text-gray-400 mt-1">
+            Sending pauses AI replies for this lead so the owner can take over.
+          </p>
+          <textarea
+            id="manual-reply"
+            value={manualReply}
+            onChange={(e) => {
+              setManualReply(e.target.value.slice(0, 500));
+              setReplyError("");
+            }}
+            disabled={sendingReply || deleting || !lead.phone}
+            rows={3}
+            className="mt-3 w-full rounded-lg border border-gray-200 px-3 py-2 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50"
+            placeholder={
+              lead.phone
+                ? "Type a reply to send from your RoofLead number..."
+                : "This lead has no phone number."
+            }
+          />
+          <div className="mt-3 flex items-center justify-between gap-3 flex-wrap">
+            <span className="text-xs text-gray-400">
+              {manualReply.length}/500 characters
+            </span>
+            <button
+              type="button"
+              onClick={sendManualReply}
+              disabled={sendingReply || manualReply.trim().length < 2 || !lead.phone}
+              className="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              <Send className="h-4 w-4" />
+              {sendingReply ? "Sending..." : "Send SMS"}
+            </button>
+          </div>
+          {replyError && (
+            <p className="mt-2 text-sm font-medium text-red-600">{replyError}</p>
+          )}
+        </div>
       </div>
     </div>
   );

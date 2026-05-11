@@ -21,6 +21,14 @@ type ProcessLeadConversationInput = {
   logger: ReturnType<typeof createRequestLogger>;
 };
 
+type ActiveLead = {
+  id: string;
+  business_id: string;
+  status: string;
+  name: string | null;
+  owner_takeover_at: string | null;
+};
+
 function getTwilioValidationUrl(req: NextRequest) {
   const requestUrl = new URL(req.url);
   const protocol =
@@ -293,14 +301,28 @@ export async function POST(req: NextRequest) {
   // Find the most recent active lead for this phone number.
   // Excludes completed/closed leads so a returning homeowner doesn't
   // corrupt a finished conversation from another business.
-  const { data: lead } = await supabase
+  const { data: activeLead } = await supabase
     .from("leads")
-    .select("id, business_id, status, name")
+    .select("id, business_id, status, name, owner_takeover_at")
     .in("phone", phoneCandidates)
     .not("status", "in", '("qualified","unresponsive","won","lost","junk")')
     .order("created_at", { ascending: false })
     .limit(1)
-    .single();
+    .single<ActiveLead>();
+
+  const { data: ownerTakeoverLead } = activeLead
+    ? { data: null }
+    : await supabase
+        .from("leads")
+        .select("id, business_id, status, name, owner_takeover_at")
+        .in("phone", phoneCandidates)
+        .not("owner_takeover_at", "is", null)
+        .not("status", "in", '("unresponsive","won","lost","junk")')
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .single<ActiveLead>();
+
+  const lead = activeLead ?? ownerTakeoverLead;
 
   if (!lead) {
     logger.info("twilio.no_active_lead");
@@ -332,8 +354,26 @@ export async function POST(req: NextRequest) {
 
   await supabase
     .from("leads")
-    .update({ last_message_at: new Date().toISOString() })
+    .update(
+      lead.owner_takeover_at
+        ? {
+            last_message_at: new Date().toISOString(),
+            needs_human_review: true,
+            handoff_reason: "Homeowner replied after owner takeover.",
+          }
+        : { last_message_at: new Date().toISOString() }
+    )
     .eq("id", lead.id);
+
+  if (lead.owner_takeover_at) {
+    logger.info("twilio.owner_takeover_reply_recorded", {
+      leadId: lead.id,
+      businessId: lead.business_id,
+      messageSid,
+    });
+
+    return emptyTwimlResponse(logger.requestId);
+  }
 
   after(async () => {
     await processLeadConversation({

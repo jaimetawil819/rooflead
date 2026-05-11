@@ -6,6 +6,40 @@ This is a running log of every change made under the controlled-implementation p
 
 ---
 
+## 2026-05-10 - Phase 2B - Manual owner SMS reply
+
+**Task:** Let the business owner send a manual SMS from the lead detail page.
+**Status:** completed
+
+**Files changed:**
+- `supabase/migrations/0009_owner_takeover.sql` (added)
+- `supabase/migrations/README.md` (modified)
+- `app/api/dashboard/leads/[id]/messages/route.ts` (added)
+- `app/api/webhooks/twilio/route.ts` (modified)
+- `app/dashboard/leads/[id]/page.tsx` (modified)
+- `docs/PROJECT_AUDIT.md` (modified)
+- `docs/IMPLEMENTATION_PLAN.md` (modified)
+- `README.md` (modified)
+- `docs/IMPLEMENTATION_LOG.md` (modified)
+
+**Reason:**
+Human handoff is only useful if the owner can act from the dashboard. This adds a protected manual reply endpoint, sends SMS through Twilio after Clerk ownership checks, stores owner-authored messages in the conversation, respects durable SMS opt-outs, and sets `owner_takeover_at` so future homeowner replies are recorded without triggering AI auto-replies.
+
+**Verification performed:**
+- `npx.cmd tsc --noEmit`: clean.
+- `npm.cmd run lint`: clean.
+- `npm.cmd run build`: clean.
+- User applied/tested the feature in the app and confirmed it works.
+
+**Follow-up needed:**
+- After A2P approval, reply from the homeowner phone and confirm the inbound reply is saved without an AI response.
+- Choose the next Phase 2 slice: scheduling or lead list pagination/search.
+
+**Notes / surprises:**
+- The feature intentionally pauses AI after owner takeover. Without that, the AI could reply over the owner in the same conversation.
+
+---
+
 ## 2026-05-10 - Phase 2A - Human handoff / owner takeover
 
 **Task:** Add durable human-review state before owner takeover features.

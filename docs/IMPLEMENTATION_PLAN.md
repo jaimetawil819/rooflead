@@ -27,7 +27,7 @@ Phase 0 and Phase 1 are complete. Phase 1 closed the core reliability gaps neede
 - Structured logging
 - Final local and production smoke test confirmed by the user
 
-Current focus: **Phase 2A - Human handoff / owner takeover** is complete and tested.
+Current focus: **Manual owner SMS reply from dashboard** is complete and tested.
 
 ---
 
@@ -270,7 +270,12 @@ Do not start until at least one pilot workflow is stable.
   - Let the AI/backend mark a lead for review when conversation processing fails or the intake exceeds the safe message cap.
   - Add dashboard visibility and manual mark/resolve controls.
   - Keep this separate from manual owner SMS replies; that is the next slice, not part of 2A.
-- Manual owner SMS reply from dashboard
+- Manual owner SMS reply from dashboard - Complete
+  - Add a protected owner reply endpoint.
+  - Send SMS through Twilio only after Clerk ownership checks.
+  - Store owner-authored replies in the conversation.
+  - Set owner takeover state so future homeowner replies are saved but do not trigger AI auto-replies.
+  - Respect STOP opt-outs before sending.
 - Scheduling/inspection booking
 - ROI metrics
 - Email fallback
@@ -296,6 +301,6 @@ Do not start until at least one pilot workflow is stable.
 
 ## Current next action
 
-Recommended next engineering slice: **Manual owner SMS reply from dashboard.**
+Recommended next engineering slice: **Decide between scheduling and lead list pagination/search.**
 
 Reason: the AI flow is now reliable enough for MVP testing, and the handoff state is implemented. The next practical product step is letting an owner act from that handoff.

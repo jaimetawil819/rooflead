@@ -108,8 +108,7 @@ Phase 1 is closed. The user confirmed the final smoke test worked after local ch
    - Current state: complete and manually tested with durable `needs_human_review` state, dashboard badges/filtering, manual mark/resolve controls, and AI/backend handoff marking on failure or message-cap cases.
 
 2. **Manual owner SMS reply from dashboard**
-   - Current risk: owners can call leads, but cannot yet take over the text conversation from RoofLead.
-   - Suggested direction: add after handoff state exists.
+   - Current state: complete and manually tested with protected owner reply endpoint, Twilio send, conversation persistence, opt-out check, and `owner_takeover_at` state that pauses future AI auto-replies.
 
 3. **Scheduling/inspection booking**
    - Current risk: appointment booking could be valuable, but needs business availability settings and a human handoff boundary first.
@@ -130,4 +129,4 @@ Phase 1 is closed. The user confirmed the final smoke test worked after local ch
 **Local/pilot-demo readiness:** Good, with simulator-based testing.
 **Real customer readiness:** Close, but not automatic. Wait for A2P approval and run a real SMS pilot test before relying on it for a paying customer.
 
-Recommended next engineering move: **Manual owner SMS reply from dashboard.**
+Recommended next engineering move: **Choose the next Phase 2 product slice: scheduling or lead list pagination/search.**

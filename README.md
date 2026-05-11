@@ -103,4 +103,4 @@ Completed in Phase 1:
 
 Recommended next slice:
 
-- Manual owner SMS reply from dashboard
+- Choose the next Phase 2 product slice: scheduling or lead list pagination/search
