@@ -4,6 +4,7 @@ import HowItWorks from "@/components/marketing/HowItWorks";
 import Problem from "@/components/marketing/Problem";
 import ProductPreview from "@/components/marketing/ProductPreview";
 import Trust from "@/components/marketing/Trust";
+import UseCases from "@/components/marketing/UseCases";
 import Pricing from "@/components/marketing/Pricing";
 import FAQ from "@/components/marketing/FAQ";
 import FinalCTA from "@/components/marketing/FinalCTA";
@@ -17,6 +18,7 @@ export default function HomePage() {
       <Problem />
       <ProductPreview />
       <Trust />
+      <UseCases />
       <HowItWorks />
       <Pricing />
       <FAQ />

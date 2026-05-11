@@ -3,18 +3,40 @@ import Image from "next/image";
 
 export default function Footer() {
   return (
-    <footer className="bg-slate-900 py-10 px-4 sm:px-6">
-      <div className="mx-auto max-w-6xl flex flex-col sm:flex-row items-center justify-between gap-4">
-        <div className="bg-white rounded-lg px-2 py-1">
-          <Image src="/logo.png" alt="RoofLead" width={120} height={36} className="h-7 w-auto" />
+    <footer className="bg-slate-950 px-4 pb-10 text-slate-400 sm:px-6 lg:px-8">
+      <div className="mx-auto max-w-7xl border-t border-white/10 pt-8">
+        <div className="flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
+          <div className="flex items-center gap-3">
+            <div className="rounded-lg bg-white px-2 py-1">
+              <Image src="/logo.png" alt="RoofLead" width={120} height={36} className="h-7 w-auto" />
+            </div>
+            <p className="max-w-sm text-sm leading-6">
+              AI SMS lead intake for roofing companies that need faster first response.
+            </p>
+          </div>
+          <nav className="flex flex-wrap gap-x-6 gap-y-3 text-sm" aria-label="Footer navigation">
+            <Link href="#proof" className="transition-colors hover:text-white">
+              Product
+            </Link>
+            <Link href="#use-cases" className="transition-colors hover:text-white">
+              Use Cases
+            </Link>
+            <Link href="#pricing" className="transition-colors hover:text-white">
+              Pricing
+            </Link>
+            <Link href="/privacy" className="transition-colors hover:text-white">
+              Privacy
+            </Link>
+            <Link href="/terms" className="transition-colors hover:text-white">
+              Terms
+            </Link>
+            <Link href="/sign-in" className="transition-colors hover:text-white">
+              Sign In
+            </Link>
+          </nav>
         </div>
-        <nav className="flex gap-6 text-sm text-slate-400">
-          <Link href="#how-it-works" className="hover:text-white transition-colors">How It Works</Link>
-          <Link href="#pricing" className="hover:text-white transition-colors">Pricing</Link>
-          <Link href="/sign-in" className="hover:text-white transition-colors">Sign In</Link>
-        </nav>
-        <p className="text-slate-500 text-xs">
-          © {new Date().getFullYear()} RoofLead. All rights reserved.
+        <p className="mt-8 text-xs">
+          Copyright {new Date().getFullYear()} RoofLead. All rights reserved.
         </p>
       </div>
     </footer>

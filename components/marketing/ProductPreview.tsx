@@ -28,16 +28,17 @@ const highlights = [
 
 export default function ProductPreview() {
   return (
-    <section className="bg-white py-24 px-4 sm:px-6">
-      <div className="mx-auto grid max-w-6xl gap-12 lg:grid-cols-[0.85fr_1.15fr] lg:items-center">
+    <section id="proof" className="bg-slate-50 px-4 py-20 sm:px-6 lg:px-8 lg:py-24">
+      <div className="mx-auto grid max-w-7xl gap-12 lg:grid-cols-[0.85fr_1.15fr] lg:items-center">
         <div>
           <p className="mb-4 text-sm font-semibold uppercase tracking-widest text-blue-600">
-            What You See
+            Product Proof
           </p>
-          <h2 className="mb-6 text-3xl font-bold leading-tight text-slate-900 sm:text-4xl">
-            A clean lead summary before you pick up the phone.
+          <h2 className="mb-6 text-3xl font-bold leading-tight text-slate-950 sm:text-4xl">
+            The dashboard answers the question that matters: who should I call
+            first?
           </h2>
-          <p className="mb-8 text-lg leading-relaxed text-gray-600">
+          <p className="mb-8 text-lg leading-8 text-slate-600">
             RoofLead turns a vague form submission into an owner-ready snapshot:
             what happened, how urgent it is, whether they own the home, and what
             to do next.
@@ -46,12 +47,12 @@ export default function ProductPreview() {
           <div className="space-y-5">
             {highlights.map(({ icon: Icon, title, description }) => (
               <div key={title} className="flex gap-4">
-                <div className="mt-0.5 flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-lg bg-blue-50 text-blue-600">
+                <div className="mt-0.5 flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-lg bg-white text-blue-600 ring-1 ring-slate-200">
                   <Icon className="h-5 w-5" aria-hidden="true" />
                 </div>
                 <div>
-                  <h3 className="font-semibold text-slate-900">{title}</h3>
-                  <p className="mt-1 text-sm leading-relaxed text-gray-600">
+                  <h3 className="font-semibold text-slate-950">{title}</h3>
+                  <p className="mt-1 text-sm leading-6 text-slate-600">
                     {description}
                   </p>
                 </div>
@@ -60,13 +61,13 @@ export default function ProductPreview() {
           </div>
         </div>
 
-        <div className="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-2xl shadow-slate-200/70">
-          <div className="flex items-center justify-between border-b border-gray-100 bg-gray-50 px-5 py-4">
+        <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-xl shadow-slate-200/80">
+          <div className="flex items-center justify-between border-b border-slate-200 bg-slate-950 px-5 py-4">
             <div>
               <p className="text-xs font-semibold uppercase tracking-wide text-gray-400">
                 Lead Detail
               </p>
-              <p className="mt-1 text-sm font-semibold text-slate-900">
+              <p className="mt-1 text-sm font-semibold text-white">
                 Sarah Martinez
               </p>
             </div>
@@ -81,7 +82,7 @@ export default function ProductPreview() {
           </div>
 
           <div className="grid gap-0 lg:grid-cols-[0.9fr_1.1fr]">
-            <div className="border-b border-gray-100 p-5 lg:border-b-0 lg:border-r">
+            <div className="border-b border-slate-100 p-5 lg:border-b-0 lg:border-r">
               <div className="mb-5 rounded-xl border border-blue-100 bg-blue-50 p-4">
                 <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-blue-600">
                   AI Summary
@@ -132,7 +133,7 @@ export default function ProductPreview() {
 
               <a
                 href="tel:+16195550182"
-                className="mt-6 inline-flex w-full items-center justify-center gap-2 rounded-lg bg-green-600 px-4 py-3 text-sm font-semibold text-white transition-colors hover:bg-green-700"
+                className="mt-6 inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-lg bg-emerald-600 px-4 py-3 text-sm font-semibold text-white transition-colors hover:bg-emerald-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-600 focus-visible:ring-offset-2"
               >
                 <Phone className="h-4 w-4" aria-hidden="true" />
                 Call Sarah Now

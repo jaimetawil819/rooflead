@@ -1,31 +1,51 @@
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, CheckCircle2 } from "lucide-react";
 
 export default function FinalCTA() {
   return (
-    <section className="bg-blue-600 py-24 px-4 sm:px-6">
-      <div className="mx-auto max-w-3xl text-center">
-        <h2 className="text-3xl sm:text-4xl font-bold text-white mb-4 leading-tight">
-          Stop losing leads to slow response times.
+    <section className="bg-slate-950 px-4 py-20 text-white sm:px-6 lg:px-8 lg:py-24">
+      <div className="mx-auto max-w-5xl text-center">
+        <p className="mb-4 text-sm font-semibold uppercase tracking-widest text-blue-300">
+          Ready For The Next Lead?
+        </p>
+        <h2 className="text-3xl font-bold leading-tight text-white sm:text-4xl lg:text-5xl">
+          Give every roofing lead a fast, professional first response.
         </h2>
-        <p className="text-blue-100 text-lg mb-10 max-w-xl mx-auto">
-          Set up takes under 10 minutes. Your next form submission gets a reply
-          in under 60 seconds.
+        <p className="mx-auto mt-5 max-w-2xl text-lg leading-8 text-slate-300">
+          Set up RoofLead once. The next form submission gets an instant SMS
+          intake, a clean summary, and a clear owner action.
         </p>
-        <Button
-          asChild
-          size="lg"
-          variant="secondary"
-          className="text-base h-12 px-8 font-semibold"
-        >
-          <Link href="/sign-up">
-            Start Your Free Trial <ArrowRight className="ml-2 h-4 w-4" />
-          </Link>
-        </Button>
-        <p className="text-blue-200 text-sm mt-4">
-          14 days free · Card required · Cancel anytime
-        </p>
+
+        <div className="mt-9 flex flex-col items-center justify-center gap-3 sm:flex-row">
+          <Button
+            asChild
+            size="lg"
+            className="min-h-12 bg-blue-600 px-8 text-base font-semibold text-white hover:bg-blue-500"
+          >
+            <Link href="/sign-up">
+              Start Your Free Trial
+              <ArrowRight className="ml-2 h-4 w-4" aria-hidden="true" />
+            </Link>
+          </Button>
+          <Button
+            asChild
+            size="lg"
+            variant="outline"
+            className="min-h-12 border-white/20 bg-white/5 px-8 text-base font-semibold text-white hover:bg-white/10 hover:text-white"
+          >
+            <Link href="#pricing">Review Pricing</Link>
+          </Button>
+        </div>
+
+        <div className="mt-7 flex flex-col items-center justify-center gap-3 text-sm text-slate-300 sm:flex-row">
+          {["14 days free", "Card required", "Cancel anytime"].map((item) => (
+            <span key={item} className="flex items-center gap-2">
+              <CheckCircle2 className="h-4 w-4 text-emerald-400" aria-hidden="true" />
+              {item}
+            </span>
+          ))}
+        </div>
       </div>
     </section>
   );

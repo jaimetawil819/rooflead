@@ -4,7 +4,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { UserButton } from "@clerk/nextjs";
-import { LayoutDashboard, Menu, Settings, Users, X } from "lucide-react";
+import { LayoutDashboard, Menu, Settings, Sparkles, Users, X } from "lucide-react";
 import { useState } from "react";
 
 const navItems = [
@@ -23,7 +23,7 @@ export default function Sidebar() {
 
   function renderNav() {
     return (
-      <nav className="flex-1 p-4 space-y-1">
+      <nav className="flex-1 space-y-1 p-4" aria-label="Dashboard navigation">
         {navItems.map(({ href, label, icon: Icon }) => {
           const active = isActivePath(pathname, href);
           return (
@@ -31,10 +31,10 @@ export default function Sidebar() {
               key={href}
               href={href}
               onClick={() => setMobileOpen(false)}
-              className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
+              className={`flex min-h-11 items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-300 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-950 ${
                 active
-                  ? "bg-blue-600 text-white"
-                  : "text-slate-400 hover:text-white hover:bg-slate-800"
+                  ? "bg-blue-600 text-white shadow-lg shadow-blue-950/25"
+                  : "text-slate-400 hover:bg-white/5 hover:text-white"
               }`}
             >
               <Icon className="h-4 w-4 flex-shrink-0" aria-hidden="true" />
@@ -48,9 +48,9 @@ export default function Sidebar() {
 
   return (
     <>
-      <header className="sticky top-0 z-40 border-b border-gray-200 bg-white/95 px-4 py-3 backdrop-blur md:hidden">
+      <header className="sticky top-0 z-40 border-b border-slate-800 bg-slate-950 px-4 py-3 text-white md:hidden">
         <div className="flex items-center justify-between">
-          <Link href="/dashboard" className="block">
+          <Link href="/dashboard" className="block rounded-md bg-white px-2 py-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-300">
             <Image
               src="/logo.png"
               alt="RoofLead"
@@ -63,7 +63,7 @@ export default function Sidebar() {
           <button
             type="button"
             onClick={() => setMobileOpen(true)}
-            className="inline-flex h-10 w-10 items-center justify-center rounded-lg border border-gray-200 text-slate-700 transition-colors hover:bg-gray-50"
+            className="inline-flex h-11 w-11 items-center justify-center rounded-lg border border-white/10 bg-white/5 text-white transition-colors hover:bg-white/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-300"
             aria-label="Open navigation"
             aria-expanded={mobileOpen}
           >
@@ -76,11 +76,11 @@ export default function Sidebar() {
         <div className="fixed inset-0 z-50 md:hidden">
           <button
             type="button"
-            className="absolute inset-0 bg-slate-900/50"
+            className="absolute inset-0 bg-slate-950/70"
             aria-label="Close navigation"
             onClick={() => setMobileOpen(false)}
           />
-          <aside className="relative flex h-full w-72 max-w-[85vw] flex-col bg-slate-900 shadow-2xl">
+          <aside className="relative flex h-full w-72 max-w-[85vw] flex-col bg-slate-950 shadow-2xl">
             <div className="flex items-center justify-between border-b border-slate-800 p-4">
               <Link
                 href="/dashboard"
@@ -98,7 +98,7 @@ export default function Sidebar() {
               <button
                 type="button"
                 onClick={() => setMobileOpen(false)}
-                className="inline-flex h-9 w-9 items-center justify-center rounded-lg text-slate-400 transition-colors hover:bg-slate-800 hover:text-white"
+                className="inline-flex h-11 w-11 items-center justify-center rounded-lg text-slate-400 transition-colors hover:bg-white/5 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-300"
                 aria-label="Close navigation"
               >
                 <X className="h-5 w-5" aria-hidden="true" />
@@ -115,9 +115,9 @@ export default function Sidebar() {
         </div>
       )}
 
-      <aside className="hidden w-60 flex-col bg-slate-900 h-screen sticky top-0 md:flex">
-        <div className="p-6 border-b border-slate-800">
-          <Link href="/dashboard" className="block bg-white rounded-lg px-2 py-1">
+      <aside className="sticky top-0 hidden h-screen w-64 flex-col border-r border-slate-800 bg-slate-950 md:flex">
+        <div className="border-b border-slate-800 p-6">
+          <Link href="/dashboard" className="block rounded-lg bg-white px-2 py-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-300">
             <Image
               src="/logo.png"
               alt="RoofLead"
@@ -126,13 +126,22 @@ export default function Sidebar() {
               className="h-7 w-auto"
             />
           </Link>
+          <div className="mt-5 rounded-xl border border-blue-400/20 bg-blue-500/10 p-3">
+            <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-blue-200">
+              <Sparkles className="h-3.5 w-3.5" aria-hidden="true" />
+              Lead command center
+            </div>
+            <p className="mt-2 text-xs leading-5 text-slate-400">
+              Start with urgent leads, then review the pipeline.
+            </p>
+          </div>
         </div>
 
         {renderNav()}
 
-        <div className="p-4 border-t border-slate-800 flex items-center gap-3">
+        <div className="flex items-center gap-3 border-t border-slate-800 p-4">
           <UserButton />
-          <span className="text-slate-400 text-sm">Account</span>
+          <span className="text-sm text-slate-400">Account</span>
         </div>
       </aside>
     </>

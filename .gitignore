@@ -40,6 +40,9 @@ yarn-error.log*
 # supabase local metadata
 supabase/.temp/
 
+# local skill installer bundles
+ui-ux-pro-max-skill-2.5.0/
+
 # typescript
 *.tsbuildinfo
 next-env.d.ts

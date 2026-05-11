@@ -5,8 +5,10 @@ import Link from "next/link";
 import {
   AlertTriangle,
   ArrowRight,
+  CheckCircle2,
   DollarSign,
   Flame,
+  PhoneCall,
   Trophy,
   TrendingUp,
   Users,
@@ -14,20 +16,20 @@ import {
 import DashboardQuickActions from "@/components/dashboard/DashboardQuickActions";
 
 const scoreColors: Record<string, string> = {
-  hot: "bg-red-100 text-red-700",
-  warm: "bg-orange-100 text-orange-700",
-  cold: "bg-blue-100 text-blue-700",
-  unqualified: "bg-gray-100 text-gray-600",
+  hot: "bg-red-100 text-red-700 ring-red-200",
+  warm: "bg-amber-100 text-amber-800 ring-amber-200",
+  cold: "bg-blue-100 text-blue-700 ring-blue-200",
+  unqualified: "bg-slate-100 text-slate-600 ring-slate-200",
 };
 
 const statusColors: Record<string, string> = {
-  new: "bg-blue-100 text-blue-700",
-  contacted: "bg-purple-100 text-purple-700",
-  qualified: "bg-green-100 text-green-700",
-  appointment_set: "bg-yellow-100 text-yellow-700",
-  won: "bg-emerald-100 text-emerald-700",
-  lost: "bg-red-100 text-red-700",
-  junk: "bg-gray-100 text-gray-500",
+  new: "bg-blue-100 text-blue-700 ring-blue-200",
+  contacted: "bg-violet-100 text-violet-700 ring-violet-200",
+  qualified: "bg-emerald-100 text-emerald-700 ring-emerald-200",
+  appointment_set: "bg-amber-100 text-amber-800 ring-amber-200",
+  won: "bg-emerald-100 text-emerald-700 ring-emerald-200",
+  lost: "bg-red-100 text-red-700 ring-red-200",
+  junk: "bg-slate-100 text-slate-500 ring-slate-200",
 };
 
 function formatCurrency(cents: number) {
@@ -55,6 +57,13 @@ function formatServiceType(serviceType: string | null) {
   };
 
   return labels[serviceType] ?? titleCase(serviceType);
+}
+
+function formatLeadDate(date: string) {
+  return new Date(date).toLocaleDateString("en-US", {
+    month: "short",
+    day: "numeric",
+  });
 }
 
 export default async function DashboardPage() {
@@ -86,7 +95,8 @@ export default async function DashboardPage() {
 
   const total = leads?.length ?? 0;
   const hot = leads?.filter((l) => l.lead_score === "hot").length ?? 0;
-  const qualified = leads?.filter((l) => l.status === "qualified" || l.status === "won").length ?? 0;
+  const qualified =
+    leads?.filter((l) => l.status === "qualified" || l.status === "won").length ?? 0;
   const needsReview = leads?.filter((l) => l.needs_human_review).length ?? 0;
   const won = leads?.filter((l) => l.status === "won").length ?? 0;
   const averageJobValueCents = business.average_job_value_cents ?? 800000;
@@ -108,62 +118,106 @@ export default async function DashboardPage() {
     : null;
 
   const stats = [
-    { label: "Total Leads", value: total, icon: Users, color: "bg-blue-50 text-blue-600" },
-    { label: "Hot Leads", value: hot, icon: Flame, color: "bg-red-50 text-red-600" },
-    { label: "Qualified", value: qualified, icon: TrendingUp, color: "bg-green-50 text-green-600" },
-    { label: "Needs Review", value: needsReview, icon: AlertTriangle, color: "bg-amber-50 text-amber-600" },
-    { label: "Won Leads", value: won, icon: Trophy, color: "bg-emerald-50 text-emerald-600" },
+    { label: "Total Leads", value: total, icon: Users, tone: "text-blue-700", bg: "bg-blue-50" },
+    { label: "Hot Leads", value: hot, icon: Flame, tone: "text-red-700", bg: "bg-red-50" },
+    { label: "Qualified", value: qualified, icon: TrendingUp, tone: "text-emerald-700", bg: "bg-emerald-50" },
+    { label: "Needs Review", value: needsReview, icon: AlertTriangle, tone: "text-amber-700", bg: "bg-amber-50" },
+    { label: "Won Leads", value: won, icon: Trophy, tone: "text-emerald-700", bg: "bg-emerald-50" },
     {
-      label: "Estimated Revenue",
+      label: "Est. Revenue",
       value: formatCurrency(estimatedRevenueCents),
       icon: DollarSign,
-      color: "bg-slate-100 text-slate-700",
+      tone: "text-slate-700",
+      bg: "bg-slate-100",
     },
   ];
 
   return (
-    <div className="p-8 max-w-5xl">
-      <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-slate-900">
-            Welcome back{business.name ? `, ${business.name}` : ""}
-          </h1>
-          <p className="text-gray-500 mt-1">
-            Start with the leads that need action now.
-          </p>
-        </div>
-        <Link
-          href="/dashboard/leads"
-          className="inline-flex items-center justify-center gap-2 rounded-lg bg-slate-900 px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-slate-700"
-        >
-          Review All Leads <ArrowRight className="h-4 w-4" />
-        </Link>
-      </div>
+    <div className="mx-auto max-w-7xl px-4 py-5 sm:px-6 lg:px-8 lg:py-8">
+      <section className="overflow-hidden rounded-2xl border border-slate-800 bg-slate-950 text-white shadow-xl shadow-slate-300/40">
+        <div className="grid gap-0 lg:grid-cols-[1.1fr_0.9fr]">
+          <div className="p-6 sm:p-8">
+            <p className="text-sm font-semibold uppercase tracking-widest text-blue-300">
+              Dashboard
+            </p>
+            <h1 className="mt-4 max-w-3xl text-3xl font-bold leading-tight tracking-tight sm:text-4xl">
+              {business.name ? `${business.name} lead command center` : "Lead command center"}
+            </h1>
+            <p className="mt-4 max-w-2xl text-base leading-7 text-slate-300 sm:text-lg">
+              Start with urgent leads, then review pipeline performance. RoofLead
+              keeps the highest-priority opportunities at the top.
+            </p>
+            <div className="mt-7 flex flex-col gap-3 sm:flex-row">
+              <Link
+                href="/dashboard/leads"
+                className="inline-flex min-h-11 items-center justify-center gap-2 rounded-lg bg-blue-600 px-5 py-3 text-sm font-bold text-white transition-colors hover:bg-blue-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-300 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-950"
+              >
+                Review All Leads <ArrowRight className="h-4 w-4" aria-hidden="true" />
+              </Link>
+              {testFormPath && (
+                <Link
+                  href={testFormPath}
+                  target="_blank"
+                  className="inline-flex min-h-11 items-center justify-center gap-2 rounded-lg border border-white/15 bg-white/5 px-5 py-3 text-sm font-bold text-white transition-colors hover:bg-white/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-300 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-950"
+                >
+                  Send Test Lead <ArrowRight className="h-4 w-4" aria-hidden="true" />
+                </Link>
+              )}
+            </div>
+          </div>
 
-      {/* Priority queue */}
-      <div className="mb-8 rounded-2xl border border-gray-100 bg-white shadow-sm">
-        <div className="flex items-center justify-between gap-4 border-b border-gray-100 px-6 py-4">
+          <div className="border-t border-slate-800 bg-white/[0.03] p-6 sm:p-8 lg:border-l lg:border-t-0">
+            <div className="grid grid-cols-2 gap-3">
+              {[
+                ["Urgent", priorityLeads.length],
+                ["Hot", hot],
+                ["Review", needsReview],
+                ["Won", won],
+              ].map(([label, value]) => (
+                <div key={label} className="rounded-xl border border-white/10 bg-white/[0.04] p-4">
+                  <p className="text-2xl font-black text-white">{value}</p>
+                  <p className="mt-1 text-xs font-medium uppercase tracking-wide text-slate-400">
+                    {label}
+                  </p>
+                </div>
+              ))}
+            </div>
+            <div className="mt-4 rounded-xl border border-emerald-400/20 bg-emerald-500/10 p-4">
+              <div className="flex items-start gap-3">
+                <CheckCircle2 className="mt-0.5 h-5 w-5 flex-shrink-0 text-emerald-300" aria-hidden="true" />
+                <p className="text-sm leading-6 text-emerald-50">
+                  Estimated won value:{" "}
+                  <span className="font-bold">{formatCurrency(estimatedRevenueCents)}</span>
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section className="mt-6 rounded-2xl border border-slate-200 bg-white shadow-sm">
+        <div className="flex flex-col gap-3 border-b border-slate-200 px-5 py-5 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <h2 className="font-semibold text-slate-900">Next Leads To Work</h2>
-            <p className="mt-1 text-sm text-gray-500">
+            <h2 className="text-lg font-bold text-slate-950">Next Leads To Work</h2>
+            <p className="mt-1 text-sm leading-6 text-slate-600">
               Hot, new, or review-needed leads appear here first.
             </p>
           </div>
-          <span className="rounded-full bg-blue-50 px-3 py-1 text-xs font-semibold text-blue-700">
+          <span className="inline-flex w-fit rounded-full bg-blue-50 px-3 py-1 text-xs font-bold uppercase tracking-wide text-blue-700">
             {priorityLeads.length} active
           </span>
         </div>
 
         {priorityLeads.length === 0 ? (
-          <div className="px-6 py-10 text-center">
-            <p className="font-medium text-slate-900">No urgent leads waiting</p>
-            <p className="mx-auto mt-1 max-w-md text-sm text-gray-500">
+          <div className="px-6 py-12 text-center">
+            <p className="font-semibold text-slate-950">No urgent leads waiting</p>
+            <p className="mx-auto mt-2 max-w-md text-sm leading-6 text-slate-600">
               When a hot, new, or review-needed lead arrives, it will show up
               here so you know who to handle first.
             </p>
           </div>
         ) : (
-          <div className="divide-y divide-gray-50">
+          <div className="grid gap-3 p-4 lg:grid-cols-2">
             {priorityLeads.map((lead) => {
               const actionLabel = lead.needs_human_review
                 ? "Review needed"
@@ -171,119 +225,123 @@ export default async function DashboardPage() {
                   ? "Call first"
                   : "New lead";
               const actionColor = lead.needs_human_review
-                ? "bg-amber-100 text-amber-700"
+                ? "bg-amber-100 text-amber-800 ring-amber-200"
                 : lead.lead_score === "hot"
-                  ? "bg-red-100 text-red-700"
-                  : "bg-blue-100 text-blue-700";
+                  ? "bg-red-100 text-red-700 ring-red-200"
+                  : "bg-blue-100 text-blue-700 ring-blue-200";
 
               return (
                 <Link
                   key={lead.id}
                   href={`/dashboard/leads/${lead.id}`}
-                  className="flex flex-col gap-3 px-6 py-4 transition-colors hover:bg-gray-50 sm:flex-row sm:items-center sm:justify-between"
+                  className="group rounded-xl border border-slate-200 bg-slate-50 p-4 transition-colors hover:border-blue-200 hover:bg-blue-50/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600"
                 >
-                  <div className="min-w-0">
-                    <div className="flex flex-wrap items-center gap-2">
-                      <p className="font-semibold text-slate-900">
-                        {lead.name ?? "Unknown Lead"}
+                  <div className="flex items-start justify-between gap-4">
+                    <div className="min-w-0">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <p className="font-bold text-slate-950">
+                          {lead.name ?? "Unknown Lead"}
+                        </p>
+                        <span className={`rounded-full px-2.5 py-1 text-xs font-bold ring-1 ${actionColor}`}>
+                          {actionLabel}
+                        </span>
+                      </div>
+                      <p className="mt-2 text-sm leading-6 text-slate-600">
+                        {formatServiceType(lead.service_type)} - {formatLeadDate(lead.created_at)}
                       </p>
-                      <span
-                        className={`rounded-full px-2.5 py-1 text-xs font-semibold ${actionColor}`}
-                      >
-                        {actionLabel}
-                      </span>
                     </div>
-                    <p className="mt-1 text-sm text-gray-500">
-                      {formatServiceType(lead.service_type)} -{" "}
-                      {new Date(lead.created_at).toLocaleDateString()}
-                    </p>
+                    <PhoneCall className="h-5 w-5 flex-shrink-0 text-blue-600" aria-hidden="true" />
                   </div>
-                  <div className="flex items-center gap-2 text-sm font-semibold text-blue-600">
-                    Open Lead <ArrowRight className="h-4 w-4" />
+                  <div className="mt-4 inline-flex items-center gap-2 text-sm font-bold text-blue-700">
+                    Open Lead
+                    <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" aria-hidden="true" />
                   </div>
                 </Link>
               );
             })}
           </div>
         )}
-      </div>
+      </section>
 
-      {/* Stats */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
-        {stats.map(({ label, value, icon: Icon, color }) => (
-          <div key={label} className="bg-white rounded-2xl border border-gray-100 p-6 shadow-sm">
-            <div className={`h-10 w-10 rounded-xl flex items-center justify-center mb-4 ${color}`}>
+      <section className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-6">
+        {stats.map(({ label, value, icon: Icon, tone, bg }) => (
+          <div key={label} className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm xl:col-span-1">
+            <div className={`mb-4 flex h-11 w-11 items-center justify-center rounded-lg ${bg} ${tone}`}>
               <Icon className="h-5 w-5" aria-hidden="true" />
             </div>
-            <p className="text-3xl font-bold text-slate-900">{value}</p>
-            <p className="text-sm text-gray-500 mt-1">{label}</p>
-            {label === "Estimated Revenue" && (
-              <p className="text-xs text-gray-400 mt-2">
-                Based on {won} won lead{won === 1 ? "" : "s"} at{" "}
-                {formatCurrency(averageJobValueCents)} average job value.
+            <p className="text-2xl font-black tracking-tight text-slate-950">{value}</p>
+            <p className="mt-1 text-sm font-medium text-slate-600">{label}</p>
+            {label === "Est. Revenue" && (
+              <p className="mt-2 text-xs leading-5 text-slate-500">
+                {won} won at {formatCurrency(averageJobValueCents)} average job value.
               </p>
             )}
           </div>
         ))}
-      </div>
+      </section>
 
-      {/* Recent leads */}
-      <div className="bg-white rounded-2xl border border-gray-100 shadow-sm">
-        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
-          <h2 className="font-semibold text-slate-900">Recent Leads</h2>
-          <Link href="/dashboard/leads" className="text-sm text-blue-600 hover:underline flex items-center gap-1">
-            View all <ArrowRight className="h-3.5 w-3.5" />
+      <section className="mt-6 rounded-2xl border border-slate-200 bg-white shadow-sm">
+        <div className="flex items-center justify-between gap-4 border-b border-slate-200 px-5 py-5">
+          <div>
+            <h2 className="font-bold text-slate-950">Recent Leads</h2>
+            <p className="mt-1 text-sm text-slate-600">Latest form submissions and SMS intakes.</p>
+          </div>
+          <Link
+            href="/dashboard/leads"
+            className="inline-flex min-h-10 items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-bold text-blue-700 transition-colors hover:bg-blue-50"
+          >
+            View all <ArrowRight className="h-3.5 w-3.5" aria-hidden="true" />
           </Link>
         </div>
 
         {recent.length === 0 ? (
           <div className="px-6 py-12 text-center">
-            <p className="text-gray-500 font-medium">No leads yet</p>
-            <p className="text-gray-400 text-sm mt-1 mb-4">
+            <p className="font-semibold text-slate-950">No leads yet</p>
+            <p className="mx-auto mt-2 max-w-md text-sm leading-6 text-slate-600">
               Once your form is installed, new submissions will appear here.
-              You can also send a test lead to confirm the flow.
+              Send a test lead to confirm the flow.
             </p>
             {testFormPath && (
               <Link
                 href={testFormPath}
                 target="_blank"
-                className="inline-flex items-center gap-1.5 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium px-4 py-2 rounded-lg transition-colors"
+                className="mt-5 inline-flex min-h-11 items-center gap-2 rounded-lg bg-blue-600 px-4 py-3 text-sm font-bold text-white transition-colors hover:bg-blue-700"
               >
-                Send a Test Lead <ArrowRight className="h-3.5 w-3.5" />
+                Send a Test Lead <ArrowRight className="h-3.5 w-3.5" aria-hidden="true" />
               </Link>
             )}
           </div>
         ) : (
-          <div className="divide-y divide-gray-50">
+          <div className="divide-y divide-slate-100">
             {recent.map((lead) => (
               <Link
                 key={lead.id}
                 href={`/dashboard/leads/${lead.id}`}
-                className="flex items-center justify-between px-6 py-4 hover:bg-gray-50 transition-colors"
+                className="grid gap-3 px-5 py-4 transition-colors hover:bg-slate-50 sm:grid-cols-[1fr_auto] sm:items-center"
               >
-                <div>
-                  <p className="font-medium text-slate-900 text-sm">{lead.name ?? "Unknown"}</p>
-                  <p className="text-xs text-gray-400 mt-0.5">
-                    {formatServiceType(lead.service_type)} - {new Date(lead.created_at).toLocaleDateString()}
+                <div className="min-w-0">
+                  <p className="truncate text-sm font-bold text-slate-950">{lead.name ?? "Unknown"}</p>
+                  <p className="mt-1 text-xs text-slate-500">
+                    {formatServiceType(lead.service_type)} - {formatLeadDate(lead.created_at)}
                   </p>
                 </div>
-                <div className="flex items-center gap-2">
+                <div className="flex flex-wrap items-center gap-2">
                   {lead.lead_score && (
-                    <span className={`text-xs font-semibold px-2.5 py-1 rounded-full ${scoreColors[lead.lead_score] ?? "bg-gray-100 text-gray-600"}`}>
+                    <span className={`rounded-full px-2.5 py-1 text-xs font-bold ring-1 ${scoreColors[lead.lead_score] ?? "bg-slate-100 text-slate-600 ring-slate-200"}`}>
                       {lead.lead_score.toUpperCase()}
                     </span>
                   )}
-                  <span className={`text-xs font-medium px-2.5 py-1 rounded-full ${statusColors[lead.status] ?? "bg-gray-100 text-gray-600"}`}>
-                    {lead.status.replace("_", " ")}
+                  <span className={`rounded-full px-2.5 py-1 text-xs font-semibold ring-1 ${statusColors[lead.status] ?? "bg-slate-100 text-slate-600 ring-slate-200"}`}>
+                    {titleCase(lead.status)}
                   </span>
                 </div>
               </Link>
             ))}
           </div>
         )}
-      </div>
+      </section>
 
-      <div className="mt-8">
+      <div className="mt-6">
         <DashboardQuickActions testFormPath={testFormPath} />
       </div>
     </div>

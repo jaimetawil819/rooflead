@@ -1,62 +1,59 @@
-import { ClipboardList, MessageSquare, Bell } from "lucide-react";
+import { Bell, ClipboardList, MessageSquare } from "lucide-react";
 
 const steps = [
   {
     icon: ClipboardList,
     step: "01",
-    title: "Homeowner fills out your form",
+    title: "Connect your lead form",
     description:
-      "Add one line of code to your website. When someone submits the form, RoofLead catches it instantly — day or night.",
+      "Use the RoofLead test form or add the embeddable widget to your existing website.",
   },
   {
     icon: MessageSquare,
     step: "02",
-    title: "AI texts them in under 60 seconds",
+    title: "AI qualifies by SMS",
     description:
-      "Our AI sends a friendly, professional SMS, asks qualifying questions about urgency, damage type, and timeline — and keeps the conversation going until it has what it needs.",
+      "The assistant replies fast, asks about damage, urgency, ownership, and timeline, then records the conversation.",
   },
   {
     icon: Bell,
     step: "03",
-    title: "You get a summary before you call",
+    title: "You get the next action",
     description:
-      'You receive an SMS with the lead\'s name, address, situation, and a quality score — Hot, Warm, or Cold — so you know exactly who to call first.',
+      "RoofLead scores the lead and sends you a summary so you can call the best opportunity first.",
   },
 ];
 
 export default function HowItWorks() {
   return (
-    <section id="how-it-works" className="bg-gray-50 py-24 px-4 sm:px-6">
-      <div className="mx-auto max-w-6xl">
-        <div className="text-center mb-16">
-          <h2 className="text-3xl sm:text-4xl font-bold text-slate-900 mb-4">
-            How it works
+    <section id="how-it-works" className="bg-white px-4 py-20 sm:px-6 lg:px-8 lg:py-24">
+      <div className="mx-auto max-w-7xl">
+        <div className="mb-14 max-w-3xl">
+          <p className="mb-4 text-sm font-semibold uppercase tracking-widest text-blue-600">
+            How It Works
+          </p>
+          <h2 className="text-3xl font-bold leading-tight text-slate-950 sm:text-4xl">
+            A simple intake workflow that keeps the owner in control.
           </h2>
-          <p className="text-lg text-gray-600 max-w-xl mx-auto">
-            Set it up once. Every lead gets a response in under a minute — forever.
+          <p className="mt-5 text-lg leading-8 text-slate-600">
+            Set it up once. Every qualified web lead gets a fast response, a
+            consistent intake path, and a clear owner handoff.
           </p>
         </div>
 
-        <div className="grid gap-8 sm:grid-cols-3">
+        <div className="grid gap-4 md:grid-cols-3">
           {steps.map((item) => {
             const Icon = item.icon;
             return (
-              <div
-                key={item.step}
-                className="relative bg-white rounded-2xl p-8 shadow-sm border border-gray-100"
-              >
-                <div className="text-5xl font-black text-gray-100 absolute top-6 right-6 select-none">
-                  {item.step}
+              <div key={item.step} className="rounded-xl border border-slate-200 bg-slate-50 p-6">
+                <div className="mb-6 flex items-center justify-between">
+                  <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-blue-600 text-white">
+                    <Icon className="h-6 w-6" aria-hidden="true" />
+                  </div>
+                  <span className="text-4xl font-black text-slate-200">{item.step}</span>
                 </div>
-                <div className="h-12 w-12 rounded-xl bg-blue-600 flex items-center justify-center mb-5">
-                  <Icon className="h-6 w-6 text-white" aria-hidden="true" />
-                </div>
-                <h3 className="text-lg font-semibold text-slate-900 mb-3">
-                  {item.title}
-                </h3>
-                <p className="text-gray-600 leading-relaxed text-sm">
-                  {item.description}
-                </p>
+                <h3 className="text-lg font-semibold text-slate-950">{item.title}</h3>
+                <p className="mt-3 text-sm leading-6 text-slate-600">{item.description}</p>
               </div>
             );
           })}

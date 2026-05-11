@@ -6,65 +6,68 @@ import { ChevronDown } from "lucide-react";
 const faqs = [
   {
     q: "Do I need to change my website?",
-    a: "No major changes needed. You add one small line of code to your site where you want the form to appear. If you're not comfortable doing that, we can walk you through it in under 5 minutes — or do it for you.",
+    a: "No major rebuild is needed. You can use the RoofLead test form or add one small embed snippet where you want the lead form to appear.",
   },
   {
     q: "What if someone texts back in the middle of the night?",
-    a: "That's the point. The AI handles it automatically, 24/7, no matter when they reply. You sleep. The AI works.",
+    a: "RoofLead keeps the qualification conversation moving automatically, even after hours. You see the summary when you are ready to act.",
   },
   {
-    q: "Will the AI say something wrong or embarrassing?",
-    a: "The AI only asks qualifying questions — it never quotes prices, makes promises, or represents your business in ways you haven't approved. You can review every conversation in your dashboard.",
+    q: "Will the AI quote prices or promise availability?",
+    a: "No. The assistant is limited to intake and qualification. It asks about the roof issue, urgency, ownership, and timing, then hands the lead to you.",
   },
   {
-    q: "What happens after the AI finishes qualifying?",
-    a: "You get an SMS notification with the lead's name, what they need, their urgency level, and a Hot/Warm/Cold score. Then you call them — the AI doesn't schedule appointments or close deals.",
+    q: "Can I take over the conversation?",
+    a: "Yes. The dashboard supports manual owner reply, and owner takeover pauses future AI auto-replies for that lead.",
   },
   {
-    q: "Is this legal? Can I text people who fill out my form?",
-    a: "Yes — the form includes TCPA-compliant consent language. By submitting, the homeowner agrees to receive SMS. We handle the compliance language automatically.",
+    q: "Can I use RoofLead with my current CRM?",
+    a: "Yes. RoofLead is meant to handle fast first response and qualification before the lead moves into your normal sales process.",
   },
   {
-    q: "What if I already have a CRM?",
-    a: "RoofLead works alongside your CRM, not instead of it. We handle the instant first response and qualification. You handle the rest in whatever system you already use.",
+    q: "Is SMS consent handled?",
+    a: "The RoofLead form includes SMS opt-in language and supports STOP handling. You should still review your own compliance obligations before running paid traffic.",
   },
 ];
 
 export default function FAQ() {
-  const [open, setOpen] = useState<number | null>(null);
+  const [open, setOpen] = useState<number | null>(0);
 
   return (
-    <section className="bg-gray-50 py-24 px-4 sm:px-6">
-      <div className="mx-auto max-w-3xl">
-        <div className="text-center mb-12">
-          <h2 className="text-3xl sm:text-4xl font-bold text-slate-900 mb-4">
-            Common questions
+    <section className="bg-white px-4 py-20 sm:px-6 lg:px-8 lg:py-24">
+      <div className="mx-auto grid max-w-7xl gap-10 lg:grid-cols-[0.75fr_1.25fr]">
+        <div>
+          <p className="mb-4 text-sm font-semibold uppercase tracking-widest text-blue-600">
+            FAQ
+          </p>
+          <h2 className="text-3xl font-bold leading-tight text-slate-950 sm:text-4xl">
+            Questions roofers ask before trusting AI with lead intake.
           </h2>
+          <p className="mt-5 text-lg leading-8 text-slate-600">
+            Clear answers beat clever copy. These are the operational concerns
+            that matter before putting SMS automation in front of real leads.
+          </p>
         </div>
 
-        <div className="space-y-2">
+        <div className="space-y-3">
           {faqs.map((faq, i) => (
-            <div
-              key={i}
-              className="bg-white rounded-xl border border-gray-200 overflow-hidden"
-            >
+            <div key={faq.q} className="overflow-hidden rounded-xl border border-slate-200 bg-slate-50">
               <button
+                type="button"
                 onClick={() => setOpen(open === i ? null : i)}
-                className="w-full flex items-center justify-between px-6 py-5 text-left gap-4 hover:bg-gray-50 transition-colors"
+                className="flex min-h-14 w-full items-center justify-between gap-4 px-5 py-4 text-left transition-colors hover:bg-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-inset"
                 aria-expanded={open === i}
               >
-                <span className="font-medium text-slate-900 text-sm sm:text-base">
-                  {faq.q}
-                </span>
+                <span className="text-sm font-semibold text-slate-950 sm:text-base">{faq.q}</span>
                 <ChevronDown
-                  className={`h-5 w-5 text-gray-400 flex-shrink-0 transition-transform duration-200 ${
+                  className={`h-5 w-5 flex-shrink-0 text-slate-500 transition-transform duration-200 ${
                     open === i ? "rotate-180" : ""
                   }`}
                   aria-hidden="true"
                 />
               </button>
               {open === i && (
-                <div className="px-6 pb-5 text-gray-600 text-sm leading-relaxed border-t border-gray-100 pt-4">
+                <div className="border-t border-slate-200 bg-white px-5 py-4 text-sm leading-6 text-slate-600">
                   {faq.a}
                 </div>
               )}

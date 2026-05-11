@@ -23,39 +23,39 @@ export default function DashboardQuickActions({
   }
 
   return (
-    <details className="rounded-2xl border border-gray-100 bg-white shadow-sm">
-      <summary className="flex cursor-pointer list-none items-center justify-between gap-4 px-5 py-4">
+    <details className="rounded-2xl border border-slate-200 bg-white shadow-sm">
+      <summary className="flex cursor-pointer list-none items-center justify-between gap-4 px-5 py-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600">
         <div className="flex items-center gap-3">
-          <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-gray-50 text-gray-500">
+          <div className="flex h-11 w-11 items-center justify-center rounded-lg bg-slate-100 text-slate-600">
             <TestTube2 className="h-4 w-4" aria-hidden="true" />
           </div>
           <div>
-            <h2 className="text-sm font-semibold text-slate-900">
+            <h2 className="text-sm font-bold text-slate-950">
               Setup & test tools
             </h2>
-            <p className="mt-0.5 text-sm text-gray-500">
+            <p className="mt-0.5 text-sm leading-6 text-slate-600">
               Use these when installing the form or checking the intake flow.
             </p>
           </div>
         </div>
-        <span className="text-xs font-semibold uppercase tracking-wide text-gray-400">
+        <span className="text-xs font-bold uppercase tracking-wide text-slate-400">
           Optional
         </span>
       </summary>
 
-      <div className="border-t border-gray-100 px-5 pb-5 pt-4">
+      <div className="border-t border-slate-200 px-5 pb-5 pt-4">
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
           {testFormPath ? (
             <Link
               href={testFormPath}
               target="_blank"
-              className="flex items-center justify-between rounded-xl border border-blue-100 bg-blue-50 px-4 py-3 text-sm font-semibold text-blue-700 transition-colors hover:bg-blue-100"
+              className="flex min-h-12 items-center justify-between rounded-xl border border-blue-100 bg-blue-50 px-4 py-3 text-sm font-bold text-blue-700 transition-colors hover:bg-blue-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600"
             >
               Open Test Form
               <ExternalLink className="h-4 w-4" />
             </Link>
           ) : (
-            <div className="rounded-xl border border-gray-100 bg-gray-50 px-4 py-3 text-sm font-medium text-gray-400">
+            <div className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-medium text-slate-400">
               Test form unavailable
             </div>
           )}
@@ -64,7 +64,7 @@ export default function DashboardQuickActions({
             type="button"
             onClick={copyTestFormLink}
             disabled={!testFormPath}
-            className="flex items-center justify-between rounded-xl border border-gray-200 bg-white px-4 py-3 text-sm font-semibold text-slate-700 transition-colors hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50"
+            className="flex min-h-12 items-center justify-between rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm font-bold text-slate-700 transition-colors hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 disabled:cursor-not-allowed disabled:opacity-50"
           >
             {copied ? "Copied Link" : "Copy Test Link"}
             <Copy className="h-4 w-4" />
@@ -72,7 +72,7 @@ export default function DashboardQuickActions({
 
           <Link
             href="/dashboard/leads"
-            className="flex items-center justify-between rounded-xl border border-gray-200 bg-white px-4 py-3 text-sm font-semibold text-slate-700 transition-colors hover:bg-gray-50"
+            className="flex min-h-12 items-center justify-between rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm font-bold text-slate-700 transition-colors hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600"
           >
             Review Leads
             <Users className="h-4 w-4" />
@@ -80,7 +80,7 @@ export default function DashboardQuickActions({
 
           <Link
             href="/dashboard/settings"
-            className="flex items-center justify-between rounded-xl border border-gray-200 bg-white px-4 py-3 text-sm font-semibold text-slate-700 transition-colors hover:bg-gray-50"
+            className="flex min-h-12 items-center justify-between rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm font-bold text-slate-700 transition-colors hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600"
           >
             Form Settings
             <Settings className="h-4 w-4" />

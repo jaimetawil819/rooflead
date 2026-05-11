@@ -57,22 +57,22 @@ export default function LeadsFilter() {
   }
 
   return (
-    <div className="flex items-center gap-3 flex-wrap">
-      <form onSubmit={applySearch} className="flex items-center gap-2">
-        <label htmlFor="lead-search" className="text-xs font-medium text-gray-500">
+    <div className="flex flex-col gap-3 lg:flex-row lg:flex-wrap lg:items-end">
+      <form onSubmit={applySearch} className="grid gap-2 sm:grid-cols-[auto_1fr_auto_auto] sm:items-center">
+        <label htmlFor="lead-search" className="text-xs font-bold uppercase tracking-wide text-slate-500">
           Search
         </label>
         <input
           id="lead-search"
           name="q"
           defaultValue={currentQuery}
-          className="w-56 rounded-lg border border-gray-200 bg-white px-2.5 py-1.5 text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="min-h-11 w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-600 sm:w-72"
           placeholder="Name, phone, address..."
           maxLength={80}
         />
         <button
           type="submit"
-          className="rounded-lg bg-slate-900 px-3 py-1.5 text-sm font-medium text-white transition-colors hover:bg-slate-700"
+          className="min-h-11 rounded-lg bg-blue-600 px-4 py-2 text-sm font-bold text-white transition-colors hover:bg-blue-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2"
         >
           Search
         </button>
@@ -80,19 +80,19 @@ export default function LeadsFilter() {
           <button
             type="button"
             onClick={clearSearch}
-            className="rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-sm font-medium text-slate-600 transition-colors hover:bg-gray-50"
+            className="min-h-11 rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm font-bold text-slate-700 transition-colors hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600"
           >
             Clear
           </button>
         )}
       </form>
 
-      <div className="flex items-center gap-2">
-        <span className="text-xs font-medium text-gray-500">Status</span>
+      <div className="grid gap-2 sm:grid-cols-[auto_1fr] sm:items-center">
+        <span className="text-xs font-bold uppercase tracking-wide text-slate-500">Status</span>
         <select
           value={currentStatus}
           onChange={(e) => update("status", e.target.value)}
-          className="border border-gray-200 rounded-lg px-2.5 py-1.5 text-sm text-slate-700 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="min-h-11 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-600"
         >
           {STATUSES.map((s) => (
             <option key={s} value={s}>
@@ -102,12 +102,12 @@ export default function LeadsFilter() {
         </select>
       </div>
 
-      <div className="flex items-center gap-2">
-        <span className="text-xs font-medium text-gray-500">Score</span>
+      <div className="grid gap-2 sm:grid-cols-[auto_1fr] sm:items-center">
+        <span className="text-xs font-bold uppercase tracking-wide text-slate-500">Score</span>
         <select
           value={currentScore}
           onChange={(e) => update("score", e.target.value)}
-          className="border border-gray-200 rounded-lg px-2.5 py-1.5 text-sm text-slate-700 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="min-h-11 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-600"
         >
           {SCORES.map((s) => (
             <option key={s} value={s}>
@@ -117,12 +117,12 @@ export default function LeadsFilter() {
         </select>
       </div>
 
-      <div className="flex items-center gap-2">
-        <span className="text-xs font-medium text-gray-500">Review</span>
+      <div className="grid gap-2 sm:grid-cols-[auto_1fr] sm:items-center">
+        <span className="text-xs font-bold uppercase tracking-wide text-slate-500">Review</span>
         <select
           value={currentReview}
           onChange={(e) => update("review", e.target.value)}
-          className="border border-gray-200 rounded-lg px-2.5 py-1.5 text-sm text-slate-700 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="min-h-11 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-600"
         >
           <option value="all">All leads</option>
           <option value="needs_review">Needs review</option>

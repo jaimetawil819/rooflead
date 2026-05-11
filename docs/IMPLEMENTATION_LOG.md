@@ -6,6 +6,94 @@ This is a running log of every change made under the controlled-implementation p
 
 ---
 
+## 2026-05-11 - UI/UX Pro Max dashboard redesign
+
+**Task:** Rebuild the dashboard overview and leads inbox to match the redesigned homepage style.
+**Status:** completed
+
+**Files changed:**
+- `app/dashboard/layout.tsx` (modified)
+- `components/dashboard/Sidebar.tsx` (modified)
+- `app/dashboard/page.tsx` (modified)
+- `components/dashboard/DashboardQuickActions.tsx` (modified)
+- `app/dashboard/leads/page.tsx` (modified)
+- `components/dashboard/LeadsFilter.tsx` (modified)
+- `docs/WEBSITE_REFINEMENT_PLAN.md` (modified)
+- `docs/IMPLEMENTATION_LOG.md` (modified)
+- `docs/PROJECT_AUDIT.md` (modified)
+
+**Reason:**
+The public homepage now uses a stronger trust-forward B2B SaaS style, but the authenticated app still felt like a lighter MVP admin panel. The dashboard should deliver on the promise made by the marketing site: serious, clear, action-first, and usable from a phone.
+
+Implemented:
+- App shell now uses a slate/navy dashboard background and a more premium sidebar/top bar.
+- Sidebar navigation has stronger active states, larger touch targets, and a command-center context panel.
+- Dashboard overview now opens with a dark command-center header, clear primary actions, urgent lead queue, KPI cards, recent leads, and secondary setup tools.
+- Setup tools were restyled to match the new dashboard card language.
+- Leads inbox now has a dark page header, stronger filter container, mobile-first lead cards, and a desktop table that shares the same badge and hierarchy system.
+- Lead filters now use larger inputs/selects and clearer focus states.
+
+**Verification performed:**
+- `npx.cmd tsc --noEmit`: clean.
+- `npm.cmd run lint`: clean.
+- `npm.cmd run build`: clean.
+- Browser visual verification was attempted, but the local dev server/browser proxy returned connection resets during protected-route checks. Production build route generation confirmed `/dashboard` and `/dashboard/leads` compile.
+
+**Follow-up needed:**
+- Run authenticated browser QA for `/dashboard` and `/dashboard/leads` in desktop and mobile viewports.
+- Bring lead detail and settings pages fully into the same dashboard design system.
+
+---
+
+## 2026-05-11 - UI/UX Pro Max marketing redesign
+
+**Task:** Redesign the public marketing site using the UI/UX Pro Max principles.
+**Status:** completed
+
+**Files changed:**
+- `.gitignore` (modified)
+- `eslint.config.mjs` (modified)
+- `tsconfig.json` (modified)
+- `app/page.tsx` (modified)
+- `components/marketing/Navbar.tsx` (modified)
+- `components/marketing/Hero.tsx` (modified)
+- `components/marketing/Problem.tsx` (modified)
+- `components/marketing/ProductPreview.tsx` (modified)
+- `components/marketing/Trust.tsx` (modified)
+- `components/marketing/UseCases.tsx` (added)
+- `components/marketing/HowItWorks.tsx` (modified)
+- `components/marketing/Pricing.tsx` (modified)
+- `components/marketing/FAQ.tsx` (modified)
+- `components/marketing/FinalCTA.tsx` (modified)
+- `components/marketing/Footer.tsx` (modified)
+- `docs/WEBSITE_REFINEMENT_PLAN.md` (modified)
+- `docs/IMPLEMENTATION_LOG.md` (modified)
+- `docs/PROJECT_AUDIT.md` (modified)
+
+**Reason:**
+The installed UI/UX Pro Max guidance pointed RoofLead toward a trust-forward B2B SaaS style: professional navy/blue palette, product proof early, clear conversion path, accessible touch targets, strong hierarchy, and concrete use-case/comparison framing. The previous marketing site had the right sections but still felt like a clean MVP. This pass makes the public site feel more like a serious SaaS product.
+
+Implemented:
+- Dark, trust-forward hero with product preview above the fold.
+- Stronger pain section with cleaner stats and less visual noise.
+- Product proof section aligned around "who should I call first?"
+- New `UseCases` section with roofing-specific moments and a before/after workflow table.
+- Cleaner how-it-works cards, pricing, FAQ, final CTA, and footer.
+- Tooling excludes the local `ui-ux-pro-max-skill-2.5.0/` installer bundle so project lint/typecheck ignore non-app skill source files.
+
+**Verification performed:**
+- `npx.cmd tsc --noEmit`: clean.
+- `npm.cmd run lint`: clean.
+- `npm.cmd run build`: clean.
+- Browser DOM check confirmed the redesigned homepage renders with the new hero, navigation, product preview, and page content.
+- Browser screenshot check confirmed the desktop hero has no obvious overlap and the product preview is visible above the fold.
+
+**Follow-up needed:**
+- Run an authenticated/mobile visual walkthrough before the next pilot.
+- Continue with the mobile lead list layout slice.
+
+---
+
 ## 2026-05-11 - Mobile dashboard navigation
 
 **Task:** Add mobile-friendly dashboard navigation while preserving the desktop sidebar.

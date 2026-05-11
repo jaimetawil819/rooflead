@@ -19,7 +19,9 @@
 - Complete: Dashboard overview now starts with owner next actions and demotes setup/test tools.
 - Complete: Settings now uses task-focused tabs for Business, Lead Form, Scheduling, and Billing.
 - Complete: Mobile dashboard navigation now supports a phone-friendly top bar and slide-out drawer while preserving the desktop sidebar.
-- Next: Improve the mobile lead list layout so lead triage feels native on a phone.
+- Complete: UI/UX Pro Max redesign pass applied to the marketing site with a trust-forward SaaS hero, stronger product proof, use cases, comparison framing, clearer pricing, and upgraded FAQ/final CTA.
+- Complete: Dashboard overview, app shell, setup tools, and leads inbox now follow the same UI/UX Pro Max SaaS style as the homepage, including a dark command-center header and mobile-first lead cards.
+- Next: Bring lead detail and settings pages fully into the same dashboard design system.
 
 ---
 
@@ -430,7 +432,7 @@ Files:
 
 - `components/marketing/HowItWorks.tsx`
 
-### 5. Use Cases
+### 5. Use Cases - Complete
 
 Purpose:
 
@@ -452,6 +454,8 @@ Visual format:
 Files:
 
 - New component: `components/marketing/UseCases.tsx`
+
+Status: Done on 2026-05-11
 
 ### 6. Trust/Credibility
 
@@ -906,7 +910,7 @@ Timing: Do next
 
 ### Phase 4 - Future SaaS Expansion
 
-#### 11. Improve Lead List Mobile Layout
+#### 11. Improve Lead List Mobile Layout - Complete
 
 What changes:
 
@@ -921,9 +925,32 @@ Likely files:
 - `app/dashboard/leads/page.tsx`
 
 Difficulty: Medium  
-Timing: Do next
+Timing: Done on 2026-05-11
 
-#### 12. Improve Lead Detail Layout
+#### 12. Align Dashboard Shell And Overview With Marketing Design - Complete
+
+What changes:
+
+- Restyle the dashboard shell with the same navy/blue SaaS language as the homepage.
+- Make the overview feel like an owner command center, not a generic admin page.
+- Preserve the action-first hierarchy: urgent leads, KPIs, recent leads, then setup tools.
+- Update dashboard quick actions to match the new card, focus, and touch-target standards.
+
+Why it matters:
+
+The app should deliver on the trust created by the homepage. A roofer who signs up should land in a product that feels just as serious and conversion-aware as the public site.
+
+Likely files:
+
+- `app/dashboard/layout.tsx`
+- `components/dashboard/Sidebar.tsx`
+- `app/dashboard/page.tsx`
+- `components/dashboard/DashboardQuickActions.tsx`
+
+Difficulty: Medium  
+Timing: Done on 2026-05-11
+
+#### 13. Improve Lead Detail Layout
 
 What changes:
 
@@ -941,7 +968,7 @@ Likely files:
 Difficulty: Medium to High  
 Timing: Later
 
-#### 13. Upgrade Embed Widget UI
+#### 14. Upgrade Embed Widget UI
 
 What changes:
 
