@@ -1,9 +1,25 @@
+import Image from "next/image";
+import Link from "next/link";
 import { supportEmail, supportMailtoHref } from "@/lib/contact";
 
 export default function PrivacyPage() {
   return (
     <div className="min-h-screen bg-white px-4 py-16">
       <div className="max-w-3xl mx-auto">
+        <div className="mb-10 flex items-center justify-between gap-4">
+          <Link
+            href="/"
+            className="rounded-lg border border-slate-200 bg-white px-2 py-1 shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600"
+          >
+            <Image src="/logo.png" alt="RoofLead" width={132} height={38} className="h-8 w-auto" />
+          </Link>
+          <Link
+            href="/"
+            className="text-sm font-semibold text-slate-600 transition-colors hover:text-slate-950 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600"
+          >
+            Back to homepage
+          </Link>
+        </div>
         <h1 className="text-3xl font-bold text-slate-900 mb-2">Privacy Policy</h1>
         <p className="text-sm text-gray-500 mb-10">Last updated: May 9, 2026</p>
 
