@@ -23,15 +23,16 @@ export default function SubscribePage() {
       <div className="bg-white rounded-2xl shadow-md p-10 max-w-md w-full text-center">
         <h1 className="text-3xl font-bold mb-2">Start Your Free Trial</h1>
         <p className="text-gray-500 mb-6">
-          14 days free, then $149/month. Cancel anytime.
+          Enter your card to activate 14 days free. After that, Starter is
+          $149/month.
         </p>
 
         <ul className="text-left space-y-2 mb-8 text-sm text-gray-700">
-          <li>✓ AI SMS lead qualification — responds in under 60 seconds</li>
-          <li>✓ Lead score + summary sent to your phone</li>
+          <li>✓ AI SMS lead qualification responds in under 60 seconds</li>
+          <li>✓ Lead score and summary sent to your phone</li>
           <li>✓ Embeddable web form widget</li>
           <li>✓ Lead dashboard with full conversation history</li>
-          <li>✓ Unlimited leads during trial</li>
+          <li>✓ Cancel before day 14 and pay nothing</li>
         </ul>
 
         <Button
@@ -39,11 +40,12 @@ export default function SubscribePage() {
           disabled={loading}
           className="w-full text-base py-6"
         >
-          {loading ? "Redirecting to checkout…" : "Start Free Trial →"}
+          {loading ? "Redirecting to checkout..." : "Start Free Trial"}
         </Button>
 
         <p className="text-xs text-gray-400 mt-4">
-          No commitment. Cancel before day 14 and you won&apos;t be charged.
+          Your card is required for activation, but you will not be charged
+          during the trial.
         </p>
       </div>
     </div>

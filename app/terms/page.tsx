@@ -33,7 +33,7 @@ export default function TermsPage() {
 
           <section>
             <h2 className="text-xl font-semibold text-slate-900 mb-3">6. Business Account Terms</h2>
-            <p>Business accounts are billed monthly at the applicable subscription rate. A 14-day free trial is available for new accounts. Cancel before the trial ends and you will not be charged. Subscriptions automatically renew unless cancelled. Refunds are not provided for partial billing periods.</p>
+            <p>Business accounts are billed monthly at the applicable subscription rate. A valid payment card is required to activate the 14-day free trial for new accounts. Cancel before the trial ends and you will not be charged. Subscriptions automatically renew unless cancelled. Refunds are not provided for partial billing periods.</p>
           </section>
 
           <section>

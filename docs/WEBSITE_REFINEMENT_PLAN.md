@@ -1,8 +1,25 @@
 # Website Refinement Plan - RoofLead
 
 **Created:** 2026-05-11  
+**Last updated:** 2026-05-11  
 **Purpose:** Blueprint for refining the RoofLead marketing website and app UI into a more credible, conversion-focused SaaS product.  
 **Scope:** Planning only. Do not implement until this plan is approved and split into execution slices.
+
+---
+
+## Current Progress
+
+- Complete: Simplified public pricing to one supported Starter plan.
+- Complete: Confirmed 14-day free trial requires a payment card.
+- Complete: Updated checkout to create a 14-day Stripe trial with card collection.
+- Complete: Updated pricing, final CTA, subscribe page, and terms copy to match.
+- Complete: Moved the landing page problem/pain section immediately after the hero.
+- Complete: Added a product preview section showing the owner-facing lead outcome.
+- Complete: Added a trust section with SMS consent, STOP handling, owner takeover, and secure account/billing signals.
+- Complete: Dashboard overview now starts with owner next actions and demotes setup/test tools.
+- Complete: Settings now uses task-focused tabs for Business, Lead Form, Scheduling, and Billing.
+- Complete: Mobile dashboard navigation now supports a phone-friendly top bar and slide-out drawer while preserving the desktop sidebar.
+- Next: Improve the mobile lead list layout so lead triage feels native on a phone.
 
 ---
 
@@ -109,9 +126,9 @@ This should be treated as the next product-polish track after core reliability a
 ### Current Friction
 
 - The homepage asks for trial signup before enough trust is built.
-- The pricing section advertises Starter and Pro, but checkout appears wired to a single Starter price.
-- The final CTA says "No credit card" while the product has a Stripe checkout step. This must match the actual billing behavior.
-- The dashboard shows `Demo Actions` prominently, which is useful for pilots but weak for production customers.
+- Pricing has now been simplified to the supported Starter plan while plan-specific checkout is deferred.
+- The trial has now been clarified as 14 days free with a payment card required.
+- Dashboard setup/test tools have been demoted below the core lead workflow.
 - The app dashboard is not clearly optimized around the owner's fastest action: calling the best lead first.
 
 ---
@@ -169,17 +186,17 @@ The SMS mockup in `Hero.tsx` is useful, but the buyer also needs to see the owne
 
 The dashboard is the proof that this is not just a chatbot.
 
-### 4. CTA/Billing Path Is Inconsistent
+### 4. CTA/Billing Path Needs Continued Discipline
 
-Issues:
+Decision now made:
 
 - Marketing CTA says `Start Free Trial`.
-- Final CTA says `No credit card`.
-- `/subscribe` says `14 days free, then $149/month`.
-- Pricing advertises Starter and Pro.
-- Checkout route appears to use one Starter price.
+- Trial is 14 days free.
+- A payment card is required to activate the trial.
+- Public pricing shows one supported Starter plan.
+- Checkout creates a Starter subscription with a 14-day trial.
 
-This inconsistency will create doubt and support issues.
+Keep this consistent as new CTAs, pricing pages, and plan tiers are added.
 
 ### 5. Dashboard Reads Like a Demo Tool
 
@@ -470,8 +487,8 @@ Make the cost feel easy relative to one recovered job.
 
 Content:
 
-- Starter and Pro if both are truly supported.
-- Otherwise show one pilot/founding plan.
+- Show one supported Starter plan for now.
+- Keep Pro out of public pricing until plan-specific checkout exists.
 - Clearly state:
   - Trial length.
   - Whether card is required.
@@ -663,13 +680,14 @@ Files:
 
 ### Phase 1 - Critical Conversion and Trust Fixes
 
-#### 1. Fix Trial, Pricing, and Checkout Consistency
+#### 1. Fix Trial, Pricing, and Checkout Consistency - Complete
 
 What changes:
 
-- Decide whether trial requires a credit card.
+- Use one supported Starter plan for now.
+- Require a payment card to activate the 14-day free trial.
 - Make all marketing copy match that reality.
-- Either support plan-specific checkout or simplify pricing to one supported plan.
+- Keep Pro out of the public pricing page until plan-specific checkout exists.
 
 Why it matters:
 
@@ -684,9 +702,9 @@ Likely files:
 - `app/api/billing/checkout/route.ts`
 
 Difficulty: Medium  
-Timing: Do now
+Timing: Done on 2026-05-11
 
-#### 2. Reorder Landing Page Sections
+#### 2. Reorder Landing Page Sections - Complete
 
 What changes:
 
@@ -703,9 +721,9 @@ Likely files:
 - `app/page.tsx`
 
 Difficulty: Low  
-Timing: Do now
+Timing: Done on 2026-05-11
 
-#### 3. Add Product Preview Section
+#### 3. Add Product Preview Section - Complete
 
 What changes:
 
@@ -721,9 +739,9 @@ Likely files:
 - `app/page.tsx`
 
 Difficulty: Medium  
-Timing: Do now
+Timing: Done on 2026-05-11
 
-#### 4. Add Trust Section
+#### 4. Add Trust Section - Complete
 
 What changes:
 
@@ -739,11 +757,11 @@ Likely files:
 - `app/page.tsx`
 
 Difficulty: Medium  
-Timing: Do now
+Timing: Done on 2026-05-11
 
 ### Phase 2 - Dashboard Production Polish
 
-#### 5. Reduce Demo-Language Prominence
+#### 5. Reduce Demo-Language Prominence - Complete
 
 What changes:
 
@@ -761,9 +779,30 @@ Likely files:
 - `app/dashboard/page.tsx`
 
 Difficulty: Low  
-Timing: Do now
+Timing: Done on 2026-05-11
 
-#### 6. Add Mobile Dashboard Navigation
+#### 6. Settings Information Architecture Pass - Complete
+
+What changes:
+
+- Split the long settings page into task-focused tabs.
+- Group business identity and ROI defaults under `Business`.
+- Group services, AI opening question, embed code, and test form access under `Lead Form`.
+- Group availability and appointment-intent controls under `Scheduling`.
+- Keep subscription management under `Billing`.
+
+Why it matters:
+
+Settings is already carrying multiple unrelated jobs. Tabs reduce cognitive load now and leave room for future SaaS expansion without turning settings into one long scroll.
+
+Likely files:
+
+- `app/dashboard/settings/page.tsx`
+
+Difficulty: Medium  
+Timing: Done on 2026-05-11
+
+#### 7. Add Mobile Dashboard Navigation - Complete
 
 What changes:
 
@@ -781,14 +820,14 @@ Likely files:
 - `app/dashboard/layout.tsx`
 
 Difficulty: Medium  
-Timing: Do now
+Timing: Done on 2026-05-11
 
-#### 7. Improve Dashboard Priority Hierarchy
+#### 8. Refine Dashboard Priority Hierarchy
 
 What changes:
 
-- Add a priority queue for hot/needs-review/new leads.
-- Put "who should I call first?" above generic stats.
+- Continue tuning the priority queue if pilot use reveals missing queue states.
+- Consider clearer next-action metadata such as call, reply, mark won/lost, or schedule inspection.
 
 Why it matters:
 
@@ -799,11 +838,11 @@ Likely files:
 - `app/dashboard/page.tsx`
 
 Difficulty: Medium  
-Timing: Do next
+Timing: Later, after pilot feedback
 
 ### Phase 3 - Marketing Polish and Lead Capture
 
-#### 8. Add Secondary Demo CTA
+#### 9. Add Secondary Demo CTA
 
 What changes:
 
@@ -822,7 +861,7 @@ Likely files:
 Difficulty: Low  
 Timing: Do next
 
-#### 9. Improve FAQ Objection Handling
+#### 10. Improve FAQ Objection Handling
 
 What changes:
 
@@ -839,7 +878,7 @@ Likely files:
 Difficulty: Low  
 Timing: Do next
 
-#### 10. Brand and Contact Credibility Pass
+#### 11. Brand and Contact Credibility Pass
 
 What changes:
 
@@ -882,7 +921,7 @@ Likely files:
 - `app/dashboard/leads/page.tsx`
 
 Difficulty: Medium  
-Timing: Later
+Timing: Do next
 
 #### 12. Improve Lead Detail Layout
 
@@ -1005,7 +1044,7 @@ Timing: Later
 Start with a narrow, high-impact slice:
 
 1. Fix CTA/trial/pricing copy consistency.
-2. Reorder landing page to `Hero -> Problem -> ProductPreview -> HowItWorks -> Trust -> Pricing -> FAQ -> FinalCTA`.
+2. Reorder landing page to `Hero -> Problem -> ProductPreview -> Trust -> HowItWorks -> Pricing -> FAQ -> FinalCTA`.
 3. Add a simple coded `ProductPreview` section using realistic lead/dashboard data.
 4. Add a lightweight `Trust` section.
 5. Keep dashboard changes for the next slice.
@@ -1013,4 +1052,3 @@ Start with a narrow, high-impact slice:
 Reason:
 
 This improves conversion credibility without disturbing the authenticated app workflow. It is the safest first step and creates a stronger public face before deeper dashboard refactors.
-

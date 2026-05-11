@@ -48,8 +48,12 @@ export async function POST() {
   const session = await stripe.checkout.sessions.create({
     customer: customerId,
     mode: "subscription",
+    payment_method_collection: "always",
     payment_method_types: ["card"],
     line_items: [{ price: process.env.STRIPE_PRICE_ID_STARTER!, quantity: 1 }],
+    subscription_data: {
+      trial_period_days: 14,
+    },
     success_url: `${process.env.NEXT_PUBLIC_APP_URL}/subscribe/success`,
     cancel_url: `${process.env.NEXT_PUBLIC_APP_URL}/subscribe`,
   });

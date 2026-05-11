@@ -1,6 +1,6 @@
 # Project Audit - RoofLead
 
-**Last updated:** 2026-05-10
+**Last updated:** 2026-05-11
 **Current phase:** Phase 2 - Product improvements
 **Purpose:** Fast source of truth for future sessions. Read this with `docs/IMPLEMENTATION_PLAN.md` and `docs/IMPLEMENTATION_LOG.md`.
 
@@ -17,6 +17,8 @@ Phase 0 safety work is complete enough to move forward: secrets are ignored, tra
 Phase 1 reliability work is complete. Billing correctness, idempotency, structured lead extraction, AI guardrails, local inbound SMS simulation, async Twilio webhook processing, prompt injection mitigation, mid-conversation timeout handling, structured backend logging, and final smoke testing have been completed. The biggest remaining risks are now external-provider readiness, pilot onboarding, and the normal limits of an MVP implementation.
 
 Phase 2 has added the most important demo-facing workflows: human review, owner SMS takeover, lead pagination/search, simple ROI metrics, and pilot-demo polish. Scheduling foundations are now being added as a lightweight manual assist, not a full calendar integration.
+
+Website refinement has started. The first conversion fixes are complete: public pricing is simplified to one Starter plan, the 14-day trial is explicitly card-required, Stripe checkout now creates a 14-day trial while collecting payment details, and the landing page now shows the problem/pain section immediately after the hero. Product preview and trust sections now show the owner-facing lead outcome plus concrete credibility signals before the how-it-works explanation. Dashboard production polish has started: the overview now leads with next-action leads and demotes setup/test tools below the core owner workflow. Settings now uses task-focused tabs for Business, Lead Form, Scheduling, and Billing. Mobile dashboard navigation is complete with a phone top bar and slide-out drawer while preserving the desktop sidebar.
 
 ---
 
@@ -141,4 +143,4 @@ Phase 1 is closed. The user confirmed the final smoke test worked after local ch
 **Local/pilot-demo readiness:** Good, with simulator-based testing.
 **Real customer readiness:** Close, but not automatic. Wait for A2P approval and run a real SMS pilot test before relying on it for a paying customer.
 
-Recommended next engineering move: **Finish scheduling foundations, run local verification, apply the scheduling migration, then test one full demo lead.**
+Recommended next engineering move: **Improve the mobile lead list layout so lead triage feels native on a phone, then run an authenticated mobile dashboard walkthrough before the next pilot demo.**

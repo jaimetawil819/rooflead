@@ -10,7 +10,8 @@ export default function FinalCTA() {
           Stop losing leads to slow response times.
         </h2>
         <p className="text-blue-100 text-lg mb-10 max-w-xl mx-auto">
-          Set up takes under 10 minutes. Your next form submission gets a reply in under 60 seconds.
+          Set up takes under 10 minutes. Your next form submission gets a reply
+          in under 60 seconds.
         </p>
         <Button
           asChild
@@ -23,7 +24,7 @@ export default function FinalCTA() {
           </Link>
         </Button>
         <p className="text-blue-200 text-sm mt-4">
-          14 days free · No credit card · Cancel anytime
+          14 days free · Card required · Cancel anytime
         </p>
       </div>
     </section>

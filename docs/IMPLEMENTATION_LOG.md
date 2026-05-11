@@ -6,6 +6,141 @@ This is a running log of every change made under the controlled-implementation p
 
 ---
 
+## 2026-05-11 - Mobile dashboard navigation
+
+**Task:** Add mobile-friendly dashboard navigation while preserving the desktop sidebar.
+**Status:** completed
+
+**Files changed:**
+- `docs/WEBSITE_REFINEMENT_PLAN.md` (modified)
+- `docs/IMPLEMENTATION_LOG.md` (modified)
+- `docs/PROJECT_AUDIT.md` (modified)
+- `components/dashboard/Sidebar.tsx` (modified)
+- `app/dashboard/layout.tsx` (modified)
+
+**Reason:**
+Roofing owners are likely to check leads from a phone while in the field. The existing dashboard shell used a fixed desktop sidebar only, which makes the app awkward on smaller screens.
+
+Implemented a responsive dashboard shell:
+- Desktop keeps the existing sticky sidebar.
+- Mobile gets a sticky top bar with a menu button.
+- The menu opens a slide-out drawer with Overview, Leads, Settings, and account access.
+- Navigation links close the drawer after selection.
+- The dashboard layout now switches from stacked mobile shell to desktop flex layout at the `md` breakpoint.
+
+**Verification performed:**
+- `npx.cmd tsc --noEmit`: clean.
+- `npm.cmd run lint`: clean.
+- `npm.cmd run build`: clean.
+- Browser check for `/dashboard` confirmed logged-out users redirect to `/sign-in?redirect_url=...`, so the protected route boundary still works. Authenticated mobile drawer visual QA still needs a logged-in browser session.
+
+**Follow-up needed:**
+- Verify the drawer on an authenticated mobile viewport before the next pilot walkthrough.
+- Improve the mobile lead list layout so lead triage feels native on a phone.
+
+---
+
+## 2026-05-11 - Settings information architecture pass
+
+**Task:** Convert Settings from one long mixed page into task-focused tabs.
+**Status:** completed
+
+**Files changed:**
+- `docs/WEBSITE_REFINEMENT_PLAN.md` (modified)
+- `docs/IMPLEMENTATION_LOG.md` (modified)
+- `docs/PROJECT_AUDIT.md` (modified)
+- `app/dashboard/settings/page.tsx` (modified)
+
+**Reason:**
+The Settings page now handles business identity, notification phone, ROI defaults, scheduling, billing, lead form customization, and embed installation. Keeping all of that in one vertical page increases cognitive load and will not scale as the SaaS grows. The next production-polish step is to split those jobs into clear tabs: Business, Lead Form, Scheduling, and Billing.
+
+Implemented a tabbed settings layout:
+- `Business`: business name, notification phone, and average job value.
+- `Lead Form`: AI opening question, services, embed code, and test form link.
+- `Scheduling`: inspection availability and scheduling intent settings.
+- `Billing`: Stripe billing portal entry point.
+
+**Verification performed:**
+- `npx.cmd tsc --noEmit`: clean.
+- `npm.cmd run lint`: clean.
+- `npm.cmd run build`: clean.
+
+**Follow-up needed:**
+- Add mobile dashboard navigation.
+
+---
+
+## 2026-05-11 - Dashboard production polish - Started
+
+**Task:** Begin dashboard production polish by reducing demo-language prominence and making owner next actions more visible.
+**Status:** completed
+
+**Files changed:**
+- `docs/WEBSITE_REFINEMENT_PLAN.md` (modified)
+- `docs/IMPLEMENTATION_LOG.md` (modified)
+- `docs/PROJECT_AUDIT.md` (modified)
+- `app/dashboard/page.tsx` (modified)
+- `components/dashboard/DashboardQuickActions.tsx` (modified)
+
+**Reason:**
+The dashboard currently leads with `Demo Actions`, which is useful for pilots but makes the product feel like an internal demo console. The production owner workflow should start with the leads that need attention now, then show performance metrics, recent lead activity, and only then setup/test utilities.
+
+Implemented a new `Next Leads To Work` section at the top of the overview. It prioritizes hot, new, and review-needed leads and labels each row with the next action: `Call first`, `New lead`, or `Review needed`. The setup/test actions were moved below recent leads and collapsed into a secondary `Setup & test tools` panel.
+
+**Verification performed:**
+- `npx.cmd tsc --noEmit`: clean.
+- `npm.cmd run lint`: clean.
+- `npm.cmd run build`: clean.
+- Search confirmed the live app/components no longer use `Demo Actions` or demo/pilot walkthrough copy.
+
+**Follow-up needed:**
+- Add mobile dashboard navigation.
+- Continue improving dashboard priority hierarchy in later slices if pilot usage shows more queue states are needed.
+
+---
+
+## 2026-05-11 - Website refinement - Pricing, trial, landing order, product preview, and trust
+
+**Task:** Start the website refinement track by simplifying public pricing, aligning trial copy with checkout behavior, moving the landing page pain section earlier, adding a product proof section, and adding a trust section.
+**Status:** completed
+
+**Files changed:**
+- `docs/WEBSITE_REFINEMENT_PLAN.md` (added/updated)
+- `components/marketing/Pricing.tsx` (modified)
+- `components/marketing/FinalCTA.tsx` (modified)
+- `app/subscribe/page.tsx` (modified)
+- `app/api/billing/checkout/route.ts` (modified)
+- `app/terms/page.tsx` (modified)
+- `app/page.tsx` (modified)
+- `components/marketing/ProductPreview.tsx` (added)
+- `components/marketing/Trust.tsx` (added)
+
+**Reason:**
+The marketing site previously advertised multiple plan options and "No credit card" language while checkout only supported the Starter plan. This created a trust problem. The public conversion path is now intentionally simple: one Starter launch plan at $149/month, 14-day free trial, payment card required, cancel before day 14 to pay nothing.
+
+The landing page also explained mechanics before fully sharpening the pain. The page order now moves `Problem` immediately after `Hero` so visitors see the missed-lead/ad-spend problem before the how-it-works section.
+
+The new `ProductPreview` section now appears between `Problem` and `HowItWorks`. It shows the owner-facing outcome: hot lead score, AI summary, structured lead details, SMS conversation, suggested action, and a call CTA.
+
+The new `Trust` section now appears between `ProductPreview` and `HowItWorks`. It gives concrete credibility signals without fake social proof: SMS consent language, STOP handling, owner takeover, protected account/billing surfaces, and a pilot-ready note.
+
+**Verification performed:**
+- `npx.cmd tsc --noEmit`: clean.
+- `npm.cmd run lint`: clean.
+- `npm.cmd run build`: clean.
+- Search confirmed stale public phrases such as "No credit card", "Most Popular", and "Unlimited leads during trial" were removed from app/components/current refinement plan targets.
+- Browser DOM check confirmed the rendered order is Hero, Problem, ProductPreview, Trust, How it works, Pricing.
+- Browser visual check confirmed the product preview section renders on the local homepage.
+
+**Follow-up needed:**
+- Begin the dashboard production polish slice by reducing `Demo Actions` prominence and making owner next actions more prominent.
+- Keep Pro out of public pricing until plan-specific checkout exists.
+
+**Notes / surprises:**
+- The Stripe checkout route now explicitly sets `trial_period_days: 14` and `payment_method_collection: "always"` so the code matches the public promise.
+
+---
+
 ## 2026-05-10 - Phase 2G - Scheduling foundations
 
 **Task:** Add lightweight scheduling foundations without building full calendar automation.

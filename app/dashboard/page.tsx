@@ -2,7 +2,15 @@ import { auth } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
 import { getAdminClient } from "@/lib/supabase/admin";
 import Link from "next/link";
-import { Users, Flame, TrendingUp, ArrowRight, AlertTriangle, Trophy, DollarSign } from "lucide-react";
+import {
+  AlertTriangle,
+  ArrowRight,
+  DollarSign,
+  Flame,
+  Trophy,
+  TrendingUp,
+  Users,
+} from "lucide-react";
 import DashboardQuickActions from "@/components/dashboard/DashboardQuickActions";
 
 const scoreColors: Record<string, string> = {
@@ -28,6 +36,25 @@ function formatCurrency(cents: number) {
     currency: "USD",
     maximumFractionDigits: 0,
   }).format(cents / 100);
+}
+
+function titleCase(value: string) {
+  return value
+    .replace(/_/g, " ")
+    .replace(/\b\w/g, (char) => char.toUpperCase());
+}
+
+function formatServiceType(serviceType: string | null) {
+  if (!serviceType) return "No service type";
+
+  const labels: Record<string, string> = {
+    repair: "Roof Repair",
+    replacement: "Full Replacement",
+    inspection: "Inspection",
+    storm_damage: "Storm Damage",
+  };
+
+  return labels[serviceType] ?? titleCase(serviceType);
 }
 
 export default async function DashboardPage() {
@@ -65,6 +92,17 @@ export default async function DashboardPage() {
   const averageJobValueCents = business.average_job_value_cents ?? 800000;
   const estimatedRevenueCents = won * averageJobValueCents;
   const recent = leads?.slice(0, 5) ?? [];
+  const priorityLeads =
+    leads
+      ?.filter((lead) => {
+        if (["won", "lost", "junk"].includes(lead.status)) return false;
+        return (
+          lead.needs_human_review ||
+          lead.lead_score === "hot" ||
+          lead.status === "new"
+        );
+      })
+      .slice(0, 4) ?? [];
   const testFormPath = widget?.widget_key
     ? `/test-form/${widget.widget_key}`
     : null;
@@ -85,14 +123,90 @@ export default async function DashboardPage() {
 
   return (
     <div className="p-8 max-w-5xl">
-      <div className="mb-8">
-        <h1 className="text-2xl font-bold text-slate-900">
-          Welcome back{business.name ? `, ${business.name}` : ""}
-        </h1>
-        <p className="text-gray-500 mt-1">Here&apos;s what&apos;s happening with your leads.</p>
+      <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+        <div>
+          <h1 className="text-2xl font-bold text-slate-900">
+            Welcome back{business.name ? `, ${business.name}` : ""}
+          </h1>
+          <p className="text-gray-500 mt-1">
+            Start with the leads that need action now.
+          </p>
+        </div>
+        <Link
+          href="/dashboard/leads"
+          className="inline-flex items-center justify-center gap-2 rounded-lg bg-slate-900 px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-slate-700"
+        >
+          Review All Leads <ArrowRight className="h-4 w-4" />
+        </Link>
       </div>
 
-      <DashboardQuickActions testFormPath={testFormPath} />
+      {/* Priority queue */}
+      <div className="mb-8 rounded-2xl border border-gray-100 bg-white shadow-sm">
+        <div className="flex items-center justify-between gap-4 border-b border-gray-100 px-6 py-4">
+          <div>
+            <h2 className="font-semibold text-slate-900">Next Leads To Work</h2>
+            <p className="mt-1 text-sm text-gray-500">
+              Hot, new, or review-needed leads appear here first.
+            </p>
+          </div>
+          <span className="rounded-full bg-blue-50 px-3 py-1 text-xs font-semibold text-blue-700">
+            {priorityLeads.length} active
+          </span>
+        </div>
+
+        {priorityLeads.length === 0 ? (
+          <div className="px-6 py-10 text-center">
+            <p className="font-medium text-slate-900">No urgent leads waiting</p>
+            <p className="mx-auto mt-1 max-w-md text-sm text-gray-500">
+              When a hot, new, or review-needed lead arrives, it will show up
+              here so you know who to handle first.
+            </p>
+          </div>
+        ) : (
+          <div className="divide-y divide-gray-50">
+            {priorityLeads.map((lead) => {
+              const actionLabel = lead.needs_human_review
+                ? "Review needed"
+                : lead.lead_score === "hot"
+                  ? "Call first"
+                  : "New lead";
+              const actionColor = lead.needs_human_review
+                ? "bg-amber-100 text-amber-700"
+                : lead.lead_score === "hot"
+                  ? "bg-red-100 text-red-700"
+                  : "bg-blue-100 text-blue-700";
+
+              return (
+                <Link
+                  key={lead.id}
+                  href={`/dashboard/leads/${lead.id}`}
+                  className="flex flex-col gap-3 px-6 py-4 transition-colors hover:bg-gray-50 sm:flex-row sm:items-center sm:justify-between"
+                >
+                  <div className="min-w-0">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <p className="font-semibold text-slate-900">
+                        {lead.name ?? "Unknown Lead"}
+                      </p>
+                      <span
+                        className={`rounded-full px-2.5 py-1 text-xs font-semibold ${actionColor}`}
+                      >
+                        {actionLabel}
+                      </span>
+                    </div>
+                    <p className="mt-1 text-sm text-gray-500">
+                      {formatServiceType(lead.service_type)} -{" "}
+                      {new Date(lead.created_at).toLocaleDateString()}
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-2 text-sm font-semibold text-blue-600">
+                    Open Lead <ArrowRight className="h-4 w-4" />
+                  </div>
+                </Link>
+              );
+            })}
+          </div>
+        )}
+      </div>
 
       {/* Stats */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
@@ -126,8 +240,8 @@ export default async function DashboardPage() {
           <div className="px-6 py-12 text-center">
             <p className="text-gray-500 font-medium">No leads yet</p>
             <p className="text-gray-400 text-sm mt-1 mb-4">
-              Start with a realistic test lead so the dashboard has something
-              useful to show during a demo.
+              Once your form is installed, new submissions will appear here.
+              You can also send a test lead to confirm the flow.
             </p>
             {testFormPath && (
               <Link
@@ -150,7 +264,7 @@ export default async function DashboardPage() {
                 <div>
                   <p className="font-medium text-slate-900 text-sm">{lead.name ?? "Unknown"}</p>
                   <p className="text-xs text-gray-400 mt-0.5">
-                    {lead.service_type ?? "No service type"} - {new Date(lead.created_at).toLocaleDateString()}
+                    {formatServiceType(lead.service_type)} - {new Date(lead.created_at).toLocaleDateString()}
                   </p>
                 </div>
                 <div className="flex items-center gap-2">
@@ -167,6 +281,10 @@ export default async function DashboardPage() {
             ))}
           </div>
         )}
+      </div>
+
+      <div className="mt-8">
+        <DashboardQuickActions testFormPath={testFormPath} />
       </div>
     </div>
   );
