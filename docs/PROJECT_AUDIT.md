@@ -114,8 +114,10 @@ Phase 1 is closed. The user confirmed the final smoke test worked after local ch
    - Current risk: appointment booking could be valuable, but needs business availability settings and a human handoff boundary first.
 
 4. **Lead list pagination/search**
-   - Current state: pagination is complete and manually tested. The leads page fetches one page at a time, preserves filters, and resets pagination when filters change.
-   - Suggested direction: add search as the next small dashboard usability slice.
+   - Current state: pagination and search are complete and manually tested. Search covers name, phone, address, service type, and summary, with URL state and pagination reset behavior.
+
+5. **Basic ROI metrics**
+   - Current state: complete and manually tested with configurable average job value in Settings and dashboard cards for total leads, hot leads, qualified leads, needs-review leads, won leads, and estimated revenue.
 
 ---
 
@@ -133,4 +135,4 @@ Phase 1 is closed. The user confirmed the final smoke test worked after local ch
 **Local/pilot-demo readiness:** Good, with simulator-based testing.
 **Real customer readiness:** Close, but not automatic. Wait for A2P approval and run a real SMS pilot test before relying on it for a paying customer.
 
-Recommended next engineering move: **Add lead search.**
+Recommended next engineering move: **Decide between scheduling/inspection booking and demo polish.**

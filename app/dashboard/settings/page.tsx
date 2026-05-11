@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { Building2, Phone, Code, Plus, X, CreditCard } from "lucide-react";
+import { Building2, Phone, Code, Plus, X, CreditCard, DollarSign } from "lucide-react";
 
 interface Service {
   label: string;
@@ -16,6 +16,7 @@ function labelToValue(label: string): string {
 export default function SettingsPage() {
   const [name, setName] = useState("");
   const [notificationPhone, setNotificationPhone] = useState("");
+  const [averageJobValue, setAverageJobValue] = useState("8000");
   const [widgetKey, setWidgetKey] = useState("");
   const [widgetId, setWidgetId] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
@@ -37,6 +38,9 @@ export default function SettingsPage() {
       if (business) {
         setName(business.name ?? "");
         setNotificationPhone(business.notification_phone ?? "");
+        setAverageJobValue(
+          String(Math.round((business.average_job_value_cents ?? 800000) / 100))
+        );
       }
 
       if (widget) {
@@ -54,7 +58,7 @@ export default function SettingsPage() {
     await fetch("/api/dashboard/settings", {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ name, notificationPhone }),
+      body: JSON.stringify({ name, notificationPhone, averageJobValue }),
     });
     setSaving(false);
     setSaved(true);
@@ -154,6 +158,28 @@ export default function SettingsPage() {
             </div>
             <p className="text-xs text-gray-400 mt-1.5">
               You&apos;ll receive an SMS here whenever a lead is qualified.
+            </p>
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-1.5" htmlFor="avg-job-value">
+              Average Job Value
+            </label>
+            <div className="relative">
+              <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" aria-hidden="true" />
+              <input
+                id="avg-job-value"
+                type="number"
+                min="0"
+                max="1000000"
+                step="100"
+                className="w-full border border-gray-200 rounded-lg pl-9 pr-3 py-2.5 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                value={averageJobValue}
+                onChange={(e) => setAverageJobValue(e.target.value)}
+                placeholder="8000"
+              />
+            </div>
+            <p className="text-xs text-gray-400 mt-1.5">
+              Used for simple ROI estimates on the dashboard.
             </p>
           </div>
         </div>

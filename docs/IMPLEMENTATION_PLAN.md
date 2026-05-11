@@ -27,7 +27,7 @@ Phase 0 and Phase 1 are complete. Phase 1 closed the core reliability gaps neede
 - Structured logging
 - Final local and production smoke test confirmed by the user
 
-Current focus: **Lead list pagination** is complete and tested.
+Current focus: **Lead search and ROI metrics** are complete and tested.
 
 ---
 
@@ -277,14 +277,20 @@ Do not start until at least one pilot workflow is stable.
   - Set owner takeover state so future homeowner replies are saved but do not trigger AI auto-replies.
   - Respect STOP opt-outs before sending.
 - Scheduling/inspection booking
-- ROI metrics
+- ROI metrics - Complete
+  - Add configurable average job value in Settings.
+  - Show total leads, hot leads, qualified leads, needs-review leads, won leads, and estimated revenue on dashboard.
+  - Keep estimates simple: won leads multiplied by average job value.
 - Email fallback
 - Twilio number per business
 - Lead list pagination - Complete
   - Fetch one page of leads at a time from Supabase.
   - Preserve status, score, and review filters across page navigation.
   - Reset to page 1 when filters change.
-- Search/filter improvements
+- Search/filter improvements - Complete
+  - Add URL-based search over name, phone, address, service type, and summary.
+  - Preserve existing status, score, review, and pagination behavior.
+  - Reset to page 1 when search changes.
 - CRM/Zapier/webhook export
 
 ---
@@ -304,6 +310,6 @@ Do not start until at least one pilot workflow is stable.
 
 ## Current next action
 
-Recommended next engineering slice: **Add lead search.**
+Recommended next engineering slice: **Decide between scheduling/inspection booking and demo polish.**
 
 Reason: the AI flow is now reliable enough for MVP testing, and the handoff state is implemented. The next practical product step is letting an owner act from that handoff.

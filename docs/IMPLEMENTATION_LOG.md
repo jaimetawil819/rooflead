@@ -6,6 +6,65 @@ This is a running log of every change made under the controlled-implementation p
 
 ---
 
+## 2026-05-10 - Phase 2E - Basic ROI metrics
+
+**Task:** Add simple dashboard ROI metrics.
+**Status:** completed
+
+**Files changed:**
+- `supabase/migrations/0010_average_job_value.sql` (added)
+- `supabase/migrations/README.md` (modified)
+- `app/api/dashboard/settings/route.ts` (modified)
+- `app/dashboard/settings/page.tsx` (modified)
+- `app/dashboard/page.tsx` (modified)
+- `docs/IMPLEMENTATION_PLAN.md` (modified)
+- `docs/IMPLEMENTATION_LOG.md` (modified)
+
+**Reason:**
+ROI metrics make the product easier to demo and sell. A roofing owner needs to see whether RoofLead is creating enough opportunity to justify the subscription.
+
+**Verification performed:**
+- `npx.cmd tsc --noEmit`: clean.
+- `npm.cmd run lint`: clean.
+- `npm.cmd run build`: clean.
+- User applied/tested the feature in the app and confirmed it works.
+
+**Follow-up needed:**
+- Decide between scheduling/inspection booking and demo polish.
+
+**Notes / surprises:**
+- This is intentionally simple: estimated revenue is `won leads * average job value`. It is a sales/demo metric, not accounting.
+
+---
+
+## 2026-05-10 - Phase 2D - Lead search
+
+**Task:** Add dashboard lead search.
+**Status:** completed
+
+**Files changed:**
+- `app/dashboard/leads/page.tsx` (modified)
+- `components/dashboard/LeadsFilter.tsx` (modified)
+- `docs/IMPLEMENTATION_PLAN.md` (modified)
+- `docs/IMPLEMENTATION_LOG.md` (modified)
+
+**Reason:**
+Pagination keeps the list manageable, but owners still need to quickly find a lead by name, phone, address, service type, or summary. Search is the next low-risk dashboard usability improvement.
+
+**Verification performed:**
+- `npx.cmd tsc --noEmit`: clean.
+- `npm.cmd run lint`: clean.
+- `npm.cmd run build`: clean.
+- User manually tested search in the dashboard and confirmed it works.
+
+**Follow-up needed:**
+- None.
+
+**Notes / surprises:**
+- Search is URL-based via `q`, so it can be shared/reloaded and works with pagination.
+
+---
+
 ## 2026-05-10 - Phase 2C - Lead list pagination
 
 **Task:** Add server-side pagination to the dashboard leads list.

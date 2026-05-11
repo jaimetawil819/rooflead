@@ -103,4 +103,4 @@ Completed in Phase 1:
 
 Recommended next slice:
 
-- Add lead search
+- Decide between scheduling/inspection booking and demo polish

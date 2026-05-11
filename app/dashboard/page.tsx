@@ -2,7 +2,7 @@ import { auth } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
 import { getAdminClient } from "@/lib/supabase/admin";
 import Link from "next/link";
-import { Users, Flame, TrendingUp, ArrowRight } from "lucide-react";
+import { Users, Flame, TrendingUp, ArrowRight, AlertTriangle, Trophy, DollarSign } from "lucide-react";
 
 const scoreColors: Record<string, string> = {
   hot: "bg-red-100 text-red-700",
@@ -21,6 +21,14 @@ const statusColors: Record<string, string> = {
   junk: "bg-gray-100 text-gray-500",
 };
 
+function formatCurrency(cents: number) {
+  return new Intl.NumberFormat("en-US", {
+    style: "currency",
+    currency: "USD",
+    maximumFractionDigits: 0,
+  }).format(cents / 100);
+}
+
 export default async function DashboardPage() {
   const { userId } = await auth();
   if (!userId) redirect("/sign-in");
@@ -29,7 +37,7 @@ export default async function DashboardPage() {
 
   const { data: business } = await supabase
     .from("businesses")
-    .select("id, name, onboarding_complete")
+    .select("id, name, onboarding_complete, average_job_value_cents")
     .eq("owner_id", userId)
     .single();
 
@@ -51,12 +59,24 @@ export default async function DashboardPage() {
   const total = leads?.length ?? 0;
   const hot = leads?.filter((l) => l.lead_score === "hot").length ?? 0;
   const qualified = leads?.filter((l) => l.status === "qualified" || l.status === "won").length ?? 0;
+  const needsReview = leads?.filter((l) => l.needs_human_review).length ?? 0;
+  const won = leads?.filter((l) => l.status === "won").length ?? 0;
+  const averageJobValueCents = business.average_job_value_cents ?? 800000;
+  const estimatedRevenueCents = won * averageJobValueCents;
   const recent = leads?.slice(0, 5) ?? [];
 
   const stats = [
     { label: "Total Leads", value: total, icon: Users, color: "bg-blue-50 text-blue-600" },
     { label: "Hot Leads", value: hot, icon: Flame, color: "bg-red-50 text-red-600" },
     { label: "Qualified", value: qualified, icon: TrendingUp, color: "bg-green-50 text-green-600" },
+    { label: "Needs Review", value: needsReview, icon: AlertTriangle, color: "bg-amber-50 text-amber-600" },
+    { label: "Won Leads", value: won, icon: Trophy, color: "bg-emerald-50 text-emerald-600" },
+    {
+      label: "Estimated Revenue",
+      value: formatCurrency(estimatedRevenueCents),
+      icon: DollarSign,
+      color: "bg-slate-100 text-slate-700",
+    },
   ];
 
   return (
@@ -69,7 +89,7 @@ export default async function DashboardPage() {
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
         {stats.map(({ label, value, icon: Icon, color }) => (
           <div key={label} className="bg-white rounded-2xl border border-gray-100 p-6 shadow-sm">
             <div className={`h-10 w-10 rounded-xl flex items-center justify-center mb-4 ${color}`}>
@@ -77,6 +97,12 @@ export default async function DashboardPage() {
             </div>
             <p className="text-3xl font-bold text-slate-900">{value}</p>
             <p className="text-sm text-gray-500 mt-1">{label}</p>
+            {label === "Estimated Revenue" && (
+              <p className="text-xs text-gray-400 mt-2">
+                Based on {won} won lead{won === 1 ? "" : "s"} at{" "}
+                {formatCurrency(averageJobValueCents)} average job value.
+              </p>
+            )}
           </div>
         ))}
       </div>

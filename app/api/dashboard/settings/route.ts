@@ -5,10 +5,25 @@ import { getAdminClient } from "@/lib/supabase/admin";
 type BusinessPatch = {
   name?: unknown;
   notificationPhone?: unknown;
+  averageJobValue?: unknown;
 };
 
 function cleanText(value: unknown, maxLength: number) {
   return typeof value === "string" ? value.trim().slice(0, maxLength) : "";
+}
+
+function parseAverageJobValueCents(value: unknown) {
+  const numericValue =
+    typeof value === "number"
+      ? value
+      : typeof value === "string"
+        ? Number(value.replace(/[$,]/g, ""))
+        : Number.NaN;
+
+  if (!Number.isFinite(numericValue)) return 800000;
+
+  const dollars = Math.max(0, Math.min(1000000, numericValue));
+  return Math.round(dollars * 100);
 }
 
 export async function GET() {
@@ -20,7 +35,7 @@ export async function GET() {
   const supabase = getAdminClient();
   const { data: business, error: businessError } = await supabase
     .from("businesses")
-    .select("id, name, notification_phone")
+    .select("id, name, notification_phone, average_job_value_cents")
     .eq("owner_id", userId)
     .single();
 
@@ -50,6 +65,7 @@ export async function PATCH(req: Request) {
 
   const name = cleanText(body.name, 120);
   const notificationPhone = cleanText(body.notificationPhone, 30);
+  const averageJobValueCents = parseAverageJobValueCents(body.averageJobValue);
 
   if (!name) {
     return NextResponse.json({ error: "Business name is required" }, { status: 400 });
@@ -58,7 +74,11 @@ export async function PATCH(req: Request) {
   const supabase = getAdminClient();
   const { error } = await supabase
     .from("businesses")
-    .update({ name, notification_phone: notificationPhone || null })
+    .update({
+      name,
+      notification_phone: notificationPhone || null,
+      average_job_value_cents: averageJobValueCents,
+    })
     .eq("owner_id", userId);
 
   if (error) {

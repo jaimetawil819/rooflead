@@ -64,6 +64,16 @@ function getDisplayStatus(lead: LeadRow) {
   return lead.status;
 }
 
+function sanitizeSearchTerm(value: string | undefined) {
+  if (!value) return "";
+
+  return value
+    .replace(/[%_,()]/g, " ")
+    .replace(/\s+/g, " ")
+    .trim()
+    .slice(0, 80);
+}
+
 export default async function LeadsPage({
   searchParams,
 }: {
@@ -72,12 +82,14 @@ export default async function LeadsPage({
     score?: string;
     review?: string;
     page?: string;
+    q?: string;
   }>;
 }) {
   const { userId } = await auth();
   if (!userId) redirect("/sign-in");
 
-  const { status, score, review, page } = await searchParams;
+  const { status, score, review, page, q } = await searchParams;
+  const searchTerm = sanitizeSearchTerm(q);
   const currentPage = Math.max(1, Number.parseInt(page ?? "1", 10) || 1);
   const from = (currentPage - 1) * PAGE_SIZE;
   const to = from + PAGE_SIZE - 1;
@@ -100,6 +112,18 @@ export default async function LeadsPage({
   if (status && status !== "all") query = query.eq("status", status);
   if (score && score !== "all") query = query.eq("lead_score", score);
   if (review === "needs_review") query = query.eq("needs_human_review", true);
+  if (searchTerm) {
+    const pattern = `%${searchTerm}%`;
+    query = query.or(
+      [
+        `name.ilike.${pattern}`,
+        `phone.ilike.${pattern}`,
+        `address.ilike.${pattern}`,
+        `service_type.ilike.${pattern}`,
+        `summary.ilike.${pattern}`,
+      ].join(",")
+    );
+  }
 
   const { data: leads, count } = await query;
   const leadRows = (leads ?? []) as LeadRow[];
@@ -114,6 +138,7 @@ export default async function LeadsPage({
     if (status && status !== "all") params.set("status", status);
     if (score && score !== "all") params.set("score", score);
     if (review && review !== "all") params.set("review", review);
+    if (searchTerm) params.set("q", searchTerm);
     if (nextPage > 1) params.set("page", String(nextPage));
 
     const queryString = params.toString();
@@ -144,7 +169,7 @@ export default async function LeadsPage({
           <div className="px-6 py-16 text-center">
             <p className="text-gray-400 font-medium">No leads found</p>
             <p className="text-gray-400 text-sm mt-1">
-              {status || score
+              {status || score || review || searchTerm
                 ? "Try adjusting your filters."
                 : "Submit a test lead using your embed form to see it appear here."}
             </p>

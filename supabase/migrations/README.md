@@ -13,6 +13,7 @@ This folder tracks database changes for RoofLead.
 - `0007_last_message_at.sql` adds conversation activity tracking for follow-up and stale-lead timeout logic.
 - `0008_human_handoff.sql` adds durable human-review state for owner handoff.
 - `0009_owner_takeover.sql` adds owner takeover tracking so manual replies can pause AI auto-replies.
+- `0010_average_job_value.sql` adds a configurable average job value for basic ROI metrics.
 
 ## Apply order
 
@@ -27,6 +28,7 @@ Apply migrations in numeric order:
 7. `0007_last_message_at.sql` - run before deploying mid-conversation timeout logic. It adds `leads.last_message_at`, backfills it from message history, and indexes it for cron queries.
 8. `0008_human_handoff.sql` - run before deploying Phase 2A. It adds `needs_human_review` and `handoff_reason` to `leads`.
 9. `0009_owner_takeover.sql` - run before deploying manual owner SMS reply. It adds `owner_takeover_at` to `leads`.
+10. `0010_average_job_value.sql` - run before deploying ROI metrics. It adds `average_job_value_cents` to `businesses`.
 
 ## Capturing the baseline
 
