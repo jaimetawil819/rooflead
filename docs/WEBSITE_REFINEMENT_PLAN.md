@@ -26,8 +26,9 @@
 - Complete: Embed widget and public test forms now follow the SaaS design system with clearer consent, stronger form hierarchy, better loading/error/success states, and safer embed rendering.
 - Complete: Marketing conversion polish added a Book Demo/Pilot Setup path, stronger FAQ objection handling, cleaner pricing contact presentation, and branded auth/subscribe/success screens.
 - Complete: Refinement plan cleanup removed stale original-audit language and separated completed work from remaining work.
-- In progress: Desktop/mobile QA has completed a static authenticated-app pass and fixed issues in onboarding, lead filters, lead detail status control, and settings service controls.
-- Next: Complete signed-in browser walkthrough when a live authenticated session is available.
+- Complete: Desktop/mobile QA completed a static authenticated-app pass and fixed issues in onboarding, lead filters, lead detail status control, and settings service controls.
+- Complete: Live mobile walkthrough found one Settings > Scheduling spacing issue; the start/end time controls no longer use decorative clock icons that crowd native mobile time inputs.
+- Next: Recheck the mobile scheduling controls, then move into the next product-polish slice.
 
 ---
 
@@ -45,7 +46,7 @@ The original refinement goals are largely complete:
 
 The remaining refinement work is narrower:
 
-- Complete a live signed-in desktop/mobile walkthrough once an authenticated browser session is available.
+- Recheck the Settings > Scheduling mobile time inputs after the walkthrough spacing fix.
 - Replace temporary support/contact email with a custom-domain inbox when available.
 - Tune dashboard next-action hierarchy after pilot usage reveals real owner behavior.
 - Add pilot proof/testimonial/case-study content once real results exist.

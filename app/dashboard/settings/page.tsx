@@ -7,7 +7,6 @@ import {
   Building2,
   CalendarDays,
   CheckCircle2,
-  Clock,
   Code,
   Copy,
   CreditCard,
@@ -668,15 +667,11 @@ export default function SettingsPage() {
                     >
                       Start Time
                     </label>
-                    <div className="relative">
-                      <Clock
-                        className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400"
-                        aria-hidden="true"
-                      />
+                    <div>
                       <input
                         id="start-time"
                         type="time"
-                        className="min-h-11 w-full rounded-lg border border-slate-200 py-2 pl-9 pr-3 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-600"
+                        className="min-h-11 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-600"
                         value={schedulingStartTime}
                         onChange={(e) => setSchedulingStartTime(e.target.value)}
                       />
@@ -690,15 +685,11 @@ export default function SettingsPage() {
                     >
                       End Time
                     </label>
-                    <div className="relative">
-                      <Clock
-                        className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400"
-                        aria-hidden="true"
-                      />
+                    <div>
                       <input
                         id="end-time"
                         type="time"
-                        className="min-h-11 w-full rounded-lg border border-slate-200 py-2 pl-9 pr-3 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-600"
+                        className="min-h-11 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-600"
                         value={schedulingEndTime}
                         onChange={(e) => setSchedulingEndTime(e.target.value)}
                       />

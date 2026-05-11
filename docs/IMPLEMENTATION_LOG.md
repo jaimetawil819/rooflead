@@ -6,6 +6,33 @@ This is a running log of every change made under the controlled-implementation p
 
 ---
 
+## 2026-05-11 - Mobile scheduling input polish
+
+**Task:** Fix the mobile Settings scheduling time controls found during the signed-in walkthrough.
+**Status:** completed
+
+**Files changed:**
+- `app/dashboard/settings/page.tsx` (modified)
+- `docs/WEBSITE_REFINEMENT_PLAN.md` (modified)
+- `docs/IMPLEMENTATION_LOG.md` (modified)
+
+**Reason:**
+During the live mobile walkthrough, the only reported issue was the decorative clock icon visually merging with the start and end time inputs in Settings > Scheduling.
+
+Implemented:
+- Removed the extra decorative clock icons from the start and end time fields.
+- Restored normal horizontal padding so the native mobile time input affordance has enough room.
+- Logged the signed-in walkthrough finding as resolved.
+
+**Verification performed:**
+- `npx.cmd tsc --noEmit`: clean.
+- `npm run lint`: clean.
+
+**Follow-up needed:**
+- Recheck Settings > Scheduling on a phone viewport to confirm the native time controls no longer feel cramped.
+
+---
+
 ## 2026-05-11 - Refinement plan cleanup
 
 **Task:** Clean up stale audit language in the website refinement roadmap.
