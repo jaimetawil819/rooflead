@@ -6,6 +6,34 @@ This is a running log of every change made under the controlled-implementation p
 
 ---
 
+## 2026-05-10 - Phase 2C - Lead list pagination
+
+**Task:** Add server-side pagination to the dashboard leads list.
+**Status:** completed
+
+**Files changed:**
+- `app/dashboard/leads/page.tsx` (modified)
+- `components/dashboard/LeadsFilter.tsx` (modified)
+- `docs/IMPLEMENTATION_PLAN.md` (modified)
+- `docs/IMPLEMENTATION_LOG.md` (modified)
+
+**Reason:**
+The leads dashboard was fetching every matching lead. That is fine for early testing, but it will get slow and visually noisy as outreach and demos create more records. Pagination keeps the dashboard stable without changing the product surface too much.
+
+**Verification performed:**
+- `npx.cmd tsc --noEmit`: clean.
+- `npm.cmd run lint`: clean.
+- `npm.cmd run build`: clean.
+- User manually tested pagination in the dashboard and confirmed it works.
+
+**Follow-up needed:**
+- Add search as the next small dashboard usability slice.
+
+**Notes / surprises:**
+- No database migration is needed.
+
+---
+
 ## 2026-05-10 - Phase 2B - Manual owner SMS reply
 
 **Task:** Let the business owner send a manual SMS from the lead detail page.

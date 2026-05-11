@@ -6,6 +6,8 @@ import { ArrowRight } from "lucide-react";
 import { Suspense } from "react";
 import LeadsFilter from "@/components/dashboard/LeadsFilter";
 
+const PAGE_SIZE = 15;
+
 const scoreColors: Record<string, string> = {
   hot: "bg-red-100 text-red-700",
   warm: "bg-orange-100 text-orange-700",
@@ -65,12 +67,20 @@ function getDisplayStatus(lead: LeadRow) {
 export default async function LeadsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ status?: string; score?: string; review?: string }>;
+  searchParams: Promise<{
+    status?: string;
+    score?: string;
+    review?: string;
+    page?: string;
+  }>;
 }) {
   const { userId } = await auth();
   if (!userId) redirect("/sign-in");
 
-  const { status, score, review } = await searchParams;
+  const { status, score, review, page } = await searchParams;
+  const currentPage = Math.max(1, Number.parseInt(page ?? "1", 10) || 1);
+  const from = (currentPage - 1) * PAGE_SIZE;
+  const to = from + PAGE_SIZE - 1;
 
   const supabase = getAdminClient();
 
@@ -82,16 +92,37 @@ export default async function LeadsPage({
 
   let query = supabase
     .from("leads")
-    .select("*")
+    .select("*", { count: "exact" })
     .eq("business_id", business?.id)
-    .order("created_at", { ascending: false });
+    .order("created_at", { ascending: false })
+    .range(from, to);
 
   if (status && status !== "all") query = query.eq("status", status);
   if (score && score !== "all") query = query.eq("lead_score", score);
   if (review === "needs_review") query = query.eq("needs_human_review", true);
 
-  const { data: leads } = await query;
+  const { data: leads, count } = await query;
   const leadRows = (leads ?? []) as LeadRow[];
+  const totalLeads = count ?? 0;
+  const totalPages = Math.max(1, Math.ceil(totalLeads / PAGE_SIZE));
+  const safePage = Math.min(currentPage, totalPages);
+  const startLead = totalLeads === 0 ? 0 : (safePage - 1) * PAGE_SIZE + 1;
+  const endLead = Math.min(safePage * PAGE_SIZE, totalLeads);
+
+  function pageHref(nextPage: number) {
+    const params = new URLSearchParams();
+    if (status && status !== "all") params.set("status", status);
+    if (score && score !== "all") params.set("score", score);
+    if (review && review !== "all") params.set("review", review);
+    if (nextPage > 1) params.set("page", String(nextPage));
+
+    const queryString = params.toString();
+    return queryString ? `/dashboard/leads?${queryString}` : "/dashboard/leads";
+  }
+
+  if (totalLeads > 0 && currentPage > totalPages) {
+    redirect(pageHref(totalPages));
+  }
 
   return (
     <div className="p-8 max-w-6xl">
@@ -182,6 +213,46 @@ export default async function LeadsPage({
           </div>
         )}
       </div>
+
+      {totalLeads > 0 && (
+        <div className="mt-4 flex items-center justify-between gap-3 flex-wrap">
+          <p className="text-sm text-gray-500">
+            Showing {startLead}-{endLead} of {totalLeads} leads
+          </p>
+
+          <div className="flex items-center gap-2">
+            {safePage > 1 ? (
+              <Link
+                href={pageHref(safePage - 1)}
+                className="rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm font-medium text-slate-700 transition-colors hover:bg-gray-50"
+              >
+                Previous
+              </Link>
+            ) : (
+              <span className="rounded-lg border border-gray-100 bg-gray-50 px-3 py-2 text-sm font-medium text-gray-300">
+                Previous
+              </span>
+            )}
+
+            <span className="text-sm text-gray-500">
+              Page {safePage} of {totalPages}
+            </span>
+
+            {safePage < totalPages ? (
+              <Link
+                href={pageHref(safePage + 1)}
+                className="rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm font-medium text-slate-700 transition-colors hover:bg-gray-50"
+              >
+                Next
+              </Link>
+            ) : (
+              <span className="rounded-lg border border-gray-100 bg-gray-50 px-3 py-2 text-sm font-medium text-gray-300">
+                Next
+              </span>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

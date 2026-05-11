@@ -27,7 +27,7 @@ Phase 0 and Phase 1 are complete. Phase 1 closed the core reliability gaps neede
 - Structured logging
 - Final local and production smoke test confirmed by the user
 
-Current focus: **Manual owner SMS reply from dashboard** is complete and tested.
+Current focus: **Lead list pagination** is complete and tested.
 
 ---
 
@@ -280,7 +280,10 @@ Do not start until at least one pilot workflow is stable.
 - ROI metrics
 - Email fallback
 - Twilio number per business
-- Lead list pagination
+- Lead list pagination - Complete
+  - Fetch one page of leads at a time from Supabase.
+  - Preserve status, score, and review filters across page navigation.
+  - Reset to page 1 when filters change.
 - Search/filter improvements
 - CRM/Zapier/webhook export
 
@@ -301,6 +304,6 @@ Do not start until at least one pilot workflow is stable.
 
 ## Current next action
 
-Recommended next engineering slice: **Decide between scheduling and lead list pagination/search.**
+Recommended next engineering slice: **Add lead search.**
 
 Reason: the AI flow is now reliable enough for MVP testing, and the handoff state is implemented. The next practical product step is letting an owner act from that handoff.

@@ -113,6 +113,10 @@ Phase 1 is closed. The user confirmed the final smoke test worked after local ch
 3. **Scheduling/inspection booking**
    - Current risk: appointment booking could be valuable, but needs business availability settings and a human handoff boundary first.
 
+4. **Lead list pagination/search**
+   - Current state: pagination is complete and manually tested. The leads page fetches one page at a time, preserves filters, and resets pagination when filters change.
+   - Suggested direction: add search as the next small dashboard usability slice.
+
 ---
 
 ## Known external blockers
@@ -129,4 +133,4 @@ Phase 1 is closed. The user confirmed the final smoke test worked after local ch
 **Local/pilot-demo readiness:** Good, with simulator-based testing.
 **Real customer readiness:** Close, but not automatic. Wait for A2P approval and run a real SMS pilot test before relying on it for a paying customer.
 
-Recommended next engineering move: **Choose the next Phase 2 product slice: scheduling or lead list pagination/search.**
+Recommended next engineering move: **Add lead search.**

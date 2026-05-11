@@ -21,6 +21,7 @@ export default function LeadsFilter() {
     } else {
       params.set(key, value);
     }
+    params.delete("page");
     router.push(`${pathname}?${params.toString()}`);
   }
 

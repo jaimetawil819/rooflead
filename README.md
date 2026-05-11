@@ -103,4 +103,4 @@ Completed in Phase 1:
 
 Recommended next slice:
 
-- Choose the next Phase 2 product slice: scheduling or lead list pagination/search
+- Add lead search
