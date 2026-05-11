@@ -507,6 +507,7 @@ export default function SettingsPage() {
                         services.map((service, i) => (
                           <div key={i} className="flex items-center gap-2">
                             <input
+                              aria-label={`Service ${i + 1} name`}
                               className="min-h-11 flex-1 rounded-lg border border-slate-200 px-3 py-2 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-600"
                               value={service.label}
                               onChange={(e) => updateService(i, e.target.value)}
@@ -516,7 +517,7 @@ export default function SettingsPage() {
                               type="button"
                               onClick={() => removeService(i)}
                               className="inline-flex h-11 w-11 items-center justify-center rounded-lg border border-slate-200 text-slate-500 transition-colors hover:border-red-200 hover:bg-red-50 hover:text-red-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-600"
-                              aria-label="Remove service"
+                              aria-label={`Remove ${service.label || `service ${i + 1}`}`}
                             >
                               <X className="h-4 w-4" aria-hidden="true" />
                             </button>

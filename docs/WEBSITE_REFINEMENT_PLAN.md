@@ -2,8 +2,8 @@
 
 **Created:** 2026-05-11  
 **Last updated:** 2026-05-11  
-**Purpose:** Blueprint for refining the RoofLead marketing website and app UI into a more credible, conversion-focused SaaS product.  
-**Scope:** Planning only. Do not implement until this plan is approved and split into execution slices.
+**Purpose:** Living roadmap for refining the RoofLead marketing website and app UI into a more credible, conversion-focused SaaS product.  
+**Scope:** Tracks completed refinement work, current QA status, and remaining product-polish slices.
 
 ---
 
@@ -24,25 +24,31 @@
 - Complete: Lead detail now follows the dashboard design system with a command header, primary call/reply actions, two-column workflow layout, sticky conversation panel, and separated danger zone.
 - Complete: Settings now follows the dashboard design system with a command header, responsive tab rail, polished settings panels, larger controls, clearer install code, and billing context.
 - Complete: Embed widget and public test forms now follow the SaaS design system with clearer consent, stronger form hierarchy, better loading/error/success states, and safer embed rendering.
-- Next: Run authenticated desktop/mobile visual QA across dashboard, lead detail, settings, and public form flows.
+- Complete: Marketing conversion polish added a Book Demo/Pilot Setup path, stronger FAQ objection handling, cleaner pricing contact presentation, and branded auth/subscribe/success screens.
+- Complete: Refinement plan cleanup removed stale original-audit language and separated completed work from remaining work.
+- In progress: Desktop/mobile QA has completed a static authenticated-app pass and fixed issues in onboarding, lead filters, lead detail status control, and settings service controls.
+- Next: Complete signed-in browser walkthrough when a live authenticated session is available.
 
 ---
 
 ## Executive Summary
 
-RoofLead already has the important product foundation: a marketing site, Clerk auth, Stripe billing, onboarding, an embeddable/test lead form, AI SMS qualification, lead dashboard, lead detail, settings, and pilot demo tooling.
+RoofLead now has a much stronger SaaS presentation across the public website, conversion path, lead capture forms, and authenticated app. The core product foundation exists: Clerk auth, Stripe billing, onboarding, embeddable/test lead forms, AI SMS qualification, lead dashboard, lead detail, settings, and pilot demo tooling.
 
-The main weakness is not that the product is missing. The weakness is that the website and app presentation still feel like a clean MVP/pilot console rather than a serious SaaS product that a roofer would trust with every paid web lead.
+The original refinement goals are largely complete:
 
-The highest-impact refinement is a focused conversion and credibility pass:
+- Public site now sells pain, proof, product, pricing, FAQ, and CTA in a stronger order.
+- Marketing and dashboard surfaces now share a trust-forward navy/blue SaaS design language.
+- Trial, card-required billing, pricing, subscribe, and terms language now match.
+- Product proof is visible through dashboard previews, realistic lead summaries, SMS flow, use cases, and trust sections.
+- Dashboard, lead inbox, lead detail, settings, onboarding, embed widget, and public test forms have been upgraded from MVP utility screens to more polished operational SaaS surfaces.
 
-- Reorder the landing page around pain, proof, product, pricing, and CTA.
-- Add visible product proof: dashboard preview, realistic lead summary, SMS flow, and/or pilot testimonial.
-- Fix CTA and billing consistency so the trial, pricing, and checkout path match.
-- Move demo-only dashboard language out of the primary customer experience.
-- Improve mobile dashboard navigation and dashboard information hierarchy.
+The remaining refinement work is narrower:
 
-This should be treated as the next product-polish track after core reliability and pilot demo readiness.
+- Complete a live signed-in desktop/mobile walkthrough once an authenticated browser session is available.
+- Replace temporary support/contact email with a custom-domain inbox when available.
+- Tune dashboard next-action hierarchy after pilot usage reveals real owner behavior.
+- Add pilot proof/testimonial/case-study content once real results exist.
 
 ---
 
@@ -86,7 +92,7 @@ This should be treated as the next product-polish track after core reliability a
 
 - `/dashboard` - App overview.
   - File: `app/dashboard/page.tsx`
-  - Includes stats, demo actions, recent leads, ROI estimate.
+  - Includes owner next actions, priority leads, KPIs, recent leads, ROI estimate, and secondary setup/testing tools.
 
 - `/dashboard/leads` - Lead list.
   - File: `app/dashboard/leads/page.tsx`
@@ -102,7 +108,7 @@ This should be treated as the next product-polish track after core reliability a
 - `/dashboard/onboarding` - Initial account setup.
   - File: `app/dashboard/onboarding/page.tsx`
 
-- `/test-form` and `/test-form/[widgetKey]` - Sample/demo lead forms.
+- `/test-form` and `/test-form/[widgetKey]` - Sample and account-specific public test lead forms.
   - Files:
     - `app/test-form/page.tsx`
     - `app/test-form/[widgetKey]/page.tsx`
@@ -128,113 +134,66 @@ This should be treated as the next product-polish track after core reliability a
 10. Business owner reviews lead in the dashboard.
 11. Owner calls or manually replies to the lead.
 
-### Current Friction
+### Remaining Friction
 
-- The homepage asks for trial signup before enough trust is built.
-- Pricing has now been simplified to the supported Starter plan while plan-specific checkout is deferred.
-- The trial has now been clarified as 14 days free with a payment card required.
-- Dashboard setup/test tools have been demoted below the core lead workflow.
-- The app dashboard is not clearly optimized around the owner's fastest action: calling the best lead first.
-
----
-
-## Biggest Layout Problems
-
-### 1. Landing Page Order Is Not Ideal
-
-Current order:
-
-1. Hero
-2. How it works
-3. Problem
-4. Pricing
-5. FAQ
-6. Final CTA
-
-Recommended order:
-
-1. Hero
-2. Pain/proof
-3. Product/solution
-4. How it works
-5. Use cases
-6. Trust
-7. Pricing
-8. FAQ
-9. Final CTA
-
-Why this matters:
-
-Roofers need to feel the business pain before they care about mechanics. The page currently explains how the product works before it fully proves why the user should care.
-
-### 2. Trust Is Too Thin
-
-The site has strong claims but little trust scaffolding:
-
-- No customer testimonial.
-- No pilot result.
-- No founder credibility note.
-- No product screenshot.
-- No source/context for response-time claims.
-- No production domain/business email signal in the pricing section.
-
-### 3. Product Preview Is Too Abstract
-
-The SMS mockup in `Hero.tsx` is useful, but the buyer also needs to see the owner outcome:
-
-- Hot/warm/cold score.
-- AI summary.
-- Call button.
-- Conversation history.
-- "Needs review" and owner takeover.
-- Estimated recovered revenue.
-
-The dashboard is the proof that this is not just a chatbot.
-
-### 4. CTA/Billing Path Needs Continued Discipline
-
-Decision now made:
-
-- Marketing CTA says `Start Free Trial`.
-- Trial is 14 days free.
-- A payment card is required to activate the trial.
-- Public pricing shows one supported Starter plan.
-- Checkout creates a Starter subscription with a 14-day trial.
-
-Keep this consistent as new CTAs, pricing pages, and plan tiers are added.
-
-### 5. Dashboard Reads Like a Demo Tool
-
-`DashboardQuickActions.tsx` is practical for walkthroughs, but it should not be the dominant customer-facing workflow. A production owner should first see:
-
-- Leads needing action.
-- Hot leads.
-- New or uncontacted leads.
-- Recent qualified leads.
-- Revenue/ROI context.
-
-Demo/test actions should be secondary or only visible in onboarding/demo mode.
-
-### 6. Dashboard Mobile Navigation Is Missing
-
-`components/dashboard/Sidebar.tsx` uses a fixed desktop sidebar. Small roofing company owners are likely to check leads on a phone. The app needs a mobile navigation pattern:
-
-- Top bar with menu button.
-- Slide-out drawer.
-- Bottom nav for core areas, or compact mobile sidebar.
-- Mobile-friendly lead detail actions.
+- A live signed-in browser walkthrough is still needed to verify authenticated desktop/mobile layouts with real session state.
+- Legal/privacy support contact still uses the current personal support email until a custom-domain inbox exists.
+- True pilot proof is not available yet, so testimonial/case-study sections should wait for real customer outcomes.
+- Dashboard priority hierarchy may need further tuning after pilot feedback shows which owner actions matter most.
 
 ---
 
-## Conversion Weaknesses
+## Completed Audit Findings
+
+### 1. Landing Page Order
+
+Original issue: the page explained mechanics before fully selling the missed-lead pain and product proof.
+
+Current state: complete. The page now leads with pain and proof, includes product preview/use cases/trust, then moves into how it works, pricing, FAQ, and final CTA.
+
+### 2. Trust And Product Proof
+
+Original issue: trust scaffolding and owner-facing product proof were too thin.
+
+Current state: mostly complete. The site now shows realistic dashboard/SMS proof, compliance/trust signals, owner takeover, secure billing/auth cues, and a clearer pilot setup path.
+
+Remaining: add real testimonial, pilot result, or case-study content once available.
+
+### 3. CTA And Billing Consistency
+
+Original issue: trial, pricing, card requirement, and checkout language needed alignment.
+
+Current state: complete. Public pricing shows one Starter plan, trial language is card-required, and checkout creates a 14-day trial.
+
+Remaining: keep this discipline when future plan tiers or plan-aware checkout are introduced.
+
+### 4. Dashboard Production Hierarchy
+
+Original issue: dashboard setup/test tools were too prominent.
+
+Current state: complete for the current release. Overview now starts with owner next actions, priority leads, KPIs, and recent leads; setup/testing tools are secondary.
+
+Remaining: tune exact next-action metadata after pilot usage.
+
+### 5. Mobile Dashboard Access
+
+Original issue: the app relied on a desktop sidebar.
+
+Current state: complete. Mobile dashboard navigation now uses a phone-friendly top bar and slide-out drawer while desktop keeps the sidebar.
+
+Remaining: verify with a live signed-in mobile walkthrough.
+
+---
+
+## Remaining Conversion Watch Items
 
 ### Clarity of Value Proposition
 
-Current hero headline is strong:
+Current hero direction is strong:
 
 > Respond to every roofing lead in under 60 seconds.
 
-Recommended refinement:
+Keep this direction:
 
 Keep the speed promise, but add money/lead loss framing nearby:
 
@@ -244,23 +203,20 @@ Keep the speed promise, but add money/lead loss framing nearby:
 
 ### CTA Placement
 
-Current CTAs:
+Current state:
 
-- Navbar: Start Free Trial
-- Hero: Start Free Trial, See How It Works
-- Pricing cards: Start Free Trial
-- Final CTA: Start Your Free Trial
+- Primary CTA: `Start Free Trial`.
+- Secondary CTA: `Book Demo` / `Book Pilot Setup`.
+- Product preview anchor remains available as a supporting link.
+- Pricing and subscribe pages match the card-required trial.
 
-Recommended:
+Watch item:
 
-- Primary CTA: `Start free trial`
-- Secondary CTA: `See 3-minute demo` or `View product preview`
-- Pricing CTA should preserve selected plan or route to a plan-aware checkout.
-- Final CTA should reinforce ROI and risk reversal.
+- If future public pricing adds multiple plans, checkout needs plan-aware routing.
 
 ### Trust and Credibility
 
-Add one or more of:
+Still worth adding later:
 
 - Pilot testimonial section.
 - "Built for owner-operated roofing companies" founder note.
@@ -270,17 +226,18 @@ Add one or more of:
 
 ### Lead Capture
 
-The site currently only pushes sign-up. For early pilots, a lower-friction path may convert better:
+Current state:
 
-- "Book a 15-minute demo"
-- "See it on your website"
-- "Get a pilot setup"
+- Self-serve signup remains primary.
+- Assisted setup is now available through Book Demo/Pilot Setup CTAs.
 
-This does not need to replace signup, but a demo CTA should exist while the product is still early.
+Watch item:
+
+- Replace mailto-based pilot setup with a real scheduling link or CRM form when available.
 
 ---
 
-## Visual/UI Weaknesses
+## Visual/UI Status
 
 ### Visual Style
 
@@ -292,11 +249,11 @@ Current style:
 - DM Sans.
 - Minimal and readable.
 
-Weakness:
+Status:
 
-It is polished enough for an MVP, but not distinctive. It could be any AI SaaS. It needs more roofing/home-services specificity without becoming gimmicky.
+The product is now visually credible for a pilot SaaS. The brand still has room for more roofing-specific photography, proof, and case-study content later, but the major MVP-style UI gap has been addressed.
 
-Recommended direction:
+Keep this direction:
 
 - Keep the clean SaaS foundation.
 - Add product screenshots and realistic field-service context.
@@ -311,7 +268,7 @@ Recommended direction:
 
 Marketing page:
 
-- Reasonable density, but missing proof sections.
+- Proof sections, use cases, comparison framing, pricing, FAQ, and final CTA are now in place.
 
 Dashboard:
 
@@ -320,20 +277,15 @@ Dashboard:
 
 Lead detail:
 
-- Good functional coverage.
-- Should eventually become a two-column workflow page on desktop:
-  - Left: lead status, summary, call/reply actions, scheduling.
-  - Right: conversation.
+- Now uses a two-column desktop workflow with primary actions high in the page and conversation/manual reply separated.
 
 ### Consistency
 
-Inconsistencies to fix:
+Remaining consistency watch items:
 
-- `RoofLead` casing vs rendered logo text.
-- Button styles across marketing, subscribe, success, onboarding.
-- Trial/card language.
-- Dashboard production copy vs demo copy.
-- Rounded card-heavy surfaces in settings and dashboard.
+- Replace legal/support email with custom-domain support when available.
+- Run live authenticated browser QA for dashboard/onboarding/settings in real session state.
+- Keep future UI additions aligned to the navy/blue SaaS design system.
 
 ---
 
@@ -520,7 +472,7 @@ Purpose:
 
 Answer objections before signup/demo.
 
-Current FAQ is useful. Add or refine:
+Status: complete. FAQ now covers:
 
 - "Can I use my existing website form?"
 - "Does this replace my CRM?"
@@ -555,27 +507,17 @@ Files:
 
 ### Dashboard Overview
 
-Current:
+Current status:
 
-- Welcome header.
-- Demo actions.
-- Six stats.
-- Recent leads.
+- Command-center header with primary lead actions.
+- Priority queue for leads that need owner attention.
+- KPI strip for lead volume, quality, review, won, and ROI context.
+- Recent lead activity.
+- Setup/test actions kept secondary.
 
-Recommended:
+Remaining:
 
-1. Header with business name and primary action.
-2. Priority queue:
-   - Hot leads.
-   - Needs review.
-   - New/uncontacted leads.
-3. KPI strip:
-   - Total leads.
-   - Hot leads.
-   - Qualified leads.
-   - Won value.
-4. Recent activity.
-5. Demo/test actions as secondary/collapsible section.
+- Tune next-action metadata after pilot feedback.
 
 Files:
 
@@ -584,15 +526,14 @@ Files:
 
 ### Sidebar/Navigation
 
-Current:
+Current status:
 
-- Fixed desktop sidebar.
-- Overview, Leads, Settings.
+- Desktop sidebar remains.
+- Mobile top bar and slide-out drawer are complete.
+- Current nav includes Overview, Leads, and Settings.
 
-Recommended:
+Future nav candidates:
 
-- Add mobile top bar and menu drawer.
-- Consider future nav:
   - Overview
   - Leads
   - Inbox/Conversations
@@ -607,16 +548,14 @@ Files:
 
 ### Lead List
 
-Current:
+Current status:
 
-- Search, filters, table-like grid, pagination.
+- Search, filters, pagination, status/score/review badges, mobile cards, and desktop grid are complete.
+- Filter controls now have proper labels.
 
-Recommended:
+Future:
 
-- Keep current functionality.
-- Add `Next action` and `Last activity` over time.
-- Make mobile rows card-like rather than relying on horizontal scroll.
-- Preserve urgency/score/status badges.
+- Add `Next action` and `Last activity` metadata over time.
 
 Files:
 
@@ -625,20 +564,16 @@ Files:
 
 ### Lead Detail
 
-Current:
+Current status:
 
-- Strong feature coverage in one vertical column.
+- Desktop two-column layout is complete.
+- Call and owner reply actions are high in the page.
+- AI summary, facts, pipeline status, scheduling, conversation, manual reply, and danger zone are visually separated.
+- Pipeline status now has an accessible label.
 
-Recommended:
+Future:
 
-- Desktop two-column layout:
-  - Left/main: snapshot, AI summary, action buttons, scheduling/status.
-  - Right: conversation and manual reply.
-- Primary action should be obvious:
-  - Call lead.
-  - Send manual reply.
-  - Mark won/lost.
-- Move `Delete Test Lead` away from normal production actions.
+- Tune scheduling and next-action metadata after pilot usage.
 
 Files:
 
@@ -646,19 +581,15 @@ Files:
 
 ### Settings
 
-Current:
+Current status:
 
-- Long single-column settings form.
+- Task-focused tabs are complete: Business, Lead Form, Scheduling, and Billing.
+- Install code/test form controls live under Lead Form.
+- Save feedback, larger controls, clearer focus states, and accessible service controls are in place.
 
-Recommended:
+Future:
 
-- Split into tabs or sections:
-  - Business
-  - Lead Form
-  - Scheduling
-  - Billing
-  - Embed
-- Add clearer save feedback and validation.
+- Consider splitting Embed into its own top-level tab only if Lead Form becomes too dense.
 
 Files:
 
@@ -666,16 +597,16 @@ Files:
 
 ### Onboarding
 
-Current:
+Current status:
 
-- Business info -> embed code -> test lead.
+- Three-step setup remains: Business, Install, Test.
+- The flow now matches the dashboard/marketing design system.
+- Old mojibake arrow text has been removed.
+- Install and test form expectations are clearer.
 
-Recommended:
+Future:
 
-- Keep simple flow.
-- Add ability to go back.
-- Add clearer difference between "test form" and "install on website."
-- After completion, land on a guided dashboard state.
+- Add back navigation if pilot users need to revise earlier setup steps.
 
 Files:
 
@@ -849,7 +780,7 @@ Timing: Later, after pilot feedback
 
 ### Phase 3 - Marketing Polish and Lead Capture
 
-#### 9. Add Secondary Demo CTA
+#### 9. Add Secondary Demo CTA - Complete
 
 What changes:
 
@@ -866,9 +797,9 @@ Likely files:
 - `components/marketing/FinalCTA.tsx`
 
 Difficulty: Low  
-Timing: Do next
+Timing: Done on 2026-05-11
 
-#### 10. Improve FAQ Objection Handling
+#### 10. Improve FAQ Objection Handling - Complete
 
 What changes:
 
@@ -883,13 +814,14 @@ Likely files:
 - `components/marketing/FAQ.tsx`
 
 Difficulty: Low  
-Timing: Do next
+Timing: Done on 2026-05-11
 
-#### 11. Brand and Contact Credibility Pass
+#### 11. Brand and Contact Credibility Pass - Complete
 
 What changes:
 
 - Ensure consistent `RoofLead` casing.
+- Replace visible personal-email marketing presentation with a more professional pilot setup CTA.
 - Replace personal Gmail with domain email when available.
 - Add footer links to privacy and terms.
 - Improve auth/subscribe/success page brand framing.
@@ -909,11 +841,15 @@ Likely files:
 - `app/subscribe/success/page.tsx`
 
 Difficulty: Low to Medium  
-Timing: Do next
+Timing: Done on 2026-05-11
 
-### Phase 4 - Future SaaS Expansion
+Remaining note:
 
-#### 11. Improve Lead List Mobile Layout - Complete
+- Legal pages still use the current support email until a custom domain/support inbox exists.
+
+### Phase 4 - Visual QA and Roadmap Hygiene
+
+#### 12. Improve Lead List Mobile Layout - Complete
 
 What changes:
 
@@ -930,7 +866,7 @@ Likely files:
 Difficulty: Medium  
 Timing: Done on 2026-05-11
 
-#### 12. Align Dashboard Shell And Overview With Marketing Design - Complete
+#### 13. Align Dashboard Shell And Overview With Marketing Design - Complete
 
 What changes:
 
@@ -953,7 +889,7 @@ Likely files:
 Difficulty: Medium  
 Timing: Done on 2026-05-11
 
-#### 13. Improve Lead Detail Layout - Complete
+#### 14. Improve Lead Detail Layout - Complete
 
 What changes:
 
@@ -974,7 +910,7 @@ Likely files:
 Difficulty: Medium to High  
 Timing: Done on 2026-05-11
 
-#### 14. Align Settings With Dashboard Design System - Complete
+#### 15. Align Settings With Dashboard Design System - Complete
 
 What changes:
 
@@ -993,7 +929,7 @@ Likely files:
 Difficulty: Medium  
 Timing: Done on 2026-05-11
 
-#### 15. Upgrade Embed Widget UI - Complete
+#### 16. Upgrade Embed Widget UI - Complete
 
 What changes:
 
@@ -1013,6 +949,66 @@ Likely files:
 - `app/test-form/[widgetKey]/page.tsx`
 
 Difficulty: Medium  
+Timing: Done on 2026-05-11
+
+#### 17. Desktop/Mobile Visual QA - In Progress
+
+What changes:
+
+- Run a visual QA pass across the redesigned public and authenticated surfaces.
+- Check desktop and mobile layouts for overflow, clipped text, awkward wrapping, broken sticky behavior, weak touch targets, unclear focus states, and inconsistent CTA hierarchy.
+- Verify public flows directly: homepage, subscribe, success, `/test-form`, and `/test-form/[widgetKey]` when a widget key is available.
+- Verify authenticated flows with a signed-in session or fallback static/code review: dashboard overview, leads inbox, lead detail, settings, mobile navigation, and tabbed settings panels.
+- Record defects as focused follow-up tasks instead of starting another broad redesign.
+
+Why it matters:
+
+The redesign work is now broad enough that the biggest risk is not missing sections. It is small responsive and interaction issues that reduce trust during a pilot demo.
+
+Likely files:
+
+- `app/page.tsx`
+- `app/dashboard/page.tsx`
+- `app/dashboard/leads/page.tsx`
+- `app/dashboard/leads/[id]/page.tsx`
+- `app/dashboard/settings/page.tsx`
+- `components/dashboard/Sidebar.tsx`
+- `public/embed.js`
+- `app/test-form/page.tsx`
+- `app/test-form/[widgetKey]/page.tsx`
+- `docs/WEBSITE_REFINEMENT_PLAN.md`
+- `docs/IMPLEMENTATION_LOG.md`
+
+Difficulty: Medium  
+Timing: Do now
+
+Current QA notes:
+
+- Public homepage and `/test-form` desktop screenshots did not show a desktop layout blocker.
+- A headless mobile screenshot suggested possible clipping, but the real-phone check did not reproduce horizontal overflow. Treat this as a watch item, not a confirmed defect.
+- Static review of the dashboard shell, leads inbox, lead detail, settings tabs, and public forms did not reveal an obvious fixed-width mobile blocker.
+- Static authenticated-app review found and fixed weaker programmatic labels in lead filters, lead detail pipeline status, and settings service controls.
+- Onboarding was brought into the same SaaS design system and old mojibake arrow text was removed.
+- Remaining work is a live authenticated browser walkthrough with a signed-in account.
+
+#### 18. Refinement Plan Cleanup - Complete
+
+What changes:
+
+- Update older audit language that still describes already-fixed problems as current defects.
+- Keep completed work, current next steps, and future/later items clearly separated.
+- Make the plan easier to use as a project tracker by avoiding duplicate numbering and stale "current" critiques.
+
+Why it matters:
+
+The plan has become the operating blueprint. If it mixes old critique with current reality, it becomes harder to choose the next slice confidently.
+
+Likely files:
+
+- `docs/WEBSITE_REFINEMENT_PLAN.md`
+- `docs/PROJECT_AUDIT.md`
+
+Difficulty: Low  
 Timing: Done on 2026-05-11
 
 ---
@@ -1093,16 +1089,17 @@ Timing: Done on 2026-05-11
 
 ---
 
-## Recommended First Execution Slice
+## Recommended Next Execution Slice
 
-Start with a narrow, high-impact slice:
+Complete the live signed-in browser walkthrough once an authenticated session is available:
 
-1. Fix CTA/trial/pricing copy consistency.
-2. Reorder landing page to `Hero -> Problem -> ProductPreview -> Trust -> HowItWorks -> Pricing -> FAQ -> FinalCTA`.
-3. Add a simple coded `ProductPreview` section using realistic lead/dashboard data.
-4. Add a lightweight `Trust` section.
-5. Keep dashboard changes for the next slice.
+1. Verify dashboard overview on desktop and phone.
+2. Verify leads inbox filters, mobile cards, pagination, and empty states.
+3. Verify lead detail action hierarchy, sticky conversation panel, manual reply, scheduling, status, and danger zone.
+4. Verify settings tabs and mobile tab behavior.
+5. Verify onboarding from account setup through test form.
+6. Record only confirmed defects as focused follow-up tasks.
 
 Reason:
 
-This improves conversion credibility without disturbing the authenticated app workflow. It is the safest first step and creates a stronger public face before deeper dashboard refactors.
+Most structural refinement is complete. The highest-value next move is catching real session-state layout or interaction issues before a pilot demo.

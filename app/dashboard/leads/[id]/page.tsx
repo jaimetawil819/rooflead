@@ -503,6 +503,7 @@ export default function LeadDetailPage({
                 </h2>
                 <div className="mt-4 flex flex-wrap items-center gap-3">
                   <select
+                    aria-label="Pipeline status"
                     value={lead.status}
                     onChange={(e) => updateStatus(e.target.value)}
                     disabled={saving || deleting}

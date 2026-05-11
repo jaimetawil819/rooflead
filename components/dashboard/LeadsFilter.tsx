@@ -88,8 +88,11 @@ export default function LeadsFilter() {
       </form>
 
       <div className="grid gap-2 sm:grid-cols-[auto_1fr] sm:items-center">
-        <span className="text-xs font-bold uppercase tracking-wide text-slate-500">Status</span>
+        <label htmlFor="lead-status-filter" className="text-xs font-bold uppercase tracking-wide text-slate-500">
+          Status
+        </label>
         <select
+          id="lead-status-filter"
           value={currentStatus}
           onChange={(e) => update("status", e.target.value)}
           className="min-h-11 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-600"
@@ -103,8 +106,11 @@ export default function LeadsFilter() {
       </div>
 
       <div className="grid gap-2 sm:grid-cols-[auto_1fr] sm:items-center">
-        <span className="text-xs font-bold uppercase tracking-wide text-slate-500">Score</span>
+        <label htmlFor="lead-score-filter" className="text-xs font-bold uppercase tracking-wide text-slate-500">
+          Score
+        </label>
         <select
+          id="lead-score-filter"
           value={currentScore}
           onChange={(e) => update("score", e.target.value)}
           className="min-h-11 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-600"
@@ -118,8 +124,11 @@ export default function LeadsFilter() {
       </div>
 
       <div className="grid gap-2 sm:grid-cols-[auto_1fr] sm:items-center">
-        <span className="text-xs font-bold uppercase tracking-wide text-slate-500">Review</span>
+        <label htmlFor="lead-review-filter" className="text-xs font-bold uppercase tracking-wide text-slate-500">
+          Review
+        </label>
         <select
+          id="lead-review-filter"
           value={currentReview}
           onChange={(e) => update("review", e.target.value)}
           className="min-h-11 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-600"

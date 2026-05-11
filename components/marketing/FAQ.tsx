@@ -5,24 +5,36 @@ import { ChevronDown } from "lucide-react";
 
 const faqs = [
   {
-    q: "Do I need to change my website?",
-    a: "No major rebuild is needed. You can use the RoofLead test form or add one small embed snippet where you want the lead form to appear.",
+    q: "Can I use this with my existing website form?",
+    a: "Yes. The fastest setup is the RoofLead embed snippet, but the product is designed around your existing website lead flow: capture the request, text the homeowner quickly, qualify the job, and show the owner what to do next.",
   },
   {
-    q: "What if someone texts back in the middle of the night?",
-    a: "RoofLead keeps the qualification conversation moving automatically, even after hours. You see the summary when you are ready to act.",
+    q: "Does this replace my CRM?",
+    a: "No. RoofLead is the fast first-response and qualification layer before your normal sales process. Use it to catch, score, and summarize leads, then move serious opportunities into whatever CRM or follow-up process you already use.",
   },
   {
-    q: "Will the AI quote prices or promise availability?",
-    a: "No. The assistant is limited to intake and qualification. It asks about the roof issue, urgency, ownership, and timing, then hands the lead to you.",
+    q: "What happens if the AI is unsure?",
+    a: "The system can flag a lead for owner review instead of pretending to know. The dashboard keeps the conversation, summary, score, and review reason together so you can take over quickly.",
   },
   {
     q: "Can I take over the conversation?",
     a: "Yes. The dashboard supports manual owner reply, and owner takeover pauses future AI auto-replies for that lead.",
   },
   {
-    q: "Can I use RoofLead with my current CRM?",
-    a: "Yes. RoofLead is meant to handle fast first response and qualification before the lead moves into your normal sales process.",
+    q: "Do I need a new phone number?",
+    a: "RoofLead sends automated intake messages through the configured SMS system. For launch, expect to use the RoofLead-managed SMS flow while keeping your normal business phone for calls and owner follow-up.",
+  },
+  {
+    q: "What does setup involve?",
+    a: "Create your account, activate the trial, add business details, choose the service options you want on the form, then test the widget before installing the embed snippet on your website.",
+  },
+  {
+    q: "What if someone texts back after hours?",
+    a: "RoofLead can keep the qualification conversation moving automatically, even when nobody is at the desk. You see the summary, priority score, and conversation when you are ready to act.",
+  },
+  {
+    q: "Will the AI quote prices or promise availability?",
+    a: "No. The assistant is limited to intake and qualification. It asks about the roof issue, urgency, ownership, and timing, then hands the lead to you.",
   },
   {
     q: "Is SMS consent handled?",

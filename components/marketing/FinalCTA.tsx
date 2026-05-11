@@ -1,6 +1,9 @@
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { ArrowRight, CheckCircle2 } from "lucide-react";
+import { ArrowRight, CalendarCheck, CheckCircle2 } from "lucide-react";
+
+const pilotSetupHref =
+  "mailto:jaimetawil819@gmail.com?subject=RoofLead%20pilot%20setup";
 
 export default function FinalCTA() {
   return (
@@ -34,9 +37,19 @@ export default function FinalCTA() {
             variant="outline"
             className="min-h-12 border-white/20 bg-white/5 px-8 text-base font-semibold text-white hover:bg-white/10 hover:text-white"
           >
-            <Link href="#pricing">Review Pricing</Link>
+            <a href={pilotSetupHref}>
+              <CalendarCheck className="mr-2 h-4 w-4" aria-hidden="true" />
+              Book Pilot Setup
+            </a>
           </Button>
         </div>
+
+        <Link
+          href="#pricing"
+          className="mt-4 inline-flex min-h-10 items-center justify-center text-sm font-bold text-blue-200 transition-colors hover:text-blue-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-300 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-950"
+        >
+          Review pricing
+        </Link>
 
         <div className="mt-7 flex flex-col items-center justify-center gap-3 text-sm text-slate-300 sm:flex-row">
           {["14 days free", "Card required", "Cancel anytime"].map((item) => (

@@ -4,7 +4,10 @@ import Link from "next/link";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@clerk/nextjs";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, CalendarCheck } from "lucide-react";
+
+const pilotSetupHref =
+  "mailto:jaimetawil819@gmail.com?subject=RoofLead%20pilot%20setup";
 
 export default function Navbar() {
   const { isSignedIn } = useAuth();
@@ -32,6 +35,9 @@ export default function Navbar() {
           <Link href="#pricing" className="text-sm font-medium text-slate-600 transition-colors hover:text-slate-950">
             Pricing
           </Link>
+          <a href={pilotSetupHref} className="text-sm font-medium text-slate-600 transition-colors hover:text-slate-950">
+            Book Demo
+          </a>
         </nav>
         <div className="flex items-center gap-3">
           {isSignedIn ? (
@@ -46,6 +52,13 @@ export default function Navbar() {
               >
                 Sign In
               </Link>
+              <a
+                href={pilotSetupHref}
+                className="hidden min-h-10 items-center gap-1.5 rounded-lg border border-slate-200 px-3 py-2 text-sm font-bold text-slate-700 transition-colors hover:bg-slate-50 lg:inline-flex"
+              >
+                <CalendarCheck className="h-4 w-4 text-blue-600" aria-hidden="true" />
+                Book Demo
+              </a>
               <Button asChild size="sm" className="min-h-10 bg-blue-600 text-white hover:bg-blue-700">
                 <Link href="/sign-up">
                   Start Free Trial

@@ -6,6 +6,140 @@ This is a running log of every change made under the controlled-implementation p
 
 ---
 
+## 2026-05-11 - Refinement plan cleanup
+
+**Task:** Clean up stale audit language in the website refinement roadmap.
+**Status:** completed
+
+**Files changed:**
+- `docs/WEBSITE_REFINEMENT_PLAN.md` (modified)
+- `docs/IMPLEMENTATION_LOG.md` (modified)
+- `docs/PROJECT_AUDIT.md` (modified)
+
+**Reason:**
+The refinement plan still included original-audit language that described already-fixed issues as current problems. That made it harder to see what is complete, what remains open, and what should happen next.
+
+Implemented:
+- Rewrote the executive summary around current product reality instead of the original MVP critique.
+- Replaced stale "current friction" and "biggest layout problems" sections with remaining friction and completed audit findings.
+- Updated conversion, visual/UI, dashboard, settings, onboarding, and lead-detail sections to show current status plus future watch items.
+- Marked the plan-cleanup roadmap item complete.
+- Replaced the old first execution slice with the actual next slice: live signed-in browser walkthrough.
+- Updated project audit next move to focus only on the remaining signed-in QA pass.
+
+**Verification performed:**
+- Documentation-only change; no app verification needed.
+
+**Follow-up needed:**
+- Complete live signed-in browser walkthrough for dashboard overview, leads inbox, lead detail, settings, mobile navigation, settings tabs, and onboarding.
+
+---
+
+## 2026-05-11 - Authenticated app QA fixes
+
+**Task:** Execute the authenticated desktop/mobile QA slice as a static/code review and fix confirmed issues.
+**Status:** in progress
+
+**Files changed:**
+- `app/dashboard/onboarding/page.tsx` (modified)
+- `app/dashboard/leads/[id]/page.tsx` (modified)
+- `app/dashboard/settings/page.tsx` (modified)
+- `components/dashboard/LeadsFilter.tsx` (modified)
+- `docs/WEBSITE_REFINEMENT_PLAN.md` (modified)
+- `docs/IMPLEMENTATION_LOG.md` (modified)
+- `docs/PROJECT_AUDIT.md` (modified)
+
+**Reason:**
+The remaining QA slice requires a signed-in browser session for full visual verification. Before that manual walkthrough, the authenticated app still needed a static UI/UX Pro Max pass for accessibility, mobile structure, and conversion-path consistency.
+
+Implemented:
+- Added real labels for leads inbox status, score, and review filters.
+- Added an accessible label to the lead detail pipeline status control.
+- Added accessible names for dynamic service inputs and service removal buttons in Settings.
+- Redesigned the onboarding flow to match the dashboard/marketing SaaS design system.
+- Removed old mojibake arrow text from onboarding and replaced it with icon-based actions.
+- Preserved onboarding behavior: save business info, generate widget key, copy embed code, open test form, and finish onboarding.
+
+**Verification performed:**
+- `npx.cmd tsc --noEmit`: clean.
+- `npm run lint`: clean.
+- `npm run build`: clean.
+
+**Follow-up needed:**
+- Complete live signed-in browser walkthrough for dashboard overview, leads inbox, lead detail, settings, mobile navigation, settings tabs, and onboarding.
+
+---
+
+## 2026-05-11 - Marketing conversion polish
+
+**Task:** Complete the next refinement slice for demo CTA, FAQ objections, and brand/contact credibility.
+**Status:** completed
+
+**Files changed:**
+- `components/marketing/Navbar.tsx` (modified)
+- `components/marketing/Hero.tsx` (modified)
+- `components/marketing/FinalCTA.tsx` (modified)
+- `components/marketing/FAQ.tsx` (modified)
+- `components/marketing/Pricing.tsx` (modified)
+- `app/sign-in/[[...sign-in]]/page.tsx` (modified)
+- `app/sign-up/[[...sign-up]]/page.tsx` (modified)
+- `app/subscribe/page.tsx` (modified)
+- `app/subscribe/success/page.tsx` (modified)
+- `docs/WEBSITE_REFINEMENT_PLAN.md` (modified)
+- `docs/IMPLEMENTATION_LOG.md` (modified)
+- `docs/PROJECT_AUDIT.md` (modified)
+
+**Reason:**
+The public homepage and dashboard had been redesigned, but the conversion path still needed a lower-friction demo/pilot option, stronger objection handling, and more credible branded auth/billing transition screens.
+
+Implemented:
+- Added `Book Demo` / `Book Pilot Setup` CTA paths in the navbar, hero, and final CTA.
+- Kept `Start Free Trial` as the primary self-serve CTA while making assisted setup easier to find.
+- Expanded FAQ coverage for existing forms, CRM fit, AI uncertainty, owner takeover, phone number expectations, setup, after-hours replies, pricing promises, and SMS consent.
+- Replaced the visible personal-email pricing contact with a professional pilot setup CTA.
+- Redesigned sign-in and sign-up pages with RoofLead branding, trust panels, and product-context copy around Clerk.
+- Redesigned subscribe and subscribe-success screens to match the SaaS design system and removed old mojibake characters.
+
+**Verification performed:**
+- `npx.cmd tsc --noEmit`: clean.
+- `npm run lint`: clean.
+- `npm run build`: clean.
+
+**Follow-up needed:**
+- Replace legal/support email with a domain support inbox once available.
+- Complete authenticated browser walkthrough from the QA slice.
+
+---
+
+## 2026-05-11 - Refinement plan QA formalization
+
+**Task:** Convert the remaining loose refinement follow-ups into tracked roadmap slices.
+**Status:** in progress
+
+**Files changed:**
+- `docs/WEBSITE_REFINEMENT_PLAN.md` (modified)
+
+**Reason:**
+The refinement plan had four remaining implementation items explicitly planned, while desktop/mobile QA was only a follow-up note and plan cleanup was not tracked. Both need to be visible roadmap work before moving into the next refinement slice.
+
+Implemented:
+- Added `Desktop/Mobile Visual QA` as item 17 and marked it in progress.
+- Added `Refinement Plan Cleanup` as item 18.
+- Fixed duplicate numbering in the later refinement phase.
+- Updated the current-progress section so the immediate next work is QA, followed by marketing conversion polish.
+
+**Verification performed:**
+- Refinement plan now includes the previously loose QA and plan-cleanup items.
+- Public desktop screenshot pass completed for homepage and `/test-form`; no desktop layout blocker found.
+- User checked the site on a real phone and reported no horizontal overflow; the earlier headless mobile screenshot is treated as a non-blocking artifact/watch item.
+- Static responsive review completed for dashboard shell, leads inbox, lead detail, settings tabs, and public form layouts. No obvious fixed-width mobile blocker found in the inspected code.
+- Authenticated static/code QA found and fixed labels plus onboarding design drift in a follow-up QA-fix entry.
+
+**Follow-up needed:**
+- Complete live signed-in browser walkthrough for dashboard overview, leads inbox, lead detail, settings, mobile navigation, settings tabs, and onboarding.
+
+---
+
 ## 2026-05-11 - UI/UX Pro Max embed and public test form redesign
 
 **Task:** Upgrade the embeddable lead form and public test form experience.

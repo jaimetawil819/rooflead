@@ -101,9 +101,12 @@ export default function Pricing() {
               </div>
             </div>
             <p className="mt-8 border-t border-white/10 pt-6 text-sm leading-6 text-slate-300">
-              Need more than 200 conversations/month? Email{" "}
-              <a href="mailto:jaimetawil819@gmail.com" className="font-semibold text-blue-200 hover:text-blue-100">
-                jaimetawil819@gmail.com
+              Need more than 200 conversations/month?{" "}
+              <a
+                href="mailto:jaimetawil819@gmail.com?subject=RoofLead%20pilot%20setup"
+                className="font-semibold text-blue-200 hover:text-blue-100"
+              >
+                Book a pilot setup conversation
               </a>
               .
             </p>
