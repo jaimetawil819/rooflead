@@ -1,3 +1,5 @@
+import { supportEmail, supportMailtoHref } from "@/lib/contact";
+
 export default function TermsPage() {
   return (
     <div className="min-h-screen bg-white px-4 py-16">
@@ -23,7 +25,7 @@ export default function TermsPage() {
 
           <section>
             <h2 className="text-xl font-semibold text-slate-900 mb-3">4. Opt-Out Instructions</h2>
-            <p>To stop receiving SMS messages, reply <strong>STOP</strong> to any message at any time. You will receive a confirmation and no further messages will be sent. To resume messages, reply <strong>START</strong>. For help, reply <strong>HELP</strong> or contact jaimetawil819@gmail.com.</p>
+            <p>To stop receiving SMS messages, reply <strong>STOP</strong> to any message at any time. You will receive a confirmation and no further messages will be sent. To resume messages, reply <strong>START</strong>. For help, reply <strong>HELP</strong> or contact <a className="font-semibold text-blue-700 hover:text-blue-800" href={supportMailtoHref}>{supportEmail}</a>.</p>
           </section>
 
           <section>
@@ -58,7 +60,7 @@ export default function TermsPage() {
 
           <section>
             <h2 className="text-xl font-semibold text-slate-900 mb-3">11. Contact</h2>
-            <p>For support or questions: jaimetawil819@gmail.com<br />Reply <strong>HELP</strong> to any SMS message for assistance.<br />Reply <strong>STOP</strong> to any SMS message to opt out.</p>
+            <p>For support or questions: <a className="font-semibold text-blue-700 hover:text-blue-800" href={supportMailtoHref}>{supportEmail}</a><br />Reply <strong>HELP</strong> to any SMS message for assistance.<br />Reply <strong>STOP</strong> to any SMS message to opt out.</p>
           </section>
         </div>
       </div>

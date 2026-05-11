@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Check, CreditCard, ShieldCheck } from "lucide-react";
+import { pilotSetupHref } from "@/lib/contact";
 
 const plan = {
   name: "Starter",
@@ -103,7 +104,7 @@ export default function Pricing() {
             <p className="mt-8 border-t border-white/10 pt-6 text-sm leading-6 text-slate-300">
               Need more than 200 conversations/month?{" "}
               <a
-                href="mailto:jaimetawil819@gmail.com?subject=RoofLead%20pilot%20setup"
+                href={pilotSetupHref}
                 className="font-semibold text-blue-200 hover:text-blue-100"
               >
                 Book a pilot setup conversation

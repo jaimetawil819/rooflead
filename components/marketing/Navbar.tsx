@@ -5,9 +5,7 @@ import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@clerk/nextjs";
 import { ArrowRight, CalendarCheck } from "lucide-react";
-
-const pilotSetupHref =
-  "mailto:jaimetawil819@gmail.com?subject=RoofLead%20pilot%20setup";
+import { pilotSetupHref } from "@/lib/contact";
 
 export default function Navbar() {
   const { isSignedIn } = useAuth();

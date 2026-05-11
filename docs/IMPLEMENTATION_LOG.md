@@ -6,6 +6,43 @@ This is a running log of every change made under the controlled-implementation p
 
 ---
 
+## 2026-05-11 - Contact and demo link configuration polish
+
+**Task:** Start the next product-polish slice by centralizing public contact and pilot setup links.
+**Status:** completed
+
+**Files changed:**
+- `lib/contact.ts` (created)
+- `.env.example` (modified)
+- `components/marketing/Navbar.tsx` (modified)
+- `components/marketing/Hero.tsx` (modified)
+- `components/marketing/FinalCTA.tsx` (modified)
+- `components/marketing/Pricing.tsx` (modified)
+- `app/privacy/page.tsx` (modified)
+- `app/terms/page.tsx` (modified)
+- `docs/WEBSITE_REFINEMENT_PLAN.md` (modified)
+- `docs/IMPLEMENTATION_LOG.md` (modified)
+
+**Reason:**
+The refinement plan still called out temporary support/contact details as a remaining trust issue. A custom-domain inbox or booking URL is not available yet, so the safest next step is to remove scattered hard-coded mailto links and make the public contact path configurable from one place.
+
+Implemented:
+- Added `lib/contact.ts` as the public contact source of truth.
+- Centralized support email, support mailto, and pilot setup CTA behavior.
+- Added optional `NEXT_PUBLIC_SUPPORT_EMAIL`, `NEXT_PUBLIC_PILOT_SETUP_EMAIL`, and `NEXT_PUBLIC_PILOT_SETUP_URL` examples.
+- Updated marketing demo CTAs and pricing pilot setup link to use the shared config.
+- Updated privacy and terms contact references to use the shared support contact.
+
+**Verification performed:**
+- `npx.cmd tsc --noEmit`: clean.
+- `npm run lint`: clean.
+- `npm run build`: clean.
+
+**Follow-up needed:**
+- Set a custom-domain support inbox and/or booking URL in production when ready.
+
+---
+
 ## 2026-05-11 - Mobile scheduling input polish
 
 **Task:** Fix the mobile Settings scheduling time controls found during the signed-in walkthrough.

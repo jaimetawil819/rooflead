@@ -1,9 +1,7 @@
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { ArrowRight, CalendarCheck, CheckCircle2 } from "lucide-react";
-
-const pilotSetupHref =
-  "mailto:jaimetawil819@gmail.com?subject=RoofLead%20pilot%20setup";
+import { pilotSetupHref } from "@/lib/contact";
 
 export default function FinalCTA() {
   return (

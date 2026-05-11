@@ -1,3 +1,5 @@
+import { supportEmail, supportMailtoHref } from "@/lib/contact";
+
 export default function PrivacyPage() {
   return (
     <div className="min-h-screen bg-white px-4 py-16">
@@ -9,7 +11,7 @@ export default function PrivacyPage() {
 
           <section>
             <h2 className="text-xl font-semibold text-slate-900 mb-3">1. Who We Are</h2>
-            <p>RoofLead (&quot;we,&quot; &quot;us,&quot; or &quot;our&quot;) provides an AI-powered lead qualification platform for roofing companies. Our service is accessible at rooflead-mu.vercel.app. Questions about this policy can be directed to jaimetawil819@gmail.com.</p>
+            <p>RoofLead (&quot;we,&quot; &quot;us,&quot; or &quot;our&quot;) provides an AI-powered lead qualification platform for roofing companies. Our service is accessible at rooflead-mu.vercel.app. Questions about this policy can be directed to <a className="font-semibold text-blue-700 hover:text-blue-800" href={supportMailtoHref}>{supportEmail}</a>.</p>
           </section>
 
           <section>
@@ -63,7 +65,7 @@ export default function PrivacyPage() {
 
           <section>
             <h2 className="text-xl font-semibold text-slate-900 mb-3">8. Your Rights</h2>
-            <p>You may request access to, correction of, or deletion of your personal data by contacting us at jaimetawil819@gmail.com. Homeowners may opt out of SMS messages at any time by replying STOP.</p>
+            <p>You may request access to, correction of, or deletion of your personal data by contacting us at <a className="font-semibold text-blue-700 hover:text-blue-800" href={supportMailtoHref}>{supportEmail}</a>. Homeowners may opt out of SMS messages at any time by replying STOP.</p>
           </section>
 
           <section>
@@ -73,7 +75,7 @@ export default function PrivacyPage() {
 
           <section>
             <h2 className="text-xl font-semibold text-slate-900 mb-3">10. Contact</h2>
-            <p>For privacy-related questions, contact us at jaimetawil819@gmail.com.</p>
+            <p>For privacy-related questions, contact us at <a className="font-semibold text-blue-700 hover:text-blue-800" href={supportMailtoHref}>{supportEmail}</a>.</p>
           </section>
 
         </div>

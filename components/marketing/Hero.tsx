@@ -4,9 +4,7 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { ArrowRight, CalendarCheck, CheckCircle2, Clock3, MessageSquareText, PhoneCall } from "lucide-react";
 import { useAuth } from "@clerk/nextjs";
-
-const pilotSetupHref =
-  "mailto:jaimetawil819@gmail.com?subject=RoofLead%20pilot%20setup";
+import { pilotSetupHref } from "@/lib/contact";
 
 const proofPoints = [
   "14-day free trial",
