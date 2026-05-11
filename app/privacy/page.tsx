@@ -1,6 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { supportEmail, supportMailtoHref } from "@/lib/contact";
+import { appHost } from "@/lib/site";
 
 export default function PrivacyPage() {
   return (
@@ -27,7 +28,7 @@ export default function PrivacyPage() {
 
           <section>
             <h2 className="text-xl font-semibold text-slate-900 mb-3">1. Who We Are</h2>
-            <p>RoofLead (&quot;we,&quot; &quot;us,&quot; or &quot;our&quot;) provides an AI-powered lead qualification platform for roofing companies. Our service is accessible at rooflead-mu.vercel.app. Questions about this policy can be directed to <a className="font-semibold text-blue-700 hover:text-blue-800" href={supportMailtoHref}>{supportEmail}</a>.</p>
+            <p>RoofLead (&quot;we,&quot; &quot;us,&quot; or &quot;our&quot;) provides an AI-powered lead qualification platform for roofing companies. Our service is accessible at {appHost}. Questions about this policy can be directed to <a className="font-semibold text-blue-700 hover:text-blue-800" href={supportMailtoHref}>{supportEmail}</a>.</p>
           </section>
 
           <section>

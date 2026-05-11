@@ -6,6 +6,40 @@ This is a running log of every change made under the controlled-implementation p
 
 ---
 
+## 2026-05-11 - Site URL configuration polish
+
+**Task:** Continue the refinement plan by centralizing public site URL references.
+**Status:** completed
+
+**Files changed:**
+- `lib/site.ts` (created)
+- `app/layout.tsx` (modified)
+- `app/privacy/page.tsx` (modified)
+- `app/api/billing/checkout/route.ts` (modified)
+- `app/api/billing/portal/route.ts` (modified)
+- `app/api/webhooks/twilio/route.ts` (modified)
+- `docs/WEBSITE_REFINEMENT_PLAN.md` (modified)
+- `docs/IMPLEMENTATION_LOG.md` (modified)
+
+**Reason:**
+The refinement plan had moved into final production-readiness polish. One deployment-specific URL still lived directly in legal copy, and backend redirect/deep-link builders read `NEXT_PUBLIC_APP_URL` directly in multiple places.
+
+Implemented:
+- Added `lib/site.ts` for the public site name, description, base URL, and host label.
+- Updated root metadata to use shared site constants.
+- Updated privacy copy to display the configured host instead of a hard-coded deployment host.
+- Updated Stripe checkout success/cancel URLs, billing portal return URL, and Twilio owner notification deep links to use the shared base URL.
+
+**Verification performed:**
+- `npx.cmd tsc --noEmit`: clean.
+- `npm run lint`: clean.
+- `npm run build`: clean.
+
+**Follow-up needed:**
+- Set `NEXT_PUBLIC_APP_URL` to the final custom domain in production when available.
+
+---
+
 ## 2026-05-11 - Contact and demo link configuration polish
 
 **Task:** Start the next product-polish slice by centralizing public contact and pilot setup links.

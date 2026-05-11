@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { ClerkProvider } from "@clerk/nextjs";
 import { DM_Sans } from "next/font/google";
+import { siteDescription, siteName } from "@/lib/site";
 import "./globals.css";
 
 const dmSans = DM_Sans({
@@ -10,8 +11,8 @@ const dmSans = DM_Sans({
 });
 
 export const metadata: Metadata = {
-  title: "RoofLead",
-  description: "AI lead intake for roofing companies",
+  title: siteName,
+  description: siteDescription,
 };
 
 export default function RootLayout({

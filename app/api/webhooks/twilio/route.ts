@@ -10,6 +10,7 @@ import {
 } from "@/lib/sms-opt-outs";
 import { sendSMS } from "@/lib/twilio";
 import { createRequestLogger } from "@/lib/logger";
+import { appBaseUrl } from "@/lib/site";
 
 export const maxDuration = 30;
 
@@ -176,7 +177,7 @@ async function processLeadConversation({
       !(await isSmsOptedOut(supabase, business.notification_phone))
     ) {
       const leadLabel = leadName ?? "New lead";
-      const notifMsg = `${score.toUpperCase()} lead - ${leadLabel}\n${summary}\nCall: ${from}\nView: ${process.env.NEXT_PUBLIC_APP_URL}/dashboard/leads/${leadId}`;
+      const notifMsg = `${score.toUpperCase()} lead - ${leadLabel}\n${summary}\nCall: ${from}\nView: ${appBaseUrl}/dashboard/leads/${leadId}`;
       await sendSMS(business.notification_phone, notifMsg);
     }
 

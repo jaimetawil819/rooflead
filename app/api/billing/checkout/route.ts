@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import Stripe from "stripe";
 import { getAdminClient } from "@/lib/supabase/admin";
 import { auth } from "@clerk/nextjs/server";
+import { appBaseUrl } from "@/lib/site";
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!);
 
@@ -54,8 +55,8 @@ export async function POST() {
     subscription_data: {
       trial_period_days: 14,
     },
-    success_url: `${process.env.NEXT_PUBLIC_APP_URL}/subscribe/success`,
-    cancel_url: `${process.env.NEXT_PUBLIC_APP_URL}/subscribe`,
+    success_url: `${appBaseUrl}/subscribe/success`,
+    cancel_url: `${appBaseUrl}/subscribe`,
   });
 
   return NextResponse.json({ url: session.url });
