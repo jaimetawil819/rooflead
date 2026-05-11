@@ -6,6 +6,104 @@ This is a running log of every change made under the controlled-implementation p
 
 ---
 
+## 2026-05-11 - UI/UX Pro Max embed and public test form redesign
+
+**Task:** Upgrade the embeddable lead form and public test form experience.
+**Status:** completed
+
+**Files changed:**
+- `public/embed.js` (modified)
+- `app/test-form/page.tsx` (modified)
+- `app/test-form/[widgetKey]/page.tsx` (modified)
+- `docs/WEBSITE_REFINEMENT_PLAN.md` (modified)
+- `docs/IMPLEMENTATION_LOG.md` (modified)
+- `docs/PROJECT_AUDIT.md` (modified)
+
+**Reason:**
+The embed widget and public test forms are often the first hands-on product proof a roofing owner sees. The previous versions worked, but they looked like MVP forms and did not fully support trust, SMS consent clarity, or polished loading/error/success feedback.
+
+Implemented:
+- Restyled `public/embed.js` as a compact SaaS-quality homeowner intake widget with a dark header, visible labels, larger fields, focus states, consent language, powered-by context, and clear success/error states.
+- Added safer embed rendering for configurable labels/options and encoded widget API URLs.
+- Redesigned the static `/test-form` sample into a stronger public preview with trust cues, consent copy, and a polished form card.
+- Redesigned the account-specific `/test-form/[widgetKey]` flow with test-mode framing, dynamic service/question loading, inline error handling, real SMS expectation setting, and a clearer submitted state.
+- Added label associations and mobile-friendly field sizing across the public form views.
+
+**Verification performed:**
+- `npx.cmd tsc --noEmit`: clean.
+- `npm run lint`: clean.
+- `npm run build`: clean.
+
+**Follow-up needed:**
+- Run authenticated desktop/mobile visual QA across dashboard, lead detail, settings, and public form flows.
+
+---
+
+## 2026-05-11 - UI/UX Pro Max settings redesign
+
+**Task:** Bring Settings into the same dashboard design system.
+**Status:** completed
+
+**Files changed:**
+- `app/dashboard/settings/page.tsx` (modified)
+- `docs/WEBSITE_REFINEMENT_PLAN.md` (modified)
+- `docs/IMPLEMENTATION_LOG.md` (modified)
+- `docs/PROJECT_AUDIT.md` (modified)
+
+**Reason:**
+Settings had already been split into the right tabs, but the visual treatment still felt like a utility form. Since Settings controls owner alerts, lead form behavior, scheduling defaults, install code, and billing, it needs to feel as trustworthy and organized as the redesigned dashboard.
+
+Implemented:
+- Dark command-center Settings header aligned with the dashboard overview and lead detail.
+- Responsive tab rail that works as a compact grid on smaller screens and a sticky side rail on desktop.
+- Stronger tab active states, larger touch targets, and clearer focus states.
+- Restyled Business, Lead Form, Scheduling, and Billing panels with consistent cards, labels, helper text, and primary actions.
+- Improved Lead Form install section with a darker code block and clearer test form actions.
+- Billing panel now includes plan/trial context alongside the Stripe portal action.
+
+**Verification performed:**
+- `npx.cmd tsc --noEmit`: clean.
+- `npm.cmd run lint`: clean.
+- `npm.cmd run build`: clean.
+
+**Follow-up needed:**
+- Run authenticated desktop/mobile visual QA for Settings once a signed-in browser session is available.
+
+---
+
+## 2026-05-11 - UI/UX Pro Max lead detail redesign
+
+**Task:** Bring the lead detail workflow into the same dashboard design system.
+**Status:** completed
+
+**Files changed:**
+- `app/dashboard/leads/[id]/page.tsx` (modified)
+- `docs/WEBSITE_REFINEMENT_PLAN.md` (modified)
+- `docs/IMPLEMENTATION_LOG.md` (modified)
+- `docs/PROJECT_AUDIT.md` (modified)
+
+**Reason:**
+Lead detail is the core operating screen after a roofing owner clicks a lead. It had the right functions, but everything was stacked with equal weight, which buried the most important actions: call the homeowner, review the AI summary, take over by SMS, and update scheduling/status.
+
+Implemented:
+- Dark command-center lead header matching the redesigned dashboard.
+- Primary call and owner-reply actions at the top of the page.
+- Responsive desktop workflow with main lead operations on the left and a sticky conversation/manual reply panel on the right.
+- AI summary, lead facts, pipeline status, owner review, scheduling, and conversation split into clearer cards.
+- Manual SMS reply kept high and sticky on desktop, with the owner-takeover explanation preserved.
+- Delete action moved into a separated danger zone instead of sitting beside normal workflow controls.
+
+**Verification performed:**
+- `npx.cmd tsc --noEmit`: clean.
+- `npm.cmd run lint`: clean.
+- `npm.cmd run build`: clean.
+
+**Follow-up needed:**
+- Bring Settings into the same dashboard design system.
+- Run authenticated desktop/mobile visual QA for lead detail once a signed-in browser session is available.
+
+---
+
 ## 2026-05-11 - UI/UX Pro Max dashboard redesign
 
 **Task:** Rebuild the dashboard overview and leads inbox to match the redesigned homepage style.

@@ -21,7 +21,10 @@
 - Complete: Mobile dashboard navigation now supports a phone-friendly top bar and slide-out drawer while preserving the desktop sidebar.
 - Complete: UI/UX Pro Max redesign pass applied to the marketing site with a trust-forward SaaS hero, stronger product proof, use cases, comparison framing, clearer pricing, and upgraded FAQ/final CTA.
 - Complete: Dashboard overview, app shell, setup tools, and leads inbox now follow the same UI/UX Pro Max SaaS style as the homepage, including a dark command-center header and mobile-first lead cards.
-- Next: Bring lead detail and settings pages fully into the same dashboard design system.
+- Complete: Lead detail now follows the dashboard design system with a command header, primary call/reply actions, two-column workflow layout, sticky conversation panel, and separated danger zone.
+- Complete: Settings now follows the dashboard design system with a command header, responsive tab rail, polished settings panels, larger controls, clearer install code, and billing context.
+- Complete: Embed widget and public test forms now follow the SaaS design system with clearer consent, stronger form hierarchy, better loading/error/success states, and safer embed rendering.
+- Next: Run authenticated desktop/mobile visual QA across dashboard, lead detail, settings, and public form flows.
 
 ---
 
@@ -950,12 +953,15 @@ Likely files:
 Difficulty: Medium  
 Timing: Done on 2026-05-11
 
-#### 13. Improve Lead Detail Layout
+#### 13. Improve Lead Detail Layout - Complete
 
 What changes:
 
 - Convert to responsive two-column desktop layout.
 - Keep action buttons sticky or high in the page.
+- Put call and owner reply actions at the top of the workflow.
+- Keep AI summary, lead facts, status controls, scheduling, and conversation visually distinct.
+- Move destructive delete behavior into a separated danger zone.
 
 Why it matters:
 
@@ -966,14 +972,35 @@ Likely files:
 - `app/dashboard/leads/[id]/page.tsx`
 
 Difficulty: Medium to High  
-Timing: Later
+Timing: Done on 2026-05-11
 
-#### 14. Upgrade Embed Widget UI
+#### 14. Align Settings With Dashboard Design System - Complete
+
+What changes:
+
+- Restyle the tabbed settings page to match the command-center dashboard language.
+- Improve mobile tab behavior and form density.
+- Keep Business, Lead Form, Scheduling, and Billing tabs, but make each panel feel like a polished SaaS settings workflow.
+
+Why it matters:
+
+Settings is where owners configure the form, scheduling defaults, and billing. It should feel trustworthy and organized, not like an MVP utility page.
+
+Likely files:
+
+- `app/dashboard/settings/page.tsx`
+
+Difficulty: Medium  
+Timing: Done on 2026-05-11
+
+#### 15. Upgrade Embed Widget UI - Complete
 
 What changes:
 
 - Improve form styling, states, errors, and customization.
 - Consider CSS isolation and safer rendering.
+- Align the public sample form and account-specific test form with the UI/UX Pro Max dashboard/marketing design language.
+- Preserve SMS consent clarity and make test-mode expectations obvious before the owner submits a real phone number.
 
 Why it matters:
 
@@ -986,7 +1013,7 @@ Likely files:
 - `app/test-form/[widgetKey]/page.tsx`
 
 Difficulty: Medium  
-Timing: Later
+Timing: Done on 2026-05-11
 
 ---
 

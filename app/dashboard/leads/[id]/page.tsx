@@ -4,17 +4,20 @@ import { useState, useEffect, use } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
+  AlertTriangle,
   ArrowLeft,
-  Phone,
-  MapPin,
-  Wrench,
+  ArrowRight,
   Calendar,
+  CheckCircle2,
   Clock,
   Home,
-  Trash2,
-  AlertTriangle,
-  CheckCircle2,
+  MapPin,
+  MessageSquareText,
+  Phone,
   Send,
+  ShieldCheck,
+  Trash2,
+  Wrench,
 } from "lucide-react";
 
 const STATUSES = [
@@ -37,21 +40,21 @@ const APPOINTMENT_STATUSES = [
 ];
 
 const scoreColors: Record<string, string> = {
-  hot: "bg-red-100 text-red-700",
-  warm: "bg-orange-100 text-orange-700",
-  cold: "bg-blue-100 text-blue-700",
-  unqualified: "bg-gray-100 text-gray-600",
+  hot: "bg-red-100 text-red-700 ring-red-200",
+  warm: "bg-amber-100 text-amber-800 ring-amber-200",
+  cold: "bg-blue-100 text-blue-700 ring-blue-200",
+  unqualified: "bg-slate-100 text-slate-600 ring-slate-200",
 };
 
 const statusColors: Record<string, string> = {
-  new: "bg-blue-100 text-blue-700",
-  contacted: "bg-purple-100 text-purple-700",
-  qualified: "bg-green-100 text-green-700",
-  appointment_set: "bg-yellow-100 text-yellow-700",
-  won: "bg-emerald-100 text-emerald-700",
-  lost: "bg-red-100 text-red-700",
-  junk: "bg-gray-100 text-gray-600",
-  unresponsive: "bg-gray-100 text-gray-600",
+  new: "bg-blue-100 text-blue-700 ring-blue-200",
+  contacted: "bg-violet-100 text-violet-700 ring-violet-200",
+  qualified: "bg-emerald-100 text-emerald-700 ring-emerald-200",
+  appointment_set: "bg-amber-100 text-amber-800 ring-amber-200",
+  won: "bg-emerald-100 text-emerald-700 ring-emerald-200",
+  lost: "bg-red-100 text-red-700 ring-red-200",
+  junk: "bg-slate-100 text-slate-600 ring-slate-200",
+  unresponsive: "bg-slate-100 text-slate-600 ring-slate-200",
 };
 
 type Lead = {
@@ -100,6 +103,27 @@ function formatServiceType(serviceType: string | null) {
   };
 
   return labels[serviceType] ?? titleCase(serviceType);
+}
+
+function getPrimaryAction(lead: Lead) {
+  if (lead.needs_human_review) return "Review conversation before replying";
+  if (lead.lead_score === "hot") return "Call this lead first";
+  if (lead.status === "new") return "Make first owner contact";
+  if (lead.status === "appointment_set") return "Confirm inspection details";
+  if (lead.status === "won") return "Won lead, keep record updated";
+  if (lead.status === "lost" || lead.status === "junk") return "No active action";
+  return "Review and update next step";
+}
+
+function formatMessageTime(sentAt?: string) {
+  if (!sentAt) return null;
+
+  return new Date(sentAt).toLocaleString("en-US", {
+    month: "short",
+    day: "numeric",
+    hour: "numeric",
+    minute: "2-digit",
+  });
 }
 
 export default function LeadDetailPage({
@@ -280,8 +304,8 @@ export default function LeadDetailPage({
 
   if (!lead) {
     return (
-      <div className="p-8 flex items-center justify-center min-h-64">
-        <div className="h-6 w-6 border-2 border-blue-600 border-t-transparent rounded-full animate-spin" />
+      <div className="flex min-h-64 items-center justify-center p-8">
+        <div className="h-6 w-6 animate-spin rounded-full border-2 border-blue-600 border-t-transparent" />
       </div>
     );
   }
@@ -293,7 +317,7 @@ export default function LeadDetailPage({
       value: lead.phone ? (
         <a
           href={`tel:${lead.phone}`}
-          className="text-blue-600 hover:underline font-medium"
+          className="font-bold text-blue-700 hover:underline"
         >
           {lead.phone}
         </a>
@@ -316,357 +340,430 @@ export default function LeadDetailPage({
   ];
 
   return (
-    <div className="p-8 max-w-3xl">
+    <div className="mx-auto max-w-7xl px-4 py-5 sm:px-6 lg:px-8 lg:py-8">
       <Link
         href="/dashboard/leads"
-        className="inline-flex items-center gap-1.5 text-sm text-gray-500 hover:text-slate-900 transition-colors mb-6"
+        className="mb-5 inline-flex min-h-10 items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-bold text-slate-700 transition-colors hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600"
       >
-        <ArrowLeft className="h-4 w-4" /> Back to leads
+        <ArrowLeft className="h-4 w-4" aria-hidden="true" />
+        Back to leads
       </Link>
 
-      <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 mb-4">
-        <p className="mb-3 text-xs font-semibold uppercase tracking-wide text-gray-400">
-          Lead Snapshot
-        </p>
-        <div className="flex items-start justify-between gap-4 flex-wrap">
-          <div>
-            <h1 className="text-2xl font-bold text-slate-900">
-              {lead.name ?? "Unknown"}
-            </h1>
-            <p className="text-gray-400 text-sm mt-1">
-              Lead received {new Date(lead.created_at).toLocaleDateString()}
+      <section className="overflow-hidden rounded-2xl border border-slate-800 bg-slate-950 text-white shadow-xl shadow-slate-300/40">
+        <div className="grid gap-0 xl:grid-cols-[1fr_0.42fr]">
+          <div className="p-6 sm:p-8">
+            <p className="text-sm font-semibold uppercase tracking-widest text-blue-300">
+              Lead Detail
             </p>
-          </div>
-          <div className="flex items-center gap-2 flex-wrap">
-            {lead.lead_score && (
-              <span
-                className={`text-sm font-bold px-4 py-1.5 rounded-full ${scoreColors[lead.lead_score] ?? "bg-gray-100 text-gray-600"}`}
-              >
-                {lead.lead_score.toUpperCase()}
-              </span>
-            )}
-            <span
-              className={`text-sm font-semibold px-4 py-1.5 rounded-full ${statusColors[lead.status] ?? "bg-gray-100 text-gray-600"}`}
-            >
-              {titleCase(lead.status)}
-            </span>
-          </div>
-        </div>
-
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-6">
-          {infoItems.map(({ icon: Icon, label, value }) => (
-            <div key={label} className="flex items-start gap-2.5 min-w-0">
-              <div className="h-8 w-8 rounded-lg bg-gray-50 flex items-center justify-center flex-shrink-0 mt-0.5">
-                <Icon className="h-4 w-4 text-gray-400" aria-hidden="true" />
-              </div>
+            <div className="mt-4 flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
               <div className="min-w-0">
-                <p className="text-xs text-gray-400">{label}</p>
-                <div className="text-sm font-medium text-slate-900 break-words">
-                  {value ?? "-"}
+                <h1 className="text-3xl font-bold leading-tight tracking-tight sm:text-4xl">
+                  {lead.name ?? "Unknown Lead"}
+                </h1>
+                <p className="mt-3 max-w-2xl text-base leading-7 text-slate-300">
+                  {getPrimaryAction(lead)}
+                </p>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                {lead.lead_score && (
+                  <span className={`rounded-full px-3 py-1.5 text-xs font-black uppercase ring-1 ${scoreColors[lead.lead_score] ?? "bg-slate-100 text-slate-600 ring-slate-200"}`}>
+                    {lead.lead_score}
+                  </span>
+                )}
+                <span className={`rounded-full px-3 py-1.5 text-xs font-bold ring-1 ${statusColors[lead.status] ?? "bg-slate-100 text-slate-600 ring-slate-200"}`}>
+                  {titleCase(lead.status)}
+                </span>
+              </div>
+            </div>
+
+            <div className="mt-7 flex flex-col gap-3 sm:flex-row">
+              {lead.phone ? (
+                <a
+                  href={`tel:${lead.phone}`}
+                  className="inline-flex min-h-11 items-center justify-center gap-2 rounded-lg bg-emerald-500 px-5 py-3 text-sm font-black text-slate-950 transition-colors hover:bg-emerald-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-300 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-950"
+                >
+                  <Phone className="h-4 w-4" aria-hidden="true" />
+                  Call {lead.name?.split(" ")[0] ?? "Lead"}
+                </a>
+              ) : (
+                <span className="inline-flex min-h-11 items-center justify-center rounded-lg border border-white/10 bg-white/5 px-5 py-3 text-sm font-bold text-slate-400">
+                  No phone number
+                </span>
+              )}
+              <a
+                href="#manual-reply"
+                className="inline-flex min-h-11 items-center justify-center gap-2 rounded-lg border border-white/15 bg-white/5 px-5 py-3 text-sm font-bold text-white transition-colors hover:bg-white/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-300 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-950"
+              >
+                <MessageSquareText className="h-4 w-4" aria-hidden="true" />
+                Owner Reply
+              </a>
+            </div>
+          </div>
+
+          <div className="border-t border-slate-800 bg-white/[0.03] p-6 sm:p-8 xl:border-l xl:border-t-0">
+            <div className="rounded-xl border border-white/10 bg-white/[0.04] p-4">
+              <div className="flex items-start gap-3">
+                {lead.needs_human_review ? (
+                  <AlertTriangle className="mt-0.5 h-5 w-5 flex-shrink-0 text-amber-300" aria-hidden="true" />
+                ) : (
+                  <ShieldCheck className="mt-0.5 h-5 w-5 flex-shrink-0 text-emerald-300" aria-hidden="true" />
+                )}
+                <div>
+                  <p className="text-sm font-bold text-white">
+                    {lead.needs_human_review ? "Owner review needed" : "AI intake captured"}
+                  </p>
+                  <p className="mt-1 text-sm leading-6 text-slate-300">
+                    {lead.needs_human_review
+                      ? lead.handoff_reason ?? "Review this lead before the AI continues."
+                      : lead.owner_takeover_at
+                        ? "Owner takeover is active for this lead."
+                        : "No owner handoff is currently requested."}
+                  </p>
                 </div>
               </div>
             </div>
-          ))}
-        </div>
 
-        {lead.phone && (
-          <div className="mt-5">
-            <a
-              href={`tel:${lead.phone}`}
-              className="inline-flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white text-sm font-semibold px-4 py-2 rounded-lg transition-colors"
-            >
-              <Phone className="h-4 w-4" />
-              Call {lead.name?.split(" ")[0] ?? "Lead"}
-            </a>
-          </div>
-        )}
-      </div>
-
-      {lead.summary && (
-        <div className="bg-blue-50 border border-blue-100 rounded-2xl p-6 mb-4">
-          <p className="text-xs font-semibold text-blue-600 uppercase tracking-wide mb-2">
-            AI Summary
-          </p>
-          <p className="text-slate-700 text-sm leading-relaxed">{lead.summary}</p>
-          {lead.qualification_reason && (
-            <p className="text-slate-500 text-sm leading-relaxed mt-3">
-              <span className="font-medium text-slate-700">Why this score:</span>{" "}
-              {lead.qualification_reason}
-            </p>
-          )}
-        </div>
-      )}
-
-      <div
-        className={`rounded-2xl border p-6 mb-4 ${
-          lead.needs_human_review
-            ? "bg-amber-50 border-amber-100"
-            : "bg-white border-gray-100 shadow-sm"
-        }`}
-      >
-        <div className="flex items-start justify-between gap-4 flex-wrap">
-          <div className="flex gap-3">
-            <div
-              className={`h-9 w-9 rounded-lg flex items-center justify-center ${
-                lead.needs_human_review ? "bg-amber-100" : "bg-gray-50"
-              }`}
-            >
-              {lead.needs_human_review ? (
-                <AlertTriangle className="h-4 w-4 text-amber-700" />
-              ) : (
-                <CheckCircle2 className="h-4 w-4 text-gray-400" />
-              )}
-            </div>
-            <div>
-              <p className="text-sm font-semibold text-slate-900">
-                {lead.needs_human_review ? "Owner Review Needed" : "Owner Handoff"}
-              </p>
-              <p className="text-sm text-slate-600 mt-1">
-                {lead.needs_human_review
-                  ? lead.handoff_reason ?? "This lead should be reviewed by a person."
-                  : lead.owner_takeover_at
-                    ? "Owner takeover is active. New homeowner replies will be saved without AI auto-replying."
-                    : "No handoff has been requested for this lead."}
-              </p>
-            </div>
-          </div>
-
-          <button
-            type="button"
-            onClick={() => updateHumanReview(!lead.needs_human_review)}
-            disabled={saving || deleting}
-            className={`inline-flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-semibold transition-colors disabled:opacity-50 ${
-              lead.needs_human_review
-                ? "bg-white border border-amber-200 text-amber-700 hover:bg-amber-100"
-                : "bg-amber-50 border border-amber-100 text-amber-700 hover:bg-amber-100"
-            }`}
-          >
-            {lead.needs_human_review ? "Mark Reviewed" : "Flag For Owner"}
-          </button>
-        </div>
-      </div>
-
-      <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 mb-4">
-        <div className="flex items-start justify-between gap-4 flex-wrap">
-          <div>
-            <p className="text-sm font-semibold text-slate-900 mb-3">
-              Pipeline Status
-            </p>
-            <div className="flex items-center gap-3 flex-wrap">
-              <select
-                value={lead.status}
-                onChange={(e) => updateStatus(e.target.value)}
-                disabled={saving || deleting}
-                className="border border-gray-200 rounded-lg px-3 py-2 text-sm text-slate-900 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50"
-              >
-                {STATUSES.map((status) => (
-                  <option key={status} value={status}>
-                    {titleCase(status)}
-                  </option>
-                ))}
-              </select>
-              {saving && <span className="text-sm text-gray-400">Saving...</span>}
-              {saved && (
-                <span className="text-sm text-green-600 font-medium">Saved!</span>
-              )}
-            </div>
-          </div>
-
-          <button
-            type="button"
-            onClick={deleteLead}
-            disabled={deleting}
-            className="inline-flex items-center gap-2 rounded-lg border border-red-100 bg-red-50 px-3 py-2 text-sm font-semibold text-red-600 transition-colors hover:bg-red-100 disabled:opacity-50"
-          >
-            <Trash2 className="h-4 w-4" />
-            {deleting ? "Deleting..." : "Delete Test Lead"}
-          </button>
-        </div>
-      </div>
-
-      <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 mb-4">
-        <div className="flex items-start justify-between gap-4 flex-wrap mb-5">
-          <div>
-            <p className="text-sm font-semibold text-slate-900">
-              Scheduling
-            </p>
-            <p className="text-sm text-gray-500 mt-1">
-              Track inspection intent without promising an automatic booking.
-            </p>
-          </div>
-          <span className="rounded-full bg-blue-50 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-blue-700">
-            {titleCase(appointmentStatus)}
-          </span>
-        </div>
-
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <div>
-            <label
-              htmlFor="appointment-status"
-              className="block text-sm font-medium text-slate-700 mb-1.5"
-            >
-              Appointment Status
-            </label>
-            <select
-              id="appointment-status"
-              value={appointmentStatus}
-              onChange={(e) => setAppointmentStatus(e.target.value)}
-              disabled={savingAppointment || deleting}
-              className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm text-slate-900 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50"
-            >
-              {APPOINTMENT_STATUSES.map((status) => (
-                <option key={status} value={status}>
-                  {titleCase(status)}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          <div>
-            <label
-              htmlFor="preferred-time"
-              className="block text-sm font-medium text-slate-700 mb-1.5"
-            >
-              Preferred Time
-            </label>
-            <input
-              id="preferred-time"
-              value={preferredAppointmentTime}
-              onChange={(e) =>
-                setPreferredAppointmentTime(e.target.value.slice(0, 120))
-              }
-              disabled={savingAppointment || deleting}
-              className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50"
-              placeholder="e.g. Tomorrow afternoon"
-            />
-          </div>
-        </div>
-
-        <div className="mt-4">
-          <label
-            htmlFor="appointment-notes"
-            className="block text-sm font-medium text-slate-700 mb-1.5"
-          >
-            Appointment Notes
-          </label>
-          <textarea
-            id="appointment-notes"
-            value={appointmentNotes}
-            onChange={(e) => setAppointmentNotes(e.target.value.slice(0, 500))}
-            disabled={savingAppointment || deleting}
-            rows={3}
-            className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50"
-            placeholder="Add confirmation details, access notes, or timing constraints."
-          />
-          <p className="text-xs text-gray-400 mt-1.5">
-            {appointmentNotes.length}/500 characters
-          </p>
-        </div>
-
-        <div className="flex items-center gap-3 mt-5">
-          <button
-            type="button"
-            onClick={updateAppointment}
-            disabled={savingAppointment || deleting}
-            className="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
-          >
-            {savingAppointment ? "Saving..." : "Save Scheduling"}
-          </button>
-          {lead.preferred_appointment_time && (
-            <span className="text-xs text-gray-400">
-              Saved preference: {lead.preferred_appointment_time}
-            </span>
-          )}
-        </div>
-      </div>
-
-      <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
-        <div className="flex items-start justify-between gap-3 mb-4">
-          <div>
-            <p className="text-sm font-semibold text-slate-900">
-              Conversation & Manual Reply
-            </p>
-            {lead.owner_takeover_at && (
-              <p className="text-xs text-gray-400 mt-1">
-                Owner takeover active
-              </p>
+            {saved && (
+              <div className="mt-3 rounded-xl border border-emerald-400/20 bg-emerald-500/10 p-3 text-sm font-bold text-emerald-100">
+                Saved
+              </div>
             )}
           </div>
         </div>
-        {messages.length === 0 ? (
-          <p className="text-gray-400 text-sm">No messages yet.</p>
-        ) : (
-          <div className="space-y-3">
-            {messages.map((msg) => (
-              <div
-                key={msg.id}
-                className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}
-              >
-                <div
-                  className={`max-w-xs sm:max-w-sm px-4 py-2.5 rounded-2xl text-sm leading-relaxed ${
-                    msg.role === "user"
-                      ? "bg-blue-600 text-white rounded-tr-sm"
-                      : msg.role === "owner"
-                        ? "bg-emerald-50 text-emerald-900 border border-emerald-100 rounded-tl-sm"
-                      : "bg-gray-100 text-slate-800 rounded-tl-sm"
-                  }`}
+      </section>
+
+      <div className="mt-6 grid gap-6 xl:grid-cols-[minmax(0,1fr)_420px]">
+        <main className="space-y-6">
+          <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
+            <div className="mb-5 flex items-center justify-between gap-4">
+              <div>
+                <p className="text-sm font-bold uppercase tracking-wide text-blue-700">
+                  AI Summary
+                </p>
+                <h2 className="mt-1 text-xl font-bold text-slate-950">
+                  Qualification snapshot
+                </h2>
+              </div>
+              <ArrowRight className="h-5 w-5 text-blue-600" aria-hidden="true" />
+            </div>
+            {lead.summary ? (
+              <>
+                <p className="text-sm leading-7 text-slate-700">{lead.summary}</p>
+                {lead.qualification_reason && (
+                  <p className="mt-4 rounded-xl border border-blue-100 bg-blue-50 p-4 text-sm leading-6 text-slate-700">
+                    <span className="font-bold text-slate-950">Why this score: </span>
+                    {lead.qualification_reason}
+                  </p>
+                )}
+              </>
+            ) : (
+              <p className="text-sm leading-6 text-slate-500">
+                No AI summary yet. It will appear after the intake conversation
+                has enough information.
+              </p>
+            )}
+          </section>
+
+          <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
+            <div className="mb-5">
+              <p className="text-sm font-bold uppercase tracking-wide text-blue-700">
+                Lead Facts
+              </p>
+              <h2 className="mt-1 text-xl font-bold text-slate-950">
+                Details needed before the call
+              </h2>
+            </div>
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+              {infoItems.map(({ icon: Icon, label, value }) => (
+                <div key={label} className="flex min-w-0 items-start gap-3 rounded-xl border border-slate-200 bg-slate-50 p-4">
+                  <div className="mt-0.5 flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-lg bg-white text-blue-600 ring-1 ring-slate-200">
+                    <Icon className="h-4 w-4" aria-hidden="true" />
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-xs font-bold uppercase tracking-wide text-slate-500">
+                      {label}
+                    </p>
+                    <div className="mt-1 break-words text-sm font-semibold text-slate-950">
+                      {value ?? "-"}
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </section>
+
+          <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
+            <div className="grid gap-5 lg:grid-cols-2">
+              <div>
+                <p className="text-sm font-bold uppercase tracking-wide text-blue-700">
+                  Pipeline Status
+                </p>
+                <h2 className="mt-1 text-xl font-bold text-slate-950">
+                  Update the sales stage
+                </h2>
+                <div className="mt-4 flex flex-wrap items-center gap-3">
+                  <select
+                    value={lead.status}
+                    onChange={(e) => updateStatus(e.target.value)}
+                    disabled={saving || deleting}
+                    className="min-h-11 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-600 disabled:opacity-50"
+                  >
+                    {STATUSES.map((status) => (
+                      <option key={status} value={status}>
+                        {titleCase(status)}
+                      </option>
+                    ))}
+                  </select>
+                  {saving && <span className="text-sm text-slate-500">Saving...</span>}
+                </div>
+              </div>
+
+              <div className={lead.needs_human_review ? "rounded-xl border border-amber-200 bg-amber-50 p-4" : "rounded-xl border border-slate-200 bg-slate-50 p-4"}>
+                <div className="flex items-start gap-3">
+                  {lead.needs_human_review ? (
+                    <AlertTriangle className="mt-0.5 h-5 w-5 flex-shrink-0 text-amber-700" aria-hidden="true" />
+                  ) : (
+                    <CheckCircle2 className="mt-0.5 h-5 w-5 flex-shrink-0 text-slate-500" aria-hidden="true" />
+                  )}
+                  <div>
+                    <p className="font-bold text-slate-950">
+                      {lead.needs_human_review ? "Review needed" : "Owner handoff"}
+                    </p>
+                    <p className="mt-1 text-sm leading-6 text-slate-600">
+                      {lead.needs_human_review
+                        ? lead.handoff_reason ?? "A person should review this lead."
+                        : "Flag this lead when it needs human judgment."}
+                    </p>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => updateHumanReview(!lead.needs_human_review)}
+                  disabled={saving || deleting}
+                  className="mt-4 inline-flex min-h-10 items-center rounded-lg border border-amber-200 bg-white px-3 py-2 text-sm font-bold text-amber-800 transition-colors hover:bg-amber-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-500 disabled:opacity-50"
                 >
-                  {msg.role === "owner" && (
-                    <p className="mb-1 text-[10px] font-semibold uppercase tracking-wide text-emerald-600">
-                      Owner
+                  {lead.needs_human_review ? "Mark Reviewed" : "Flag For Owner"}
+                </button>
+              </div>
+            </div>
+          </section>
+
+          <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
+            <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+              <div>
+                <p className="text-sm font-bold uppercase tracking-wide text-blue-700">
+                  Scheduling
+                </p>
+                <h2 className="mt-1 text-xl font-bold text-slate-950">
+                  Track inspection intent
+                </h2>
+                <p className="mt-2 text-sm leading-6 text-slate-600">
+                  Save preferred timing and notes without promising automatic booking.
+                </p>
+              </div>
+              <span className="inline-flex w-fit rounded-full bg-blue-50 px-3 py-1 text-xs font-bold uppercase tracking-wide text-blue-700">
+                {titleCase(appointmentStatus)}
+              </span>
+            </div>
+
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+              <div>
+                <label htmlFor="appointment-status" className="mb-1.5 block text-sm font-bold text-slate-700">
+                  Appointment Status
+                </label>
+                <select
+                  id="appointment-status"
+                  value={appointmentStatus}
+                  onChange={(e) => setAppointmentStatus(e.target.value)}
+                  disabled={savingAppointment || deleting}
+                  className="min-h-11 w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-600 disabled:opacity-50"
+                >
+                  {APPOINTMENT_STATUSES.map((status) => (
+                    <option key={status} value={status}>
+                      {titleCase(status)}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label htmlFor="preferred-time" className="mb-1.5 block text-sm font-bold text-slate-700">
+                  Preferred Time
+                </label>
+                <input
+                  id="preferred-time"
+                  value={preferredAppointmentTime}
+                  onChange={(e) =>
+                    setPreferredAppointmentTime(e.target.value.slice(0, 120))
+                  }
+                  disabled={savingAppointment || deleting}
+                  className="min-h-11 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-600 disabled:opacity-50"
+                  placeholder="e.g. Tomorrow afternoon"
+                />
+              </div>
+            </div>
+
+            <div className="mt-4">
+              <label htmlFor="appointment-notes" className="mb-1.5 block text-sm font-bold text-slate-700">
+                Appointment Notes
+              </label>
+              <textarea
+                id="appointment-notes"
+                value={appointmentNotes}
+                onChange={(e) => setAppointmentNotes(e.target.value.slice(0, 500))}
+                disabled={savingAppointment || deleting}
+                rows={3}
+                className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-600 disabled:opacity-50"
+                placeholder="Add confirmation details, access notes, or timing constraints."
+              />
+              <p className="mt-1.5 text-xs text-slate-500">
+                {appointmentNotes.length}/500 characters
+              </p>
+            </div>
+
+            <div className="mt-5 flex flex-wrap items-center gap-3">
+              <button
+                type="button"
+                onClick={updateAppointment}
+                disabled={savingAppointment || deleting}
+                className="inline-flex min-h-11 items-center gap-2 rounded-lg bg-blue-600 px-4 py-3 text-sm font-bold text-white transition-colors hover:bg-blue-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                {savingAppointment ? "Saving..." : "Save Scheduling"}
+              </button>
+              {lead.preferred_appointment_time && (
+                <span className="text-xs text-slate-500">
+                  Saved preference: {lead.preferred_appointment_time}
+                </span>
+              )}
+            </div>
+          </section>
+
+          <section className="rounded-2xl border border-red-200 bg-red-50 p-5 sm:p-6">
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+              <div>
+                <p className="text-sm font-bold uppercase tracking-wide text-red-700">
+                  Danger Zone
+                </p>
+                <h2 className="mt-1 text-lg font-bold text-slate-950">
+                  Delete test or unwanted lead
+                </h2>
+                <p className="mt-2 text-sm leading-6 text-slate-700">
+                  This permanently removes the lead and its conversation. Use it
+                  only for test data or records you no longer need.
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={deleteLead}
+                disabled={deleting}
+                className="inline-flex min-h-11 items-center justify-center gap-2 rounded-lg border border-red-200 bg-white px-4 py-3 text-sm font-bold text-red-700 transition-colors hover:bg-red-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-600 disabled:opacity-50"
+              >
+                <Trash2 className="h-4 w-4" aria-hidden="true" />
+                {deleting ? "Deleting..." : "Delete Lead"}
+              </button>
+            </div>
+          </section>
+        </main>
+
+        <aside className="space-y-6 xl:sticky xl:top-8 xl:self-start">
+          <section className="rounded-2xl border border-slate-200 bg-white shadow-sm">
+            <div className="border-b border-slate-200 px-5 py-5">
+              <div className="flex items-start justify-between gap-3">
+                <div>
+                  <p className="text-sm font-bold uppercase tracking-wide text-blue-700">
+                    Conversation
+                  </p>
+                  <h2 className="mt-1 text-xl font-bold text-slate-950">
+                    SMS timeline
+                  </h2>
+                  {lead.owner_takeover_at && (
+                    <p className="mt-1 text-xs font-semibold text-emerald-700">
+                      Owner takeover active
                     </p>
                   )}
-                  {msg.body}
                 </div>
+                <MessageSquareText className="h-5 w-5 text-blue-600" aria-hidden="true" />
               </div>
-            ))}
-          </div>
-        )}
+            </div>
 
-        <div className="mt-6 border-t border-gray-100 pt-4">
-          <label
-            htmlFor="manual-reply"
-            className="text-sm font-semibold text-slate-900"
-          >
-            Send manual SMS
-          </label>
-          <p className="text-xs text-gray-400 mt-1">
-            Sending pauses AI replies for this lead so the owner can take over.
-          </p>
-          <textarea
-            id="manual-reply"
-            value={manualReply}
-            onChange={(e) => {
-              setManualReply(e.target.value.slice(0, 500));
-              setReplyError("");
-            }}
-            disabled={sendingReply || deleting || !lead.phone}
-            rows={3}
-            className="mt-3 w-full rounded-lg border border-gray-200 px-3 py-2 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50"
-            placeholder={
-              lead.phone
-                ? "Type a reply to send from your RoofLead number..."
-                : "This lead has no phone number."
-            }
-          />
-          <div className="mt-3 flex items-center justify-between gap-3 flex-wrap">
-            <span className="text-xs text-gray-400">
-              {manualReply.length}/500 characters
-            </span>
-            <button
-              type="button"
-              onClick={sendManualReply}
-              disabled={sendingReply || manualReply.trim().length < 2 || !lead.phone}
-              className="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
-            >
-              <Send className="h-4 w-4" />
-              {sendingReply ? "Sending..." : "Send SMS"}
-            </button>
-          </div>
-          {replyError && (
-            <p className="mt-2 text-sm font-medium text-red-600">{replyError}</p>
-          )}
-        </div>
+            <div className="max-h-[520px] space-y-3 overflow-y-auto px-5 py-5">
+              {messages.length === 0 ? (
+                <p className="text-sm leading-6 text-slate-500">No messages yet.</p>
+              ) : (
+                messages.map((msg) => (
+                  <div
+                    key={msg.id}
+                    className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}
+                  >
+                    <div
+                      className={`max-w-[88%] rounded-2xl px-4 py-2.5 text-sm leading-6 ${
+                        msg.role === "user"
+                          ? "rounded-tr-sm bg-blue-600 text-white"
+                          : msg.role === "owner"
+                            ? "rounded-tl-sm border border-emerald-100 bg-emerald-50 text-emerald-950"
+                            : "rounded-tl-sm bg-slate-100 text-slate-800"
+                      }`}
+                    >
+                      {msg.role === "owner" && (
+                        <p className="mb-1 text-[10px] font-bold uppercase tracking-wide text-emerald-700">
+                          Owner
+                        </p>
+                      )}
+                      <p>{msg.body}</p>
+                      {formatMessageTime(msg.sent_at) && (
+                        <p className={`mt-1 text-[10px] ${msg.role === "user" ? "text-blue-100" : "text-slate-500"}`}>
+                          {formatMessageTime(msg.sent_at)}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+          </section>
+
+          <section id="manual-reply" className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+            <label htmlFor="manual-reply-input" className="text-sm font-bold uppercase tracking-wide text-blue-700">
+              Send manual SMS
+            </label>
+            <p className="mt-2 text-sm leading-6 text-slate-600">
+              Sending pauses AI replies for this lead so the owner can take over.
+            </p>
+            <textarea
+              id="manual-reply-input"
+              value={manualReply}
+              onChange={(e) => {
+                setManualReply(e.target.value.slice(0, 500));
+                setReplyError("");
+              }}
+              disabled={sendingReply || deleting || !lead.phone}
+              rows={4}
+              className="mt-4 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-600 disabled:opacity-50"
+              placeholder={
+                lead.phone
+                  ? "Type a reply to send from your RoofLead number..."
+                  : "This lead has no phone number."
+              }
+            />
+            <div className="mt-3 flex flex-wrap items-center justify-between gap-3">
+              <span className="text-xs text-slate-500">
+                {manualReply.length}/500 characters
+              </span>
+              <button
+                type="button"
+                onClick={sendManualReply}
+                disabled={sendingReply || manualReply.trim().length < 2 || !lead.phone}
+                className="inline-flex min-h-11 items-center gap-2 rounded-lg bg-blue-600 px-4 py-3 text-sm font-bold text-white transition-colors hover:bg-blue-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                <Send className="h-4 w-4" aria-hidden="true" />
+                {sendingReply ? "Sending..." : "Send SMS"}
+              </button>
+            </div>
+            {replyError && (
+              <p className="mt-3 text-sm font-bold text-red-600">{replyError}</p>
+            )}
+          </section>
+        </aside>
       </div>
     </div>
   );
