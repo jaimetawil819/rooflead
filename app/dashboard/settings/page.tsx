@@ -2,12 +2,39 @@
 
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { Building2, Phone, Code, Plus, X, CreditCard, DollarSign } from "lucide-react";
+import {
+  Building2,
+  Phone,
+  Code,
+  Plus,
+  X,
+  CreditCard,
+  DollarSign,
+  CalendarDays,
+  Clock,
+} from "lucide-react";
 
 interface Service {
   label: string;
   value: string;
 }
+
+const DAYS = [
+  { label: "Mon", value: "monday" },
+  { label: "Tue", value: "tuesday" },
+  { label: "Wed", value: "wednesday" },
+  { label: "Thu", value: "thursday" },
+  { label: "Fri", value: "friday" },
+  { label: "Sat", value: "saturday" },
+  { label: "Sun", value: "sunday" },
+];
+
+const TIMEZONES = [
+  { label: "Pacific Time", value: "America/Los_Angeles" },
+  { label: "Mountain Time", value: "America/Denver" },
+  { label: "Central Time", value: "America/Chicago" },
+  { label: "Eastern Time", value: "America/New_York" },
+];
 
 function labelToValue(label: string): string {
   return label.toLowerCase().replace(/[^a-z0-9]+/g, "_").replace(/^_|_$/g, "");
@@ -22,6 +49,19 @@ export default function SettingsPage() {
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [schedulingEnabled, setSchedulingEnabled] = useState(true);
+  const [schedulingTimezone, setSchedulingTimezone] = useState("America/Los_Angeles");
+  const [schedulingAvailableDays, setSchedulingAvailableDays] = useState<string[]>([
+    "monday",
+    "tuesday",
+    "wednesday",
+    "thursday",
+    "friday",
+  ]);
+  const [schedulingStartTime, setSchedulingStartTime] = useState("08:00");
+  const [schedulingEndTime, setSchedulingEndTime] = useState("17:00");
+  const [inspectionDurationMinutes, setInspectionDurationMinutes] = useState("60");
+  const [schedulingBufferMinutes, setSchedulingBufferMinutes] = useState("15");
 
   const [services, setServices] = useState<Service[]>([]);
   const [intakeQuestion, setIntakeQuestion] = useState("");
@@ -41,6 +81,23 @@ export default function SettingsPage() {
         setAverageJobValue(
           String(Math.round((business.average_job_value_cents ?? 800000) / 100))
         );
+        setSchedulingEnabled(business.scheduling_enabled ?? true);
+        setSchedulingTimezone(
+          business.scheduling_timezone ?? "America/Los_Angeles"
+        );
+        setSchedulingAvailableDays(
+          Array.isArray(business.scheduling_available_days)
+            ? business.scheduling_available_days
+            : ["monday", "tuesday", "wednesday", "thursday", "friday"]
+        );
+        setSchedulingStartTime(business.scheduling_start_time ?? "08:00");
+        setSchedulingEndTime(business.scheduling_end_time ?? "17:00");
+        setInspectionDurationMinutes(
+          String(business.inspection_duration_minutes ?? 60)
+        );
+        setSchedulingBufferMinutes(
+          String(business.scheduling_buffer_minutes ?? 15)
+        );
       }
 
       if (widget) {
@@ -58,7 +115,18 @@ export default function SettingsPage() {
     await fetch("/api/dashboard/settings", {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ name, notificationPhone, averageJobValue }),
+      body: JSON.stringify({
+        name,
+        notificationPhone,
+        averageJobValue,
+        schedulingEnabled,
+        schedulingTimezone,
+        schedulingAvailableDays,
+        schedulingStartTime,
+        schedulingEndTime,
+        inspectionDurationMinutes,
+        schedulingBufferMinutes,
+      }),
     });
     setSaving(false);
     setSaved(true);
@@ -90,6 +158,14 @@ export default function SettingsPage() {
 
   const removeService = (index: number) => {
     setServices(services.filter((_, i) => i !== index));
+  };
+
+  const toggleAvailableDay = (day: string) => {
+    setSchedulingAvailableDays((current) =>
+      current.includes(day)
+        ? current.filter((value) => value !== day)
+        : [...current, day]
+    );
   };
 
   const embedCode = widgetKey
@@ -186,6 +262,150 @@ export default function SettingsPage() {
         <div className="flex items-center gap-3 mt-6">
           <Button onClick={save} disabled={saving} size="sm">
             {saving ? "Saving…" : "Save Changes"}
+          </Button>
+          {saved && <span className="text-sm text-green-600 font-medium">Saved!</span>}
+        </div>
+      </div>
+
+      <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 mb-4">
+        <div className="flex items-center gap-2 mb-2">
+          <CalendarDays className="h-4 w-4 text-gray-400" aria-hidden="true" />
+          <h2 className="font-semibold text-slate-900">Scheduling</h2>
+        </div>
+        <p className="text-sm text-gray-500 mb-5">
+          Set the basic inspection availability the AI can use when asking for preferred times.
+        </p>
+
+        <label className="flex items-center gap-2 text-sm font-medium text-slate-700 mb-5">
+          <input
+            type="checkbox"
+            checked={schedulingEnabled}
+            onChange={(e) => setSchedulingEnabled(e.target.checked)}
+            className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+          />
+          Ask leads for preferred inspection times
+        </label>
+
+        <div className="space-y-5">
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-2">
+              Available Days
+            </label>
+            <div className="flex flex-wrap gap-2">
+              {DAYS.map((day) => {
+                const selected = schedulingAvailableDays.includes(day.value);
+
+                return (
+                  <button
+                    key={day.value}
+                    type="button"
+                    onClick={() => toggleAvailableDay(day.value)}
+                    className={`rounded-lg border px-3 py-2 text-sm font-semibold transition-colors ${
+                      selected
+                        ? "border-blue-200 bg-blue-50 text-blue-700"
+                        : "border-gray-200 bg-white text-gray-500 hover:bg-gray-50"
+                    }`}
+                  >
+                    {day.label}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-1.5" htmlFor="start-time">
+                Start Time
+              </label>
+              <div className="relative">
+                <Clock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" aria-hidden="true" />
+                <input
+                  id="start-time"
+                  type="time"
+                  className="w-full border border-gray-200 rounded-lg pl-9 pr-3 py-2.5 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  value={schedulingStartTime}
+                  onChange={(e) => setSchedulingStartTime(e.target.value)}
+                />
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-1.5" htmlFor="end-time">
+                End Time
+              </label>
+              <div className="relative">
+                <Clock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" aria-hidden="true" />
+                <input
+                  id="end-time"
+                  type="time"
+                  className="w-full border border-gray-200 rounded-lg pl-9 pr-3 py-2.5 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  value={schedulingEndTime}
+                  onChange={(e) => setSchedulingEndTime(e.target.value)}
+                />
+              </div>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-1.5" htmlFor="duration">
+                Inspection Minutes
+              </label>
+              <input
+                id="duration"
+                type="number"
+                min="15"
+                max="240"
+                step="15"
+                className="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                value={inspectionDurationMinutes}
+                onChange={(e) => setInspectionDurationMinutes(e.target.value)}
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-1.5" htmlFor="buffer">
+                Buffer Minutes
+              </label>
+              <input
+                id="buffer"
+                type="number"
+                min="0"
+                max="120"
+                step="5"
+                className="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                value={schedulingBufferMinutes}
+                onChange={(e) => setSchedulingBufferMinutes(e.target.value)}
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-1.5" htmlFor="timezone">
+                Timezone
+              </label>
+              <select
+                id="timezone"
+                className="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm text-slate-900 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                value={schedulingTimezone}
+                onChange={(e) => setSchedulingTimezone(e.target.value)}
+              >
+                {TIMEZONES.map((timezone) => (
+                  <option key={timezone.value} value={timezone.value}>
+                    {timezone.label}
+                  </option>
+                ))}
+              </select>
+              <p className="text-xs text-gray-400 mt-1.5">
+                Used only to interpret preferred inspection times.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-3 mt-6">
+          <Button onClick={save} disabled={saving} size="sm">
+            {saving ? "Savingâ€¦" : "Save Scheduling"}
           </Button>
           {saved && <span className="text-sm text-green-600 font-medium">Saved!</span>}
         </div>

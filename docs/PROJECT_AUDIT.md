@@ -16,7 +16,7 @@ Phase 0 safety work is complete enough to move forward: secrets are ignored, tra
 
 Phase 1 reliability work is complete. Billing correctness, idempotency, structured lead extraction, AI guardrails, local inbound SMS simulation, async Twilio webhook processing, prompt injection mitigation, mid-conversation timeout handling, structured backend logging, and final smoke testing have been completed. The biggest remaining risks are now external-provider readiness, pilot onboarding, and the normal limits of an MVP implementation.
 
-Phase 2 has added the most important demo-facing workflows: human review, owner SMS takeover, lead pagination/search, and simple ROI metrics. The product is now close to demo-ready, but should go through a dedicated pilot-demo readiness pass before scheduling or larger features.
+Phase 2 has added the most important demo-facing workflows: human review, owner SMS takeover, lead pagination/search, simple ROI metrics, and pilot-demo polish. Scheduling foundations are now being added as a lightweight manual assist, not a full calendar integration.
 
 ---
 
@@ -113,7 +113,7 @@ Phase 1 is closed. The user confirmed the final smoke test worked after local ch
    - Current state: complete and manually tested with protected owner reply endpoint, Twilio send, conversation persistence, opt-out check, and `owner_takeover_at` state that pauses future AI auto-replies.
 
 3. **Scheduling/inspection booking**
-   - Current risk: appointment booking could be valuable, but needs business availability settings and a human handoff boundary first.
+   - Current state: in progress. The near-term scope is business availability settings plus lead-level appointment intent/status. Full calendar booking, reminders, and automatic slot confirmation remain intentionally out of scope.
 
 4. **Lead list pagination/search**
    - Current state: pagination and search are complete and manually tested. Search covers name, phone, address, service type, and summary, with URL state and pagination reset behavior.
@@ -141,4 +141,4 @@ Phase 1 is closed. The user confirmed the final smoke test worked after local ch
 **Local/pilot-demo readiness:** Good, with simulator-based testing.
 **Real customer readiness:** Close, but not automatic. Wait for A2P approval and run a real SMS pilot test before relying on it for a paying customer.
 
-Recommended next engineering move: **Run a production demo smoke test before scheduling/inspection booking.**
+Recommended next engineering move: **Finish scheduling foundations, run local verification, apply the scheduling migration, then test one full demo lead.**

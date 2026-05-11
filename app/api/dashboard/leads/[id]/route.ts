@@ -14,11 +14,26 @@ const STATUSES = new Set([
   "unresponsive",
 ]);
 
+const APPOINTMENT_STATUSES = new Set([
+  "not_requested",
+  "requested",
+  "scheduled",
+  "completed",
+  "canceled",
+]);
+
 type LeadPatch = {
   status?: unknown;
   needsHumanReview?: unknown;
   handoffReason?: unknown;
+  appointmentStatus?: unknown;
+  preferredAppointmentTime?: unknown;
+  appointmentNotes?: unknown;
 };
+
+function cleanText(value: unknown, maxLength: number) {
+  return typeof value === "string" ? value.trim().slice(0, maxLength) : "";
+}
 
 async function getOwnedLead(id: string, userId: string) {
   const supabase = getAdminClient();
@@ -76,9 +91,21 @@ export async function PATCH(
 
   const body = (await req.json().catch(() => null)) as LeadPatch | null;
   const status = typeof body?.status === "string" ? body.status : "";
+  const appointmentStatus =
+    typeof body?.appointmentStatus === "string" ? body.appointmentStatus : "";
 
   if (body?.status !== undefined && !STATUSES.has(status)) {
     return NextResponse.json({ error: "Invalid status" }, { status: 400 });
+  }
+
+  if (
+    body?.appointmentStatus !== undefined &&
+    !APPOINTMENT_STATUSES.has(appointmentStatus)
+  ) {
+    return NextResponse.json(
+      { error: "Invalid appointment status" },
+      { status: 400 }
+    );
   }
 
   const update: Record<string, string | boolean | null> = {};
@@ -101,6 +128,19 @@ export async function PATCH(
         ? body.handoffReason.trim().slice(0, 250)
         : "Marked for review by owner."
       : null;
+  }
+
+  if (body?.appointmentStatus !== undefined) {
+    update.appointment_status = appointmentStatus;
+  }
+
+  if (body?.preferredAppointmentTime !== undefined) {
+    update.preferred_appointment_time =
+      cleanText(body.preferredAppointmentTime, 120) || null;
+  }
+
+  if (body?.appointmentNotes !== undefined) {
+    update.appointment_notes = cleanText(body.appointmentNotes, 500) || null;
   }
 
   if (Object.keys(update).length === 0) {

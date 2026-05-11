@@ -6,6 +6,43 @@ This is a running log of every change made under the controlled-implementation p
 
 ---
 
+## 2026-05-10 - Phase 2G - Scheduling foundations
+
+**Task:** Add lightweight scheduling foundations without building full calendar automation.
+**Status:** code complete, awaiting migration and manual test
+
+**Files changed:**
+- `docs/SCHEDULING_PLAN.md` (added)
+- `supabase/migrations/0011_scheduling_foundations.sql` (added)
+- `supabase/migrations/README.md` (modified)
+- `app/api/dashboard/settings/route.ts` (modified)
+- `app/dashboard/settings/page.tsx` (modified)
+- `app/api/dashboard/leads/[id]/route.ts` (modified)
+- `app/dashboard/leads/[id]/page.tsx` (modified)
+- `app/dashboard/leads/page.tsx` (modified)
+- `docs/IMPLEMENTATION_PLAN.md` (modified)
+- `docs/PROJECT_AUDIT.md` (modified)
+- `docs/IMPLEMENTATION_LOG.md` (modified)
+
+**Reason:**
+Scheduling is likely valuable for roofers, but building calendar automation too early would create complexity before pilot validation. This slice creates the data model and dashboard workflow for manual appointment intent: business availability settings, lead appointment status, preferred time, and appointment notes.
+
+**Verification performed:**
+- `npx.cmd tsc --noEmit`: clean.
+- `npm run lint`: clean.
+- `npm run build`: clean.
+
+**Follow-up needed:**
+- Apply `supabase/migrations/0011_scheduling_foundations.sql` in Supabase before testing.
+- Test Settings scheduling save.
+- Test Lead Detail scheduling save.
+- Decide later whether AI should ask for preferred inspection time automatically.
+
+**Notes / surprises:**
+- This is intentionally not a booking engine. The AI should collect preferred timing and tell the lead the business will confirm availability.
+
+---
+
 ## 2026-05-10 - Phase 2F - Pilot demo readiness planning
 
 **Task:** Create a source of truth for demo readiness before adding larger features.

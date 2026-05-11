@@ -28,6 +28,14 @@ const STATUSES = [
   "unresponsive",
 ];
 
+const APPOINTMENT_STATUSES = [
+  "not_requested",
+  "requested",
+  "scheduled",
+  "completed",
+  "canceled",
+];
+
 const scoreColors: Record<string, string> = {
   hot: "bg-red-100 text-red-700",
   warm: "bg-orange-100 text-orange-700",
@@ -63,6 +71,9 @@ type Lead = {
   needs_human_review: boolean | null;
   handoff_reason: string | null;
   owner_takeover_at: string | null;
+  appointment_status: string;
+  preferred_appointment_time: string | null;
+  appointment_notes: string | null;
 };
 
 type Message = {
@@ -106,6 +117,10 @@ export default function LeadDetailPage({
   const [manualReply, setManualReply] = useState("");
   const [sendingReply, setSendingReply] = useState(false);
   const [replyError, setReplyError] = useState("");
+  const [appointmentStatus, setAppointmentStatus] = useState("not_requested");
+  const [preferredAppointmentTime, setPreferredAppointmentTime] = useState("");
+  const [appointmentNotes, setAppointmentNotes] = useState("");
+  const [savingAppointment, setSavingAppointment] = useState(false);
 
   useEffect(() => {
     const load = async () => {
@@ -115,6 +130,9 @@ export default function LeadDetailPage({
       const data = await res.json();
       setLead(data.lead);
       setMessages(data.messages ?? []);
+      setAppointmentStatus(data.lead.appointment_status ?? "not_requested");
+      setPreferredAppointmentTime(data.lead.preferred_appointment_time ?? "");
+      setAppointmentNotes(data.lead.appointment_notes ?? "");
     };
     load();
   }, [id]);
@@ -132,6 +150,42 @@ export default function LeadDetailPage({
     }
 
     setSaving(false);
+    setSaved(true);
+    setTimeout(() => setSaved(false), 2000);
+  };
+
+  const updateAppointment = async () => {
+    setSavingAppointment(true);
+    const res = await fetch(`/api/dashboard/leads/${id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        status: appointmentStatus === "scheduled" ? "appointment_set" : undefined,
+        appointmentStatus,
+        preferredAppointmentTime,
+        appointmentNotes,
+      }),
+    });
+
+    if (res.ok) {
+      setLead((prev) =>
+        prev
+          ? {
+              ...prev,
+              appointment_status: appointmentStatus,
+              preferred_appointment_time: preferredAppointmentTime || null,
+              appointment_notes: appointmentNotes || null,
+              status:
+                appointmentStatus === "scheduled" &&
+                prev.status !== "appointment_set"
+                  ? "appointment_set"
+                  : prev.status,
+            }
+          : prev
+      );
+    }
+
+    setSavingAppointment(false);
     setSaved(true);
     setTimeout(() => setSaved(false), 2000);
   };
@@ -427,6 +481,102 @@ export default function LeadDetailPage({
             <Trash2 className="h-4 w-4" />
             {deleting ? "Deleting..." : "Delete Test Lead"}
           </button>
+        </div>
+      </div>
+
+      <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 mb-4">
+        <div className="flex items-start justify-between gap-4 flex-wrap mb-5">
+          <div>
+            <p className="text-sm font-semibold text-slate-900">
+              Scheduling
+            </p>
+            <p className="text-sm text-gray-500 mt-1">
+              Track inspection intent without promising an automatic booking.
+            </p>
+          </div>
+          <span className="rounded-full bg-blue-50 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-blue-700">
+            {titleCase(appointmentStatus)}
+          </span>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div>
+            <label
+              htmlFor="appointment-status"
+              className="block text-sm font-medium text-slate-700 mb-1.5"
+            >
+              Appointment Status
+            </label>
+            <select
+              id="appointment-status"
+              value={appointmentStatus}
+              onChange={(e) => setAppointmentStatus(e.target.value)}
+              disabled={savingAppointment || deleting}
+              className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm text-slate-900 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50"
+            >
+              {APPOINTMENT_STATUSES.map((status) => (
+                <option key={status} value={status}>
+                  {titleCase(status)}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div>
+            <label
+              htmlFor="preferred-time"
+              className="block text-sm font-medium text-slate-700 mb-1.5"
+            >
+              Preferred Time
+            </label>
+            <input
+              id="preferred-time"
+              value={preferredAppointmentTime}
+              onChange={(e) =>
+                setPreferredAppointmentTime(e.target.value.slice(0, 120))
+              }
+              disabled={savingAppointment || deleting}
+              className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50"
+              placeholder="e.g. Tomorrow afternoon"
+            />
+          </div>
+        </div>
+
+        <div className="mt-4">
+          <label
+            htmlFor="appointment-notes"
+            className="block text-sm font-medium text-slate-700 mb-1.5"
+          >
+            Appointment Notes
+          </label>
+          <textarea
+            id="appointment-notes"
+            value={appointmentNotes}
+            onChange={(e) => setAppointmentNotes(e.target.value.slice(0, 500))}
+            disabled={savingAppointment || deleting}
+            rows={3}
+            className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50"
+            placeholder="Add confirmation details, access notes, or timing constraints."
+          />
+          <p className="text-xs text-gray-400 mt-1.5">
+            {appointmentNotes.length}/500 characters
+          </p>
+        </div>
+
+        <div className="flex items-center gap-3 mt-5">
+          <button
+            type="button"
+            onClick={updateAppointment}
+            disabled={savingAppointment || deleting}
+            className="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            {savingAppointment ? "Saving..." : "Save Scheduling"}
+          </button>
+          {lead.preferred_appointment_time && (
+            <span className="text-xs text-gray-400">
+              Saved preference: {lead.preferred_appointment_time}
+            </span>
+          )}
         </div>
       </div>
 

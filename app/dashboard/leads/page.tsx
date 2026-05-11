@@ -35,6 +35,7 @@ type LeadRow = {
   status: string;
   created_at: string;
   needs_human_review: boolean | null;
+  appointment_status: string | null;
 };
 
 function titleCase(value: string) {
@@ -205,6 +206,12 @@ export default async function LeadsPage({
                             Needs Review
                           </span>
                         )}
+                        {lead.appointment_status &&
+                          lead.appointment_status !== "not_requested" && (
+                            <span className="rounded-full bg-blue-100 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-blue-700">
+                              {titleCase(lead.appointment_status)}
+                            </span>
+                          )}
                         <ArrowRight className="h-3.5 w-3.5 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity" />
                       </p>
                       <p className="text-xs text-gray-400 mt-0.5 truncate">

@@ -27,7 +27,7 @@ Phase 0 and Phase 1 are complete. Phase 1 closed the core reliability gaps neede
 - Structured logging
 - Final local and production smoke test confirmed by the user
 
-Current focus: **Pilot demo readiness** is complete. Next step is a production demo smoke test before adding scheduling.
+Current focus: **Scheduling foundations** are in progress after pilot demo readiness was completed.
 
 ---
 
@@ -276,7 +276,12 @@ Do not start until at least one pilot workflow is stable.
   - Store owner-authored replies in the conversation.
   - Set owner takeover state so future homeowner replies are saved but do not trigger AI auto-replies.
   - Respect STOP opt-outs before sending.
-- Scheduling/inspection booking
+- Scheduling/inspection booking - In progress
+  - Add a lightweight scheduling plan in `docs/SCHEDULING_PLAN.md`.
+  - Add business scheduling settings: enabled state, timezone, days, hours, inspection duration, and buffer.
+  - Add lead appointment fields: appointment status, preferred appointment time, and appointment notes.
+  - Show and manually edit scheduling info from the lead detail page.
+  - Do not add calendar integrations or automatic booking yet.
 - ROI metrics - Complete
   - Add configurable average job value in Settings.
   - Show total leads, hot leads, qualified leads, needs-review leads, won leads, and estimated revenue on dashboard.
@@ -316,6 +321,6 @@ Do not start until at least one pilot workflow is stable.
 
 ## Current next action
 
-Recommended next engineering slice: **Production demo smoke test, then scheduling foundations.**
+Recommended next engineering slice: **Finish and test scheduling foundations.**
 
-Reason: the core workflow is now broad enough for a demo. The next practical step is making sure the product looks credible and runs cleanly in front of a roofing company owner.
+Reason: the demo path is stable enough to add appointment intent without overbuilding. Keep this as manual scheduling assist until pilot conversations prove full calendar booking is worth building.
