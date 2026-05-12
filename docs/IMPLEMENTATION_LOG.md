@@ -6,6 +6,38 @@ This is a running log of every change made under the controlled-implementation p
 
 ---
 
+## 2026-05-11 - Stripe trial access fix
+
+**Task:** Fix post-checkout dashboard access for card-backed free trials.
+**Status:** completed
+
+**Files changed:**
+- `lib/billing.ts` (created)
+- `app/dashboard/layout.tsx` (modified)
+- `app/api/billing/checkout/route.ts` (modified)
+- `app/subscribe/success/page.tsx` (modified)
+- `docs/IMPLEMENTATION_LOG.md` (modified)
+
+**Reason:**
+Stripe subscriptions with a free trial use the `trialing` status. The dashboard gate only allowed `active`, so a successful checkout could return to the success page and still redirect back to `/subscribe` when the user clicked into the dashboard.
+
+Implemented:
+- Added shared billing access helper that allows `active` and `trialing` only when a real Stripe subscription id exists.
+- Updated the dashboard gate to use that helper.
+- Updated Stripe checkout success URLs to include `{CHECKOUT_SESSION_ID}`.
+- Added server-side checkout-session reconciliation on `/subscribe/success` so a completed checkout can sync subscription status/id even if webhook timing is delayed.
+
+**Verification performed:**
+- `npx.cmd tsc --noEmit`: clean.
+- `npm run lint`: clean.
+- `npm run build`: clean.
+
+**Follow-up needed:**
+- After deploy, repeat the card-backed trial checkout and confirm the dashboard opens.
+- If the already-created trial still lacks `stripe_subscription_id`, resend the relevant Stripe webhook event or create a fresh checkout after this deploy.
+
+---
+
 ## 2026-05-11 - Scheduling conversation polish
 
 **Task:** Improve AI intake behavior around known form data and inspection scheduling intent.

@@ -55,7 +55,7 @@ export async function POST() {
     subscription_data: {
       trial_period_days: 14,
     },
-    success_url: `${appBaseUrl}/subscribe/success`,
+    success_url: `${appBaseUrl}/subscribe/success?session_id={CHECKOUT_SESSION_ID}`,
     cancel_url: `${appBaseUrl}/subscribe`,
   });
 

@@ -2,6 +2,7 @@ import { auth } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
 import { getAdminClient } from "@/lib/supabase/admin";
 import Sidebar from "@/components/dashboard/Sidebar";
+import { hasDashboardAccess } from "@/lib/billing";
 
 export default async function DashboardLayout({
   children,
@@ -14,11 +15,17 @@ export default async function DashboardLayout({
   const supabase = getAdminClient();
   const { data: business } = await supabase
     .from("businesses")
-    .select("subscription_status, onboarding_complete")
+    .select("subscription_status, stripe_subscription_id, onboarding_complete")
     .eq("owner_id", userId)
     .single();
 
-  if (!business || business.subscription_status !== "active") {
+  if (
+    !business ||
+    !hasDashboardAccess(
+      business.subscription_status,
+      business.stripe_subscription_id
+    )
+  ) {
     redirect("/subscribe");
   }
 

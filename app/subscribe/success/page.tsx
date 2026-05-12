@@ -1,8 +1,72 @@
 import Image from "next/image";
 import Link from "next/link";
+import Stripe from "stripe";
+import { auth } from "@clerk/nextjs/server";
 import { ArrowRight, CheckCircle2, Code2, MessageSquareText } from "lucide-react";
+import { getAdminClient } from "@/lib/supabase/admin";
 
-export default function SubscribeSuccessPage() {
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!);
+
+type SubscribeSuccessPageProps = {
+  searchParams?: Promise<{ session_id?: string }>;
+};
+
+type StripeReference = string | { id: string } | null;
+
+function getStripeId(ref: StripeReference) {
+  if (!ref) return null;
+  return typeof ref === "string" ? ref : ref.id;
+}
+
+function getSubscriptionPriceId(subscription: Stripe.Subscription) {
+  return subscription.items.data[0]?.price.id ?? null;
+}
+
+async function syncCheckoutSession(sessionId: string | undefined) {
+  if (!sessionId) return false;
+
+  const { userId } = await auth();
+  if (!userId) return false;
+
+  try {
+    const session = await stripe.checkout.sessions.retrieve(sessionId);
+    const customerId = getStripeId(session.customer);
+    const subscriptionId = getStripeId(session.subscription);
+
+    if (!customerId || !subscriptionId) return false;
+
+    const subscription = await stripe.subscriptions.retrieve(subscriptionId);
+    const supabase = getAdminClient();
+    const { data: business } = await supabase
+      .from("businesses")
+      .select("id")
+      .eq("owner_id", userId)
+      .eq("stripe_customer_id", customerId)
+      .single();
+
+    if (!business) return false;
+
+    await supabase
+      .from("businesses")
+      .update({
+        subscription_status: subscription.status,
+        stripe_subscription_id: subscription.id,
+        stripe_price_id: getSubscriptionPriceId(subscription),
+      })
+      .eq("id", business.id);
+
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+export default async function SubscribeSuccessPage({
+  searchParams,
+}: SubscribeSuccessPageProps) {
+  const params = searchParams ? await searchParams : {};
+  await syncCheckoutSession(params.session_id);
+
   return (
     <main className="min-h-dvh bg-slate-100 px-4 py-8 sm:px-6 lg:px-8">
       <div className="mx-auto max-w-4xl overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-xl shadow-slate-200/70">
