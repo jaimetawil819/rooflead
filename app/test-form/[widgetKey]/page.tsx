@@ -27,6 +27,7 @@ export default function TestFormPage({
   const [phone, setPhone] = useState("");
   const [address, setAddress] = useState("");
   const [serviceType, setServiceType] = useState("");
+  const [smsConsent, setSmsConsent] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [done, setDone] = useState(false);
   const [error, setError] = useState("");
@@ -53,10 +54,16 @@ export default function TestFormPage({
     setSubmitting(true);
     setError("");
 
+    if (!smsConsent) {
+      setError("Please agree to receive SMS messages before submitting.");
+      setSubmitting(false);
+      return;
+    }
+
     const res = await fetch(`/api/forms/${widgetKey}`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ name, phone, address, serviceType }),
+      body: JSON.stringify({ name, phone, address, serviceType, smsConsent }),
     });
 
     if (!res.ok) {
@@ -230,11 +237,25 @@ export default function TestFormPage({
                   )}
                 </div>
 
-                <p className="rounded-xl border border-blue-100 bg-blue-50 p-4 text-xs leading-6 text-slate-700">
-                  By submitting, you agree to receive automated SMS messages
-                  from this business about your estimate request. Message and
-                  data rates may apply. Reply STOP to opt out or HELP for help.
-                </p>
+                <label
+                  htmlFor="test-sms-consent"
+                  className="flex cursor-pointer gap-3 rounded-xl border border-blue-100 bg-blue-50 p-4 text-xs leading-6 text-slate-700"
+                >
+                  <input
+                    id="test-sms-consent"
+                    type="checkbox"
+                    required
+                    checked={smsConsent}
+                    onChange={(e) => setSmsConsent(e.target.checked)}
+                    className="mt-1 h-4 w-4 flex-shrink-0 accent-blue-600"
+                    aria-describedby="test-sms-consent-copy"
+                  />
+                  <span id="test-sms-consent-copy">
+                    I agree to receive automated SMS messages from this business
+                    about my estimate request. Message and data rates may apply.
+                    Reply STOP to opt out or HELP for help.
+                  </span>
+                </label>
 
                 <button
                   type="submit"

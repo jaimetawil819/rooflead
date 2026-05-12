@@ -64,6 +64,7 @@
     var services = Array.isArray(config.services) ? config.services : [];
     var intakeQuestion = config.intakeQuestion || "What type of roofing issue are you dealing with?";
     var serviceId = uid + "-service";
+    var consentId = uid + "-sms-consent";
 
     var serviceOptions = services.map(function (s) {
       return '<option value="' + escapeHtml(s.value) + '">' + escapeHtml(s.label) + "</option>";
@@ -106,14 +107,17 @@
               "</div>" +
               '<div>' + serviceField + "</div>" +
             "</div>" +
-            '<p style="margin:16px 0 0;color:#64748b;font-size:12px;line-height:1.6;">By submitting, you agree to receive automated SMS messages from this business about your estimate request. Message and data rates may apply. Reply STOP to opt out or HELP for help.</p>' +
+            '<label for="' + consentId + '" style="display:flex;gap:10px;align-items:flex-start;margin:16px 0 0;border:1px solid #bfdbfe;border-radius:12px;background:#eff6ff;padding:12px 14px;color:#334155;cursor:pointer;">' +
+              '<input id="' + consentId + '" name="smsConsent" type="checkbox" required style="width:18px;height:18px;margin:2px 0 0;flex:0 0 auto;accent-color:#2563eb;cursor:pointer;" />' +
+              '<span style="display:block;font-size:12px;line-height:1.6;">I agree to receive automated SMS messages from this business about my estimate request. Message and data rates may apply. Reply STOP to opt out or HELP for help.</span>' +
+            "</label>" +
             '<button type="submit" id="' + uid + '-btn" style="width:100%;min-height:48px;margin-top:18px;border:0;border-radius:10px;background:#2563eb;color:#ffffff;cursor:pointer;font-size:16px;font-weight:800;line-height:1.2;transition:background 160ms ease, transform 160ms ease;">Get a Free Estimate</button>' +
             '<p style="margin:12px 0 0;text-align:center;color:#94a3b8;font-size:11px;line-height:1.5;">Powered by RoofLead AI intake</p>' +
           "</div>" +
         "</form>" +
       "</div>";
 
-    var fields = container.querySelectorAll("input, select");
+    var fields = container.querySelectorAll("input:not([type='checkbox']), select");
     Array.prototype.forEach.call(fields, function (field) {
       field.addEventListener("focus", function () {
         field.style.borderColor = "#2563eb";
@@ -151,6 +155,7 @@
           phone: form.phone.value,
           address: form.address.value,
           serviceType: form.serviceType.value,
+          smsConsent: form.smsConsent.checked,
         }),
       }).then(function (response) {
         if (!response.ok) throw new Error("submit_failed");

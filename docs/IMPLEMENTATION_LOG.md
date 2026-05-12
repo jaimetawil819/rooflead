@@ -6,6 +6,43 @@ This is a running log of every change made under the controlled-implementation p
 
 ---
 
+## 2026-05-12 - Required SMS consent checkbox
+
+**Task:** Add required SMS consent checkboxes to the embedded widget and test forms.
+**Status:** completed
+
+**Files changed:**
+- `public/embed.js` (modified)
+- `app/test-form/page.tsx` (modified)
+- `app/test-form/[widgetKey]/page.tsx` (modified)
+- `lib/form-validation.ts` (modified)
+- `docs/IMPLEMENTATION_LOG.md` (modified)
+
+**Reason:**
+The forms showed SMS consent copy, but the homeowner did not have to explicitly check a consent box, and direct API posts could omit consent entirely. The consent requirement now uses a native required checkbox in the user-facing forms and server-side validation in the public lead endpoint.
+
+Implemented:
+- Added a required SMS consent checkbox to the embeddable widget.
+- Added a required SMS consent checkbox to the public static sample test form.
+- Added a required SMS consent checkbox to the account-specific test form.
+- Included `smsConsent` in widget/test-form submissions.
+- Updated form validation so missing or false `smsConsent` returns `400` with `SMS consent is required`.
+
+**Verification performed:**
+- `POST /api/forms/[widgetKey]` without `smsConsent`: `400`.
+- `POST /api/forms/[widgetKey]` with `smsConsent: false`: `400`.
+- `POST /api/forms/[widgetKey]` with `smsConsent: true`: `200`, fake test lead created.
+- Browser snapshot of `http://127.0.0.1:3000/test.html`: required SMS consent checkbox present on the embedded widget.
+- Browser snapshot of `/test-form`: required SMS consent checkbox present on the static sample form.
+- Browser snapshot of `/test-form/[widgetKey]`: required SMS consent checkbox present on the keyed test form. The in-app browser showed the existing service-options loading state even though the config endpoint returned `200`; no console errors were reported.
+- `npm run lint`: clean.
+- `npm run build`: clean.
+
+**Follow-up needed:**
+- Recheck `/test-form/[widgetKey]` in a normal browser session if the in-app browser continues to show stale loading state for service options.
+
+---
+
 ## 2026-05-12 - Embedded widget CORS smoke test
 
 **Task:** Test the embedded lead widget and fix external-site submission.

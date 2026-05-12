@@ -11,6 +11,7 @@ export type LeadFormInput = {
   phone: string;
   address: string | null;
   serviceType: string | null;
+  smsConsent: true;
 };
 
 type ValidationResult =
@@ -49,6 +50,7 @@ export function parseLeadFormBody(rawBody: string): ValidationResult {
   const rawPhone = sanitizeText(record.phone, MAX_PHONE_LENGTH);
   const address = sanitizeText(record.address, MAX_ADDRESS_LENGTH);
   const serviceType = sanitizeText(record.serviceType, MAX_SERVICE_TYPE_LENGTH);
+  const smsConsent = record.smsConsent === true;
   const phone = normalizePhoneNumber(rawPhone);
 
   if (!name) {
@@ -63,6 +65,10 @@ export function parseLeadFormBody(rawBody: string): ValidationResult {
     return { ok: false, error: "Phone must be a valid US number", status: 400 };
   }
 
+  if (!smsConsent) {
+    return { ok: false, error: "SMS consent is required", status: 400 };
+  }
+
   return {
     ok: true,
     data: {
@@ -70,6 +76,7 @@ export function parseLeadFormBody(rawBody: string): ValidationResult {
       phone,
       address: address || null,
       serviceType: serviceType || null,
+      smsConsent,
     },
   };
 }

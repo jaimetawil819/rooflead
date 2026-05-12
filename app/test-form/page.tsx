@@ -112,20 +112,32 @@ export default function SampleTestFormPage() {
               </select>
             </div>
 
-            <p className="rounded-xl border border-blue-100 bg-blue-50 p-4 text-xs leading-6 text-slate-700">
-              By submitting, you agree to receive automated SMS messages from
-              this roofing business about your estimate request. Message and
-              data rates may apply. Message frequency varies. Reply STOP to opt
-              out or HELP for help. See our{" "}
-              <Link href="/privacy" className="font-bold text-blue-700 hover:underline">
-                Privacy Policy
-              </Link>{" "}
-              and{" "}
-              <Link href="/terms" className="font-bold text-blue-700 hover:underline">
-                Terms
-              </Link>
-              .
-            </p>
+            <label
+              htmlFor="sample-sms-consent"
+              className="flex cursor-pointer gap-3 rounded-xl border border-blue-100 bg-blue-50 p-4 text-xs leading-6 text-slate-700"
+            >
+              <input
+                id="sample-sms-consent"
+                type="checkbox"
+                required
+                className="mt-1 h-4 w-4 flex-shrink-0 accent-blue-600"
+                aria-describedby="sample-sms-consent-copy"
+              />
+              <span id="sample-sms-consent-copy">
+                I agree to receive automated SMS messages from this roofing
+                business about my estimate request. Message and data rates may
+                apply. Message frequency varies. Reply STOP to opt out or HELP
+                for help. See our{" "}
+                <Link href="/privacy" className="font-bold text-blue-700 hover:underline">
+                  Privacy Policy
+                </Link>{" "}
+                and{" "}
+                <Link href="/terms" className="font-bold text-blue-700 hover:underline">
+                  Terms
+                </Link>
+                .
+              </span>
+            </label>
 
             <button
               type="button"
