@@ -2,6 +2,7 @@ import { after, NextRequest, NextResponse } from "next/server";
 import twilio from "twilio";
 import { getAdminClient } from "@/lib/supabase/admin";
 import { generateConversationReply, generateLeadSummary } from "@/lib/ai";
+import type { LeadAppointmentStatus } from "@/lib/ai";
 import { getPhoneLookupCandidates } from "@/lib/phone";
 import {
   isSmsOptedOut,
@@ -29,6 +30,47 @@ type ActiveLead = {
   name: string | null;
   owner_takeover_at: string | null;
 };
+
+type BusinessConversationRow = {
+  name: string | null;
+  notification_phone: string | null;
+  scheduling_enabled: boolean | null;
+  scheduling_timezone: string | null;
+  scheduling_available_days: unknown;
+  scheduling_start_time: string | null;
+  scheduling_end_time: string | null;
+};
+
+type LeadConversationRow = {
+  name: string | null;
+  address: string | null;
+  service_type: string | null;
+  appointment_status: string | null;
+};
+
+function shouldPersistAppointmentIntent(
+  appointmentStatus: LeadAppointmentStatus | null,
+  preferredAppointmentTime: string | null,
+  appointmentNotes: string | null,
+  currentAppointmentStatus?: string | null
+) {
+  if (currentAppointmentStatus === "scheduled") return false;
+
+  return Boolean(
+    appointmentStatus === "requested" ||
+      preferredAppointmentTime ||
+      appointmentNotes
+  );
+}
+
+function getPersistedAppointmentStatus(
+  appointmentStatus: LeadAppointmentStatus | null,
+  preferredAppointmentTime: string | null
+) {
+  return appointmentStatus === "requested" || preferredAppointmentTime
+    ? "requested"
+    : "not_requested";
+}
 
 function getTwilioValidationUrl(req: NextRequest) {
   const requestUrl = new URL(req.url);
@@ -91,31 +133,56 @@ async function processLeadConversation({
       content: m.body,
     }));
 
-    const [{ data: business }, { data: widget }] = await Promise.all([
-      supabase
-        .from("businesses")
-        .select("name, notification_phone")
-        .eq("id", businessId)
-        .single(),
-      supabase
-        .from("form_widgets")
-        .select("services, intake_question")
-        .eq("business_id", businessId)
-        .single(),
-    ]);
+    const [{ data: business }, { data: widget }, { data: leadDetails }] =
+      await Promise.all([
+        supabase
+          .from("businesses")
+          .select("name, notification_phone, scheduling_enabled, scheduling_timezone, scheduling_available_days, scheduling_start_time, scheduling_end_time")
+          .eq("id", businessId)
+          .single<BusinessConversationRow>(),
+        supabase
+          .from("form_widgets")
+          .select("services, intake_question")
+          .eq("business_id", businessId)
+          .single(),
+        supabase
+          .from("leads")
+          .select("name, address, service_type, appointment_status")
+          .eq("id", leadId)
+          .single<LeadConversationRow>(),
+      ]);
 
     const businessName = business?.name ?? "the team";
     const services = widget?.services ?? [];
     const intakeQuestion =
       widget?.intake_question ?? "What type of roofing issue are you dealing with?";
 
-    const { reply, isComplete, needsHumanReview, handoffReason } =
-      await generateConversationReply(
-        businessName,
-        history,
-        services,
-        intakeQuestion
-      );
+    const {
+      reply,
+      isComplete,
+      needsHumanReview,
+      handoffReason,
+      appointmentStatus,
+      preferredAppointmentTime,
+      appointmentNotes,
+    } = await generateConversationReply(
+      businessName,
+      history,
+      services,
+      intakeQuestion,
+      {
+        name: leadDetails?.name ?? leadName,
+        address: leadDetails?.address ?? null,
+        serviceType: leadDetails?.service_type ?? null,
+      },
+      {
+        enabled: business?.scheduling_enabled,
+        timezone: business?.scheduling_timezone,
+        availableDays: business?.scheduling_available_days,
+        startTime: business?.scheduling_start_time,
+        endTime: business?.scheduling_end_time,
+      }
+    );
 
     await supabase.from("messages").insert({
       lead_id: leadId,
@@ -156,6 +223,21 @@ async function processLeadConversation({
     } = await generateLeadSummary(allMessages);
     const nextStatus =
       score === "unqualified" || isHomeowner === false ? "junk" : "qualified";
+    const appointmentUpdate = shouldPersistAppointmentIntent(
+      appointmentStatus,
+      preferredAppointmentTime,
+      appointmentNotes,
+      leadDetails?.appointment_status
+      )
+      ? {
+          appointment_status: getPersistedAppointmentStatus(
+            appointmentStatus,
+            preferredAppointmentTime
+          ),
+          preferred_appointment_time: preferredAppointmentTime,
+          appointment_notes: appointmentNotes,
+        }
+      : {};
 
     await supabase
       .from("leads")
@@ -169,6 +251,7 @@ async function processLeadConversation({
         status: nextStatus,
         needs_human_review: false,
         handoff_reason: null,
+        ...appointmentUpdate,
       })
       .eq("id", leadId);
 
@@ -177,7 +260,12 @@ async function processLeadConversation({
       !(await isSmsOptedOut(supabase, business.notification_phone))
     ) {
       const leadLabel = leadName ?? "New lead";
-      const notifMsg = `${score.toUpperCase()} lead - ${leadLabel}\n${summary}\nCall: ${from}\nView: ${appBaseUrl}/dashboard/leads/${leadId}`;
+      const appointmentLine = preferredAppointmentTime
+        ? `Preferred inspection: ${preferredAppointmentTime}\n`
+        : appointmentStatus === "requested"
+          ? "Inspection requested; confirm availability.\n"
+          : "";
+      const notifMsg = `${score.toUpperCase()} lead - ${leadLabel}\n${summary}\n${appointmentLine}Call: ${from}\nView: ${appBaseUrl}/dashboard/leads/${leadId}`;
       await sendSMS(business.notification_phone, notifMsg);
     }
 

@@ -10,6 +10,7 @@ type WidgetBusiness = { name: string | null };
 type WidgetRow = {
   business_id: string;
   intake_question: string | null;
+  services: { label: string; value: string }[] | null;
   businesses: WidgetBusiness | WidgetBusiness[] | null;
 };
 
@@ -19,6 +20,34 @@ function getBusinessName(businesses: WidgetRow["businesses"]) {
   }
 
   return businesses?.name ?? "the team";
+}
+
+function getServiceLabel(
+  serviceType: string | null,
+  services: WidgetRow["services"]
+) {
+  if (!serviceType) return "";
+
+  const service = services?.find(
+    (option) => option.value === serviceType || option.label === serviceType
+  );
+
+  return service?.label ?? serviceType;
+}
+
+function buildGreeting(
+  name: string | null,
+  businessName: string,
+  serviceLabel: string,
+  intakeQuestion: string
+) {
+  const firstName = name?.split(" ")[0] || "there";
+
+  if (serviceLabel) {
+    return `Hi ${firstName}! Thanks for reaching out to ${businessName}. I saw your request about ${serviceLabel}. Is this an active leak or storm damage, or are you looking for an estimate soon?`;
+  }
+
+  return `Hi ${firstName}! Thanks for reaching out to ${businessName}. I have a few quick questions to make sure we can help you. ${intakeQuestion}`;
 }
 
 export async function POST(
@@ -55,7 +84,7 @@ export async function POST(
 
   const { data: widget } = await supabase
     .from("form_widgets")
-    .select("business_id, intake_question, businesses(name)")
+    .select("business_id, intake_question, services, businesses(name)")
     .eq("widget_key", widgetKey)
     .single();
 
@@ -70,6 +99,7 @@ export async function POST(
   const typedWidget = widget as WidgetRow;
   const businessName = getBusinessName(typedWidget.businesses);
   const intakeQuestion = widget.intake_question ?? "What type of roofing issue are you dealing with?";
+  const serviceLabel = getServiceLabel(serviceType, typedWidget.services);
   const duplicateWindowStart = new Date(Date.now() - 5 * 60 * 1000).toISOString();
 
   const { data: recentLead } = await supabase
@@ -124,7 +154,12 @@ export async function POST(
         .update({ sms_opted_out_at: new Date().toISOString() })
         .eq("id", lead.id);
     } else {
-      const greeting = `Hi ${name ?? "there"}! Thanks for reaching out to ${businessName}. I have a few quick questions to make sure we can help you. ${intakeQuestion}`;
+      const greeting = buildGreeting(
+        name,
+        businessName,
+        serviceLabel,
+        intakeQuestion
+      );
       try {
         await sendSMS(phone, greeting);
       } catch (err) {

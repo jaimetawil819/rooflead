@@ -30,7 +30,8 @@
 - Complete: Live mobile walkthrough found one Settings > Scheduling spacing issue; the start/end time controls no longer use decorative clock icons that crowd native mobile time inputs.
 - Complete: Public support and pilot setup links now use a centralized contact config so a domain inbox or booking URL can be swapped in without hunting through marketing/legal pages.
 - Complete: Public site URL, metadata, legal host copy, Stripe redirects, billing portal return path, and owner SMS deep links now use shared site URL config.
-- Next: Recheck the mobile scheduling controls, then set production URL/contact env vars when a custom-domain inbox, custom domain, or booking URL is available.
+- Complete: Custom domain and founder email setup is reflected in repo defaults: `https://roofleadapp.com` and `jaime@roofleadapp.com`.
+- Next: Recheck the mobile scheduling controls, then set a booking URL when a dedicated scheduling page exists.
 
 ---
 
@@ -49,7 +50,7 @@ The original refinement goals are largely complete:
 The remaining refinement work is narrower:
 
 - Recheck the Settings > Scheduling mobile time inputs after the walkthrough spacing fix.
-- Set `NEXT_PUBLIC_APP_URL`, `NEXT_PUBLIC_SUPPORT_EMAIL`, `NEXT_PUBLIC_PILOT_SETUP_EMAIL`, or `NEXT_PUBLIC_PILOT_SETUP_URL` in production when a custom domain, custom-domain inbox, or booking link is available.
+- Set `NEXT_PUBLIC_PILOT_SETUP_URL` in production when a dedicated booking link is available.
 - Tune dashboard next-action hierarchy after pilot usage reveals real owner behavior.
 - Add pilot proof/testimonial/case-study content once real results exist.
 
@@ -140,8 +141,8 @@ The remaining refinement work is narrower:
 ### Remaining Friction
 
 - A live signed-in browser walkthrough is still needed to verify authenticated desktop/mobile layouts with real session state.
-- Legal/privacy support contact is now centralized behind public env config, but still needs a custom-domain inbox value when available.
-- Public app URL usage is now centralized behind site config, but production still needs the final custom-domain value when available.
+- Legal/privacy support contact is now centralized behind public env config and defaults to `jaime@roofleadapp.com`.
+- Public app URL usage is now centralized behind site config and defaults to `https://roofleadapp.com`.
 - True pilot proof is not available yet, so testimonial/case-study sections should wait for real customer outcomes.
 - Dashboard priority hierarchy may need further tuning after pilot feedback shows which owner actions matter most.
 

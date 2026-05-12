@@ -6,6 +6,69 @@ This is a running log of every change made under the controlled-implementation p
 
 ---
 
+## 2026-05-11 - Scheduling conversation polish
+
+**Task:** Improve AI intake behavior around known form data and inspection scheduling intent.
+**Status:** completed
+
+**Files changed:**
+- `app/api/forms/[widgetKey]/route.ts` (modified)
+- `app/api/webhooks/twilio/route.ts` (modified)
+- `lib/ai.ts` (modified)
+- `docs/IMPLEMENTATION_PLAN.md` (modified)
+- `docs/IMPLEMENTATION_LOG.md` (modified)
+
+**Reason:**
+Scheduling foundations existed in the dashboard, but the SMS intake still needed to better use known form context, avoid repeating questions, and capture preferred inspection timing without pretending an appointment was confirmed.
+
+Implemented:
+- Personalized initial SMS greetings with the submitted service label when available.
+- Passed known lead context and business scheduling settings into AI conversation generation.
+- Updated AI intake rules to avoid re-asking known service details, combine urgency/timeline intelligently, and ask for appointment intent only when appropriate.
+- Added structured appointment intent output from the AI completion tool.
+- Persisted appointment intent on completed leads unless the owner has already scheduled the appointment.
+- Included preferred inspection timing in owner notification SMS when available.
+- Updated the broader implementation plan to reflect completed Phase 2 polish and the current production pilot readiness focus.
+
+**Verification performed:**
+- `npx.cmd tsc --noEmit`: clean.
+- `npm run lint`: clean.
+- `npm run build`: clean.
+
+**Follow-up needed:**
+- Run a simulator conversation that includes a preferred inspection time to confirm the owner alert wording feels right.
+
+---
+
+## 2026-05-11 - Custom domain email update
+
+**Task:** Replace temporary founder Gmail contact fallback with the new domain email.
+**Status:** completed
+
+**Files changed:**
+- `lib/contact.ts` (modified)
+- `.env.example` (modified)
+- `docs/WEBSITE_REFINEMENT_PLAN.md` (modified)
+- `docs/IMPLEMENTATION_LOG.md` (modified)
+
+**Reason:**
+The `roofleadapp.com` domain and `jaime@roofleadapp.com` email are now set up, so public contact links should no longer fall back to the temporary Gmail address.
+
+Implemented:
+- Updated the public contact fallback to `jaime@roofleadapp.com`.
+- Updated example public env values to use `https://roofleadapp.com` and `jaime@roofleadapp.com`.
+- Updated the refinement plan so custom-domain email/site setup is no longer listed as future work.
+
+**Verification performed:**
+- `npx.cmd tsc --noEmit`: clean.
+- `npm run lint`: clean.
+- `npm run build`: clean.
+
+**Follow-up needed:**
+- Add `NEXT_PUBLIC_PILOT_SETUP_URL` when a dedicated booking page exists.
+
+---
+
 ## 2026-05-11 - Site URL configuration polish
 
 **Task:** Continue the refinement plan by centralizing public site URL references.

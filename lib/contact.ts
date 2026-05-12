@@ -1,4 +1,4 @@
-const DEFAULT_SUPPORT_EMAIL = "jaimetawil819@gmail.com";
+const DEFAULT_SUPPORT_EMAIL = "jaime@roofleadapp.com";
 
 function cleanValue(value: string | undefined): string {
   return value?.trim() ?? "";

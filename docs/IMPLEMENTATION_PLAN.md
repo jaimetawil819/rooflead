@@ -1,7 +1,7 @@
 # Implementation Plan - RoofLead
 
 **Created:** 2026-05-09
-**Last updated:** 2026-05-10
+**Last updated:** 2026-05-11
 **Tracker:** `docs/IMPLEMENTATION_LOG.md`
 
 This is the execution checklist. Work one slice at a time, verify, commit, then move on.
@@ -27,7 +27,7 @@ Phase 0 and Phase 1 are complete. Phase 1 closed the core reliability gaps neede
 - Structured logging
 - Final local and production smoke test confirmed by the user
 
-Current focus: **Scheduling foundations** are in progress after pilot demo readiness was completed.
+Current focus: **pilot/demo readiness and production polish**. Scheduling foundations, dashboard/app redesign, marketing conversion polish, contact configuration, and site URL configuration have been implemented. The next work should be narrow production-readiness checks, environment configuration, and pilot onboarding support rather than another large feature.
 
 ---
 
@@ -265,62 +265,147 @@ Verify:
 
 Do not start until at least one pilot workflow is stable.
 
-- Human handoff / owner takeover - Complete
+### 2A - Human handoff / owner takeover - Complete
+
   - Add durable `needs_human_review` and `handoff_reason` fields on leads.
   - Let the AI/backend mark a lead for review when conversation processing fails or the intake exceeds the safe message cap.
   - Add dashboard visibility and manual mark/resolve controls.
   - Keep this separate from manual owner SMS replies; that is the next slice, not part of 2A.
-- Manual owner SMS reply from dashboard - Complete
+
+### 2B - Manual owner SMS reply from dashboard - Complete
+
   - Add a protected owner reply endpoint.
   - Send SMS through Twilio only after Clerk ownership checks.
   - Store owner-authored replies in the conversation.
   - Set owner takeover state so future homeowner replies are saved but do not trigger AI auto-replies.
   - Respect STOP opt-outs before sending.
-- Scheduling/inspection booking - In progress
-  - Add a lightweight scheduling plan in `docs/SCHEDULING_PLAN.md`.
-  - Add business scheduling settings: enabled state, timezone, days, hours, inspection duration, and buffer.
-  - Add lead appointment fields: appointment status, preferred appointment time, and appointment notes.
-  - Show and manually edit scheduling info from the lead detail page.
-  - Do not add calendar integrations or automatic booking yet.
-- ROI metrics - Complete
-  - Add configurable average job value in Settings.
-  - Show total leads, hot leads, qualified leads, needs-review leads, won leads, and estimated revenue on dashboard.
-  - Keep estimates simple: won leads multiplied by average job value.
-- Email fallback
-- Twilio number per business
-- Lead list pagination - Complete
+
+### 2C - Lead list pagination - Complete
+
   - Fetch one page of leads at a time from Supabase.
   - Preserve status, score, and review filters across page navigation.
   - Reset to page 1 when filters change.
-- Search/filter improvements - Complete
+
+### 2D - Search/filter improvements - Complete
+
   - Add URL-based search over name, phone, address, service type, and summary.
   - Preserve existing status, score, review, and pagination behavior.
   - Reset to page 1 when search changes.
-- Pilot demo readiness - Complete
+
+### 2E - ROI metrics - Complete
+
+  - Add configurable average job value in Settings.
+  - Show total leads, hot leads, qualified leads, needs-review leads, won leads, and estimated revenue on dashboard.
+  - Keep estimates simple: won leads multiplied by average job value.
+
+### 2F - Pilot demo readiness - Complete
+
   - Create a demo checklist and 5-minute demo script.
   - Define pre-demo technical checks.
   - Identify demo data cleanup rules.
   - Polish dashboard/lead detail only where it improves a real pilot demo.
   - Add dashboard demo actions for opening/copying the test form, reviewing leads, and opening settings.
-- CRM/Zapier/webhook export
+
+### 2G - Scheduling/inspection booking foundations - Complete
+
+  - Add a lightweight scheduling plan in `docs/SCHEDULING_PLAN.md`.
+  - Add business scheduling settings: enabled state, timezone, days, hours, inspection duration, and buffer.
+  - Add lead appointment fields: appointment status, preferred appointment time, and appointment notes.
+  - Show and manually edit scheduling info from the lead detail page.
+  - Do not add calendar integrations or automatic booking yet.
+
+### 2H - Marketing conversion polish - Complete
+
+  - Add Book Demo / Book Pilot Setup CTA paths while keeping Start Free Trial as the primary self-serve action.
+  - Expand FAQ coverage for CRM fit, AI uncertainty, owner takeover, phone number expectations, setup, after-hours replies, pricing, and SMS consent.
+  - Redesign sign-in, sign-up, subscribe, and success screens so the conversion path feels branded and credible.
+  - Remove visible personal-email pricing contact from public pricing and route pilot setup through shared contact config.
+
+### 2I - Public website and product proof redesign - Complete
+
+  - Reorder the landing page around pain, proof, product, pricing, FAQ, and CTA.
+  - Add product preview, realistic lead summary, trust signals, use cases, comparison framing, and stronger final CTA.
+  - Align pricing, trial, card-required checkout, final CTA, subscribe page, and terms copy.
+  - Keep future testimonial/case-study proof blocked until real pilot outcomes exist.
+
+### 2J - Authenticated app UI/UX redesign - Complete
+
+  - Redesign dashboard shell, sidebar, mobile navigation, overview, leads inbox, lead detail, settings, and onboarding into the same trust-forward SaaS style.
+  - Add mobile-friendly navigation with a top bar and slide-out drawer.
+  - Upgrade lead detail into an action-oriented workflow with call/reply actions, AI summary, structured fields, scheduling, owner review, and safer danger-zone delete placement.
+  - Upgrade Settings into task-focused tabs for Business, Lead Form, Scheduling, and Billing.
+
+### 2K - Embed widget and public test form redesign - Complete
+
+  - Restyle `public/embed.js` with clearer hierarchy, visible labels, consent language, and safer rendering.
+  - Redesign `/test-form` and `/test-form/[widgetKey]` so Twilio/A2P reviewers and pilot customers see a credible sample form.
+  - Improve loading, error, and submitted states.
+
+### 2L - Authenticated QA/accessibility polish - Complete
+
+  - Add labels for leads inbox filters and lead detail status controls.
+  - Add accessible names for service inputs and removal buttons in Settings.
+  - Fix onboarding design drift and old mojibake UI text.
+  - Fix mobile Settings scheduling time input spacing by removing decorative clock icons from native time inputs.
+
+### 2M - Contact and site URL configuration - Complete
+
+  - Add `lib/contact.ts` for support email, pilot setup email, and optional booking URL.
+  - Add `lib/site.ts` for shared site name, description, base URL, and host label.
+  - Update metadata, privacy/legal copy, Stripe checkout redirects, Stripe billing portal return URL, and Twilio owner notification links to use shared config.
+  - Keep `NEXT_PUBLIC_APP_URL`, support email, pilot setup email, and booking URL configurable through environment variables.
+
+### 2N - Remaining Phase 2 watch items
+
+These are intentionally not started unless pilot feedback or production testing justifies them:
+
+  - Email fallback.
+  - Twilio number per business.
+  - CRM/Zapier/webhook export.
+  - Real calendar booking.
+  - Reminder SMS.
+  - Pilot testimonial/case-study content.
 
 ---
 
 ## Phase 3 - Scale and polish
 
-- Custom domain
-- Production Clerk instance
-- Stripe live mode
-- Better onboarding
-- Multiple notification phones
-- Photo/MMS intake
-- Realtime dashboard updates
-- Consolidate old off-repo planning docs
+Phase 3 should focus on production readiness and scale after the first pilot path is stable.
+
+- Custom domain.
+- Custom-domain support inbox.
+- Set `NEXT_PUBLIC_APP_URL` to the custom domain in Vercel.
+- Set `NEXT_PUBLIC_SUPPORT_EMAIL`, `NEXT_PUBLIC_PILOT_SETUP_EMAIL`, and/or `NEXT_PUBLIC_PILOT_SETUP_URL` in Vercel when ready.
+- Production Clerk instance.
+- Stripe live mode.
+- Final A2P 10DLC approval and live SMS smoke test.
+- Better onboarding based on pilot usage.
+- Multiple notification phones.
+- Photo/MMS intake.
+- Email fallback.
+- CRM/Zapier/webhook export.
+- Twilio number per business.
+- Realtime dashboard updates.
+- Replace simulator-heavy testing with a small automated regression suite.
+- Consolidate old off-repo planning docs.
 
 ---
 
 ## Current next action
 
-Recommended next engineering slice: **Finish and test scheduling foundations.**
+Recommended next engineering slice: **production pilot readiness pass.**
 
-Reason: the demo path is stable enough to add appointment intent without overbuilding. Keep this as manual scheduling assist until pilot conversations prove full calendar booking is worth building.
+Reason: the core MVP, Phase 1 reliability work, Phase 2 product features, scheduling foundations, and UI/website polish are now in place. The biggest risks before a real pilot are operational: provider configuration, A2P status, production environment variables, custom domain/contact setup, final mobile scheduling recheck, and one end-to-end demo smoke test on the deployed app.
+
+Suggested checklist:
+
+1. Recheck Settings > Scheduling on a phone viewport.
+2. Confirm Vercel env vars match the current `.env.example` names.
+3. Confirm `NEXT_PUBLIC_APP_URL` points to the deployed app, then later the custom domain.
+4. Confirm public legal/contact links use the desired support address.
+5. Confirm Stripe checkout, billing portal, and webhook behavior still work after URL config changes.
+6. Confirm public `/test-form` works for A2P reviewers.
+7. Confirm account-specific `/test-form/[widgetKey]` creates a lead.
+8. Confirm simulator-based SMS conversation still produces summary/score/scheduling-safe language.
+9. Wait for A2P approval, then run one real live SMS test.
+10. Prepare one clean demo account and demo script before outreach.
