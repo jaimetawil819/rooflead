@@ -14,6 +14,20 @@ type WidgetRow = {
   businesses: WidgetBusiness | WidgetBusiness[] | null;
 };
 
+const CORS_HEADERS = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Methods": "POST, OPTIONS",
+  "Access-Control-Allow-Headers": "Content-Type",
+};
+
+function withCors(response: NextResponse) {
+  Object.entries(CORS_HEADERS).forEach(([key, value]) => {
+    response.headers.set(key, value);
+  });
+
+  return response;
+}
+
 function getBusinessName(businesses: WidgetRow["businesses"]) {
   if (Array.isArray(businesses)) {
     return businesses[0]?.name ?? "the team";
@@ -62,21 +76,25 @@ export async function POST(
   const rateLimit = checkRateLimit(`lead-form:${widgetKey}:${clientIp}`);
 
   if (!rateLimit.allowed) {
-    return NextResponse.json(
-      { error: "Too many requests. Please try again shortly." },
-      {
-        status: 429,
-        headers: { "Retry-After": String(rateLimit.retryAfterSeconds) },
-      }
+    return withCors(
+      NextResponse.json(
+        { error: "Too many requests. Please try again shortly." },
+        {
+          status: 429,
+          headers: { "Retry-After": String(rateLimit.retryAfterSeconds) },
+        }
+      )
     );
   }
 
   const validation = parseLeadFormBody(await req.text());
 
   if (!validation.ok) {
-    return NextResponse.json(
-      { error: validation.error },
-      { status: validation.status }
+    return withCors(
+      NextResponse.json(
+        { error: validation.error },
+        { status: validation.status }
+      )
     );
   }
 
@@ -90,9 +108,11 @@ export async function POST(
 
   if (!widget) {
     logger.warn("invalid_widget_key");
-    return NextResponse.json(
-      { error: "Invalid widget key", requestId: logger.requestId },
-      { status: 404, headers: { "x-request-id": logger.requestId } }
+    return withCors(
+      NextResponse.json(
+        { error: "Invalid widget key", requestId: logger.requestId },
+        { status: 404, headers: { "x-request-id": logger.requestId } }
+      )
     );
   }
 
@@ -113,11 +133,13 @@ export async function POST(
     .maybeSingle();
 
   if (recentLead) {
-    return NextResponse.json({
-      success: true,
-      duplicate: true,
-      leadId: recentLead.id,
-    });
+    return withCors(
+      NextResponse.json({
+        success: true,
+        duplicate: true,
+        leadId: recentLead.id,
+      })
+    );
   }
 
   const { data: lead, error } = await supabase
@@ -138,9 +160,11 @@ export async function POST(
     logger.error("lead_create_failed", error, {
       businessId: typedWidget.business_id,
     });
-    return NextResponse.json(
-      { error: "Failed to create lead", requestId: logger.requestId },
-      { status: 500, headers: { "x-request-id": logger.requestId } }
+    return withCors(
+      NextResponse.json(
+        { error: "Failed to create lead", requestId: logger.requestId },
+        { status: 500, headers: { "x-request-id": logger.requestId } }
+      )
     );
   }
 
@@ -188,8 +212,17 @@ export async function POST(
     businessId: typedWidget.business_id,
   });
 
-  return NextResponse.json(
-    { success: true, leadId: lead.id },
-    { headers: { "x-request-id": logger.requestId } }
+  return withCors(
+    NextResponse.json(
+      { success: true, leadId: lead.id },
+      { headers: { "x-request-id": logger.requestId } }
+    )
   );
+}
+
+export async function OPTIONS() {
+  return new NextResponse(null, {
+    status: 204,
+    headers: CORS_HEADERS,
+  });
 }

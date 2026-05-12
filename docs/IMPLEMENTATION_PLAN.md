@@ -1,7 +1,7 @@
 # Implementation Plan - RoofLead
 
 **Created:** 2026-05-09
-**Last updated:** 2026-05-11
+**Last updated:** 2026-05-12
 **Tracker:** `docs/IMPLEMENTATION_LOG.md`
 
 This is the execution checklist. Work one slice at a time, verify, commit, then move on.
@@ -27,7 +27,7 @@ Phase 0 and Phase 1 are complete. Phase 1 closed the core reliability gaps neede
 - Structured logging
 - Final local and production smoke test confirmed by the user
 
-Current focus: **pilot/demo readiness and production polish**. Scheduling foundations, dashboard/app redesign, marketing conversion polish, contact configuration, and site URL configuration have been implemented. The next work should be narrow production-readiness checks, environment configuration, and pilot onboarding support rather than another large feature.
+Current focus: **pilot/demo readiness and production polish**. Scheduling foundations, dashboard/app redesign, marketing conversion polish, contact configuration, site URL configuration, and local embedded widget smoke testing have been implemented. The next work should be narrow production-readiness checks, environment configuration, and pilot onboarding support rather than another large feature.
 
 ---
 
@@ -340,6 +340,7 @@ Do not start until at least one pilot workflow is stable.
   - Restyle `public/embed.js` with clearer hierarchy, visible labels, consent language, and safer rendering.
   - Redesign `/test-form` and `/test-form/[widgetKey]` so Twilio/A2P reviewers and pilot customers see a credible sample form.
   - Improve loading, error, and submitted states.
+  - Confirm external embedded-widget submissions work locally with CORS preflight and create Supabase leads.
 
 ### 2L - Authenticated QA/accessibility polish - Complete
 
@@ -395,7 +396,7 @@ Phase 3 should focus on production readiness and scale after the first pilot pat
 
 Recommended next engineering slice: **production pilot readiness pass.**
 
-Reason: the core MVP, Phase 1 reliability work, Phase 2 product features, scheduling foundations, and UI/website polish are now in place. The biggest risks before a real pilot are operational: provider configuration, A2P status, production environment variables, custom domain/contact setup, final mobile scheduling recheck, and one end-to-end demo smoke test on the deployed app.
+Reason: the core MVP, Phase 1 reliability work, Phase 2 product features, scheduling foundations, UI/website polish, and local embedded widget smoke test are now in place. The biggest risks before a real pilot are operational: provider configuration, A2P status, production environment variables, custom domain/contact setup, final mobile scheduling recheck, and one end-to-end demo smoke test on the deployed app.
 
 Suggested checklist:
 
@@ -404,8 +405,8 @@ Suggested checklist:
 3. Confirm `NEXT_PUBLIC_APP_URL` points to the deployed app, then later the custom domain.
 4. Confirm public legal/contact links use the desired support address.
 5. Confirm Stripe checkout, billing portal, and webhook behavior still work after URL config changes.
-6. Confirm public `/test-form` works for A2P reviewers.
-7. Confirm account-specific `/test-form/[widgetKey]` creates a lead.
+6. Confirm public `/test-form` works for A2P reviewers after deploy.
+7. Confirm account-specific `/test-form/[widgetKey]` and external embed snippets create leads after deploy.
 8. Confirm simulator-based SMS conversation still produces summary/score/scheduling-safe language.
 9. Wait for A2P approval, then run one real live SMS test.
 10. Prepare one clean demo account and demo script before outreach.

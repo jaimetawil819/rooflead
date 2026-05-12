@@ -101,7 +101,8 @@ Completed in Phase 1:
 - Mid-conversation timeout
 - Structured logging
 - Final local and production smoke test
+- Local embedded-widget smoke test with CORS preflight
 
 Recommended next slice:
 
-- Production demo smoke test before scheduling/inspection booking
+- Production embedded-widget and demo smoke test after deploy

@@ -6,6 +6,42 @@ This is a running log of every change made under the controlled-implementation p
 
 ---
 
+## 2026-05-12 - Embedded widget CORS smoke test
+
+**Task:** Test the embedded lead widget and fix external-site submission.
+**Status:** completed
+
+**Files changed:**
+- `app/api/forms/[widgetKey]/route.ts` (modified)
+- `public/test.html` (modified)
+- `docs/IMPLEMENTATION_LOG.md` (modified)
+- `docs/IMPLEMENTATION_PLAN.md` (modified)
+- `docs/PROJECT_AUDIT.md` (modified)
+- `README.md` (modified)
+
+**Reason:**
+The embedded widget rendered correctly from `public/embed.js`, but a customer-site style host page could not submit leads because `POST /api/forms/[widgetKey]` did not answer browser CORS preflight requests. Same-origin API submission worked, which narrowed the bug to external embed CORS rather than form validation, Supabase, or Twilio.
+
+Implemented:
+- Added shared CORS headers for the public form submission endpoint.
+- Added `OPTIONS` handling for `POST /api/forms/[widgetKey]` preflight.
+- Ensured all form submission responses, including validation errors, rate limits, duplicates, invalid widget keys, server errors, and success responses, include CORS headers.
+- Updated `public/test.html` to use a currently valid widget key and load `/embed.js` from the local app.
+
+**Verification performed:**
+- `GET /api/forms/c1b0cad9-b6e0-4002-b648-8b00f06617bb/config`: `200`, services returned, CORS `*`.
+- `OPTIONS /api/forms/c1b0cad9-b6e0-4002-b648-8b00f06617bb`: `204`, CORS `*`, methods `POST, OPTIONS`, headers `Content-Type`.
+- Browser smoke test at `http://127.0.0.1:3000/test.html`: widget rendered name, phone, address, services, consent copy, and submit button.
+- Browser submission showed `Request received`.
+- Supabase confirmed a created fake test lead with status `new`.
+- `npm run lint`: clean.
+- `npm run build`: clean.
+
+**Follow-up needed:**
+- After deploy, repeat the embedded widget smoke test against the production domain with a real customer-style origin.
+
+---
+
 ## 2026-05-11 - Stripe trial access fix
 
 **Task:** Fix post-checkout dashboard access for card-backed free trials.
